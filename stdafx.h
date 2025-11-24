@@ -1,0 +1,31 @@
+#pragma once
+
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <cstring>
+#include <cstdlib>
+#include <cstdarg>
+#include <cwchar>
+#include <stack>
+#include <queue>
+#include <vector>
+#include <map>
+#include <set>
+#include <algorithm>
+#include <iomanip>
+#include <ctime>
+
+#include "Headers/Error.h"
+#include "Headers/Parm.h"
+#include "Headers/Log.h"
+#include "Headers/In.h"
+#include "Headers/Out.h"
+#include "Headers/IT.h"
+#include "Headers/LT.h"
+#include "Headers/LexA.h"
+#include "Headers/FST.h"
+#include "Headers/GRB.h"
+#include "Headers/MFST.h"
+#include "Headers/SemA.h"
+#include "Headers/RPN.h"
