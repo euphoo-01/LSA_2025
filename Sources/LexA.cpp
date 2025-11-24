@@ -13,17 +13,17 @@ namespace LexA
 	LT::LexTable lexTable = LT::Create(LT_MAXSIZE - 1);
 	IT::IdTable idTable = IT::Create(TI_MAXSIZE - 1);
 	int countParms = 0;
-	bool whileflag = false;
+	bool whileflag = false; // Для because
 	bool ifflag = false;
-	bool elseflag = false;
-	bool stringFlag = false;
-	bool uintFlag = false;
-	bool boolFlag = false;
-	bool doubleFlag = false;
+	bool differflag = false; // Для differ
+	bool unsignedKeywordFlag = false; // Для "unsigned"
+	bool integerKeywordFlag = false; // Для "integer"
+	bool charTypeFlag = false; // Для "char" type
+	bool logicTypeFlag = false; // Для "logic" type
 	bool parmFlag = false;
 	bool litflag = false;
-	bool falseFlag = false;
-	bool trueFlag = false;
+	// bool falseFlag = false; // LSA-2025 boolean literals are 0 or 1, not keywords
+	// bool trueFlag = false; // LSA-2025 boolean literals are 0 or 1, not keywords
 	bool mainFlag = false;
 	bool callFunc;
 	char* str = new char[TI_MAXSIZE];
@@ -41,106 +41,79 @@ namespace LexA
 	}
 	char FST()
 	{
-		FST_UINT
-		FST_STRING
-		FST_BOOL
-		FST_FUNC
-		FST_RETURN
+		FST_UNSIGNED
+		FST_INTEGER
+		FST_CHAR_TYPE_KEYWORD
+		FST_LOGIC_TYPE_KEYWORD
+		FST_FUNC_KEYWORD
+		FST_SEND
+		FST_BECAUSE
+		FST_DIFFER
 		FST_MAIN
-		FST_PRINT
-		FST_PRINTLN
-		FST_READ
-		FST_TRUE
-		FST_FALSE
-		FST_WHILE
 		FST_IF
 		FST_LITERAL
 		FST_IDEN
-		FST_DOUBLE
-		FST_ELSE
-		FST_UNTIL
-		FST_OTHERWISE
-		if (FST::execute(_uint)) {
-			uintFlag = true;
-			return LEX_UINTEGER;
+
+		if (FST::execute(_unsigned)) {
+			unsignedKeywordFlag = true;
+			return '\0';
 		}
-		if (FST::execute(_double)) {
-			doubleFlag = true;
-			return LEX_DOUBLE;
+		if (FST::execute(_integer)) {
+			integerKeywordFlag = true;
+			return '\0';
 		}
-		if (FST::execute(_bool)) {
-			boolFlag = true;
-			return LEX_BOOL;
+		if (FST::execute(_char_type_keyword)) {
+			charTypeFlag = true;
+			return LEX_CHAR_TYPE;
 		}
-		if (FST::execute(_string))
-		{
-			stringFlag = true;
-			return LEX_STRING;
+		if (FST::execute(_logic_type_keyword)) {
+			logicTypeFlag = true;
+			return LEX_LOGIC_TYPE;
 		}
-		if (FST::execute(_function)) {
-			return LEX_FUNCTION;
+		if (FST::execute(_func_keyword)) {
+			return LEX_FUNC;
 		}
-		if (FST::execute(_return))
-			return LEX_RETURN;
-		if (FST::execute(_main))
-		{
+		if (FST::execute(_send)) {
+			return LEX_SEND;
+		}
+		if (FST::execute(_because)) {
+			whileflag = true; // Переименовать для ясности, относится к "because"
+			return LEX_BECAUSE;
+		}
+		if (FST::execute(_differ)) {
+			differflag = true;
+			return LEX_DIFFER;
+		}
+		if (FST::execute(_main)) {
 			mainFlag = true;
 			return LEX_MAIN;
-		}
-		if (FST::execute(_print))
-			return LEX_PRINT;
-		if (FST::execute(_println))
-			return LEX_PRINTLN;
-		if (FST::execute(_read))
-			return LEX_READ;
-		if (FST::execute(_true)) {
-			trueFlag = true;
-			return LEX_LITERAL;
-		}
-		if (FST::execute(_false)) {
-			falseFlag = true;
-			return LEX_LITERAL;
-		}
-		if (FST::execute(_while)) {
-			whileflag = true;
-			return LEX_WHILE;
 		}
 		if (FST::execute(_if)) {
 			ifflag = true;
 			return LEX_IF;
 		}
-		if (FST::execute(_else)) {
-			elseflag = true;
-			return LEX_ELSE;
-		}
-		if (FST::execute(_until)) {
-			whileflag = true;
-			return LEX_UNTIL;
-		}
-		if (FST::execute(_otherwise)) {
-			elseflag = true;
-			return LEX_OTHERWISE;
-		}
-		if (FST::execute(_literal))
+		if (FST::execute(_literal)) {
 			return LEX_LITERAL;
-		if (FST::execute(_iden))
+		}
+		if (FST::execute(_iden)) {
 			return LEX_ID;
+		}
 		return '\0';
 	}
 	LEX LexA(Parm::PARm parm, In::iN in)
 	{
 		LEX lexResult;
-		IT::Add(idTable, *new IT::Entry(-1, "compare", IT::UINT, IT::F, "global", 2));
+		IT::Add(idTable, *new IT::Entry(-1, "compare", IT::LOGIC, IT::F, "global", 2));
 		IT::Add(idTable, *new IT::Entry(-1, "len", IT::UINT, IT::F, "global", 1));
 		IT::Add(idTable, *new IT::Entry(-1, "getmin", IT::UINT, IT::F, "global", 2));
 		IT::Add(idTable, *new IT::Entry(-1, "getmax", IT::UINT, IT::F, "global", 2));
-		lexResult.functions["compare"].push_back(IT::STR);
-		lexResult.functions["compare"].push_back(IT::STR);
+		lexResult.functions["compare"].push_back(IT::CHAR);
+		lexResult.functions["compare"].push_back(IT::CHAR);
 		lexResult.functions["getmin"].push_back(IT::UINT);
 		lexResult.functions["getmin"].push_back(IT::UINT);
 		lexResult.functions["getmax"].push_back(IT::UINT);
 		lexResult.functions["getmax"].push_back(IT::UINT);
-		lexResult.functions["len"].push_back(IT::STR);
+		lexResult.functions["len"].push_back(IT::CHAR);
 		int indexIT;
 		int pos = 0;
 		LT::Entry cur_lex;
@@ -149,9 +122,9 @@ namespace LexA
 		cur_lex.idxTI = 0;
 		cur_lex.lexema[0] = '\0';
 		int number_literal = 0;
-		int number_until = 0;
+		int number_because = 0; // Renamed from number_until
 		int number_if = 0;
-		int number_else = 0;
+		int number_differ = 0; // Renamed from number_else
 		map<string, string> scope;
 		scope["global"] = "";
 		string cur_scope = "global";
@@ -182,12 +155,34 @@ namespace LexA
 			{
 				if (bufferIndex > 0) {
 					str[bufferIndex] = '\0';
-					cur_lex.lexema[0] = FST();
+					cur_lex.lexema[0] = FST(); // Call FST to get the base lexeme
 				} else {
 					cur_lex.lexema[0] = '\0';
 				}
+
+				// Special handling for "unsigned integer"
+				if (unsignedKeywordFlag) {
+					if (integerKeywordFlag) {
+						cur_lex.lexema[0] = LEX_UINT_TYPE;
+						unsignedKeywordFlag = false;
+						integerKeywordFlag = false;
+					} else { // "unsigned" was detected, but "integer" was not the next keyword
+						// This indicates an error or "unsigned" used alone, which is invalid
+						// For now, treat as invalid keyword sequence, FST already returned '\0'
+						// If FST returned '\0', cur_lex.lexema[0] is already '\0' so it will be ignored later.
+						// The unsignedKeywordFlag should be reset immediately if not followed by 'integer'.
+						// Re-lex 'unsigned' as an identifier or throw an error.
+						// For now, assume a correct 'unsigned integer' sequence or it's an error handled later
+						unsignedKeywordFlag = false; // Reset flag
+					}
+				} else if (integerKeywordFlag) { // 'integer' was found without 'unsigned' before it.
+					// Also an error, 'integer' is not a standalone type keyword.
+					integerKeywordFlag = false; // Reset flag
+				}
 				
-				// Обработка одиночных символов
+				// Handle single-character tokens (if bufferIndex was 0)
+				// The FST() result takes precedence if bufferIndex > 0.
+				// If bufferIndex was 0, it means we are dealing with a separator or operator.
 				if (bufferIndex == 0) {
 					switch (in.text[i]) {
 						case LEX_LEFTBRACE:
@@ -209,29 +204,69 @@ namespace LexA
 							cur_lex.lexema[0] = LEX_RIGHTTHESIS;
 							break;
 						case LEX_PLUS:
-							cur_lex.lexema[0] = LEX_PLUS;
+							if (in.text[i + 1] == LEX_PLUS) { // ++ operator
+								cur_lex.lexema[0] = LEX_INCREMENT;
+								i++; // Consume next character
+							} else {
+								cur_lex.lexema[0] = LEX_PLUS;
+							}
 							break;
 						case LEX_MINUS:
-							cur_lex.lexema[0] = LEX_MINUS;
+							if (in.text[i + 1] == LEX_MINUS) { // -- operator
+								cur_lex.lexema[0] = LEX_DECREMENT;
+								i++; // Consume next character
+							} else {
+								cur_lex.lexema[0] = LEX_MINUS;
+							}
 							break;
 						case LEX_STAR:
 							cur_lex.lexema[0] = LEX_STAR;
 							break;
-						case LEX_DIRSLASH:
-							cur_lex.lexema[0] = LEX_DIRSLASH;
+						case LEX_COLON: // New division operator
+							cur_lex.lexema[0] = LEX_COLON;
 							break;
 						case LEX_EQUAL:
-							cur_lex.lexema[0] = LEX_EQUAL;
+							if (in.text[i + 1] == LEX_EQUAL) { // == operator
+								cur_lex.lexema[0] = LEX_ISEQUAL;
+								i++; // Consume next character
+							} else {
+								cur_lex.lexema[0] = LEX_EQUAL; // Assignment operator
+							}
 							break;
-						case LEX_OST:
-							cur_lex.lexema[0] = LEX_OST;
+						case LEX_MORE:
+							if (in.text[i + 1] == LEX_EQUAL) { // >= operator
+								cur_lex.lexema[0] = LEX_MORE_OR_EQUAL;
+								i++; // Consume next character
+							} else {
+								cur_lex.lexema[0] = LEX_MORE;
+							}
+							break;
+						case LEX_LESS:
+							if (in.text[i + 1] == LEX_EQUAL) { // <= operator
+								cur_lex.lexema[0] = LEX_LESS_OR_EQUAL;
+								i++; // Consume next character
+							} else {
+								cur_lex.lexema[0] = LEX_LESS;
+							}
+							break;
+						case LEX_BITNOT: // ~ operator
+							cur_lex.lexema[0] = LEX_BITNOT;
+							break;
+						case '!': // Only for != (not equal)
+							if (in.text[i + 1] == LEX_EQUAL) {
+								cur_lex.lexema[0] = LEX_NOT_EQUAL;
+								i++; // Consume next character
+							} else {
+								throw ERROR_THROW_IN(601, currentLine, pos); // Invalid operator '!'
+							}
 							break;
 						default:
 							cur_lex.lexema[0] = '\0';
 							break;
 					}
 				}
-				// cout << "Текущая область видимости " << cur_scope << " Предыдущая " << prev_scope << '\n';
+
+				// Processing recognized lexeme
 				if (cur_lex.lexema[0] == LEX_MAIN)
 				{
 					if (callFunc) {
@@ -241,9 +276,9 @@ namespace LexA
 					cur_lex.idxTI = idTable.size;
 					memcpy(cur_iden.id, str, 15);
 					cur_iden.id[15] = '\0';
-					cur_iden.iddatatype = IT::UINT;
+					cur_iden.iddatatype = IT::UINT; // main returns unsigned integer
 					cur_iden.idtype = IT::F;
-                                        cur_iden.value.vint = 0.0;
+                    cur_iden.value.vint = 0.0;
 					cur_iden.idxfirstLE = currentLine;
 					cur_iden.scope_name = cur_scope;
 					indexIT = IT::search(idTable, cur_iden);
@@ -256,73 +291,44 @@ namespace LexA
 						IT::Add(idTable, cur_iden);
 					}
 				}
-				if (cur_lex.lexema[0] == LEX_LITERAL)
+				else if (cur_lex.lexema[0] == LEX_LITERAL)
 				{
-					cur_iden.iddatatype = IT::UINT;
 					cur_iden.idtype = IT::L;
-					std::sprintf(cur_iden.id, "");
+					std::sprintf(cur_iden.id, ""); // Reset id for literal
 					bool dot = false;
+					// Check if literal is a double (not allowed in LSA-2025 except by conversion) or has a decimal point
 					for (int j = 0; j < strlen(str); j++) {
 						if (str[j] == '.') {
 							dot = true;
 							break;
 						}
 					}
-					if (trueFlag) {
-						cur_iden.iddatatype = IT::BOOL;
-						cur_iden.value.vint = 1;
-					}
-					else if (falseFlag) {
-						cur_iden.iddatatype = IT::BOOL;
-						cur_iden.value.vint = 0;
-					}
-					else if (dot) {
-						cur_iden.iddatatype = IT::DOUBLE;
-						if ((lexTable.table[lexTable.size - 2].lexema[0] != LEX_RIGHTTHESIS 
-							&& lexTable.table[lexTable.size - 2].lexema[0] != LEX_ID && lexTable.table[lexTable.size - 2].lexema[0] != LEX_LITERAL)
-							&& in.text[i - strlen(str)] != ' ' && in.text[i - strlen(str) - 1] == LEX_MINUS) {
-							std::sscanf(str, "%lf", &cur_iden.value.vint);
-							cur_iden.value.vint = -cur_iden.value.vint;
+
+					// LSA-2025 only has unsigned integer, char, logic literals
+					// Integer literals
+					if (!dot) {
+						cur_iden.iddatatype = IT::UINT;
+						// Handle signed literals temporarily for parsing, then ensure unsigned
+						long long val_ll = stoll(str);
+						if (val_ll < 0 || val_ll > 4294967295ULL) { // Check against unsigned integer max value
+							throw ERROR_THROW_IN(120, currentLine, pos); // Value out of range
 						}
-						else {
-							std::sscanf(str, "%lf", &cur_iden.value.vint);
+						cur_iden.value.vint = static_cast<double>(val_ll); // Store as double, convert to uint later
+						if (str[0] == '0' && strlen(str) > 1) { // Octal literal handling, if spec supports
+							cur_iden.value.vint = static_cast<double>(stoll(str, nullptr, 8));
 						}
 					}
+					// Char literals (single character within marks) are handled in the MARK case below.
+					// If a literal that passed FST_LITERAL, and it's not an integer, it's an error.
 					else {
-						if ((lexTable.table[lexTable.size - 2].lexema[0] != LEX_RIGHTTHESIS
-							&& lexTable.table[lexTable.size - 2].lexema[0] != LEX_ID && lexTable.table[lexTable.size - 2].lexema[0] != LEX_LITERAL)
-							&& in.text[i - strlen(str)] != ' ' && in.text[i - strlen(str) - 1] == LEX_MINUS) {
-							cur_iden.value.vint = (unsigned int)(-stoi(str));
-							if (str[0] == '0')
-								cur_iden.value.vint = (unsigned int)-stoi(str, nullptr, 8);
-							lexTable.size--;
-						}
-						else {
-							cur_iden.value.vint = (unsigned int)(stoi(str));
-							if (str[0] == '0')
-								cur_iden.value.vint = (unsigned int)stoi(str, nullptr, 8);
-						}
+						throw ERROR_THROW_IN(120, currentLine, pos); // LSA-2025 does not support float/double literals
 					}
+
 					indexIT = IT::search(idTable, cur_iden);
 					if (indexIT >= 0) {
 						cur_lex.idxTI = indexIT;
-						trueFlag = false;
-						falseFlag = false;
-					}
-					else {
+					} else {
 						std::sprintf(cur_iden.id, "L%d", number_literal);
-						if (trueFlag)
-						{
-							cur_iden.iddatatype = IT::BOOL;
-							cur_iden.value.vint = 1;
-							trueFlag = false;
-						}
-						if (falseFlag)
-						{
-							cur_iden.iddatatype = IT::BOOL;
-							cur_iden.value.vint = 0;
-							falseFlag = false;
-						}
 						cur_iden.idxfirstLE = currentLine;
 						cur_iden.scope_name = cur_scope;
 						cur_lex.idxTI = idTable.size;
@@ -330,216 +336,168 @@ namespace LexA
 						number_literal++;
 					}
 				}
-				if (cur_lex.lexema[0] == LEX_ID)
+				else if (cur_lex.lexema[0] == LEX_ID)
 				{
 					cur_iden.idtype = IT::V;
 					cur_iden.scope_name = cur_scope;
 					cur_lex.idxTI = idTable.size;
 					memcpy(cur_iden.id, str, 15);
 					cur_iden.id[15] = '\0';
-					cur_iden.iddatatype = IT::UINT;
-                                        cur_iden.value.vint = 0.0;
+					cur_iden.iddatatype = IT::UINT; // Default to UINT, will be updated by type keywords
+                    cur_iden.value.vint = 0.0;
 					cur_iden.idxfirstLE = currentLine;
-					if (lexTable.table[lexTable.size - 2].lexema[0] == LEX_FUNCTION) {
-						if (callFunc) {
-							throw ERROR_THROW_IN(600, currentLine, 0);
+
+					// Check if previous token was a type keyword for declaration
+					if (lexTable.size > 0) {
+						char prevLex = lexTable.table[lexTable.size - 1].lexema[0];
+						if (prevLex == LEX_FUNC) {
+							if (callFunc) {
+								throw ERROR_THROW_IN(600, currentLine, 0); // Nested func calls, invalid syntax
+							}
+							callFunc = true;
+							cur_iden.idtype = IT::F;
+							declareFunc = true;
+
+							// Determine function return type based on previous type keyword
+							if (charTypeFlag) {
+								cur_iden.iddatatype = IT::CHAR;
+								charTypeFlag = false;
+							} else if (logicTypeFlag) {
+								cur_iden.iddatatype = IT::LOGIC;
+								logicTypeFlag = false;
+							} else if (unsignedKeywordFlag && integerKeywordFlag) { // "unsigned integer"
+								cur_iden.iddatatype = IT::UINT;
+								unsignedKeywordFlag = false;
+								integerKeywordFlag = false;
+							} else {
+								// Default to UINT or throw error if func declaration type is missing/invalid
+								throw ERROR_THROW_IN(120, currentLine, pos); // Invalid type for function
+							}
+
+							indexIT = IT::search(idTable, cur_iden);
+							if (indexIT >= 0) {
+								throw ERROR_THROW_IN(107, currentLine, pos); // Function already defined
+							}
+							if(indexIT == -1){
+								lexResult.functions[cur_iden.id] = {};
+								cur_lex.idxTI = idTable.size;
+								IT::Add(idTable, cur_iden);
+								pushToIT = true;
+							}
 						}
-						callFunc = true;
-						cur_iden.idtype = IT::F;
-						declareFunc = true;
-						if (uintFlag) {
-							cur_iden.iddatatype = IT::UINT;
-							uintFlag = false;
+						// Parameter declaration
+						else if (prevLex == LEX_LEFTTHESIS || prevLex == LEX_COMMA) {
+							// Look further back to see if it's a function parameter
+							bool is_param = false;
+							if (lexTable.size >= 2 && idTable.table[lexTable.table[lexTable.size - (prevLex == LEX_LEFTTHESIS ? 2 : 3)].idxTI].idtype == IT::F) {
+								is_param = true;
+							}
+							if (is_param && declareFunc) { // Only if currently declaring a function
+								cur_iden.idtype = IT::P;
+								countParms++;
+								if (countParms > 8) { // Max parameters, as per previous code
+									throw ERROR_THROW_IN(108, currentLine, pos);
+								}
+
+								// Determine parameter type based on previous type keyword
+								if (charTypeFlag) {
+									cur_iden.iddatatype = IT::CHAR;
+									charTypeFlag = false;
+								} else if (logicTypeFlag) {
+									cur_iden.iddatatype = IT::LOGIC;
+									logicTypeFlag = false;
+								} else if (unsignedKeywordFlag && integerKeywordFlag) { // "unsigned integer"
+									cur_iden.iddatatype = IT::UINT;
+									unsignedKeywordFlag = false;
+									integerKeywordFlag = false;
+								} else {
+									throw ERROR_THROW_IN(120, currentLine, pos); // Invalid type for parameter
+								}
+
+								indexIT = IT::search(idTable, cur_iden);
+								if (indexIT >= 0) {
+									throw ERROR_THROW_IN(105, currentLine, pos); // Duplicate identifier
+								}
+								lexResult.functions[cur_scope].push_back(cur_iden.iddatatype);
+								cur_lex.idxTI = idTable.size;
+								IT::Add(idTable, cur_iden);
+								pushToIT = true;
+							}
 						}
-						if (boolFlag) {
-							cur_iden.iddatatype = IT::BOOL;
-							boolFlag = false;
-						}
-						if (doubleFlag) {
-							cur_iden.iddatatype = IT::DOUBLE;
-							doubleFlag = false;
-						}
-						if (stringFlag) {
-							throw ERROR_THROW_IN(126, currentLine, 0);
-							cur_iden.iddatatype = IT::STR;
-							stringFlag = false;
-						}
-						indexIT = IT::search(idTable, cur_iden);
-						if (indexIT >= 0) {
-							throw ERROR_THROW_IN(107, currentLine, pos);
-						}
-						if(indexIT == -1){
-							lexResult.functions[cur_iden.id] = {};
+						// Variable declaration
+						else if (charTypeFlag || logicTypeFlag || (unsignedKeywordFlag && integerKeywordFlag)) {
+							cur_iden.idtype = IT::V;
+							if (charTypeFlag) {
+								cur_iden.iddatatype = IT::CHAR;
+								charTypeFlag = false;
+							} else if (logicTypeFlag) {
+								cur_iden.iddatatype = IT::LOGIC;
+								logicTypeFlag = false;
+							} else if (unsignedKeywordFlag && integerKeywordFlag) {
+								cur_iden.iddatatype = IT::UINT;
+								unsignedKeywordFlag = false;
+								integerKeywordFlag = false;
+							}
+
+							indexIT = IT::search(idTable, cur_iden);
+							if (indexIT >= 0) {
+								throw ERROR_THROW_IN(105, currentLine, pos); // Duplicate identifier
+							}
 							cur_lex.idxTI = idTable.size;
 							IT::Add(idTable, cur_iden);
 							pushToIT = true;
 						}
 					}
-					if (lexTable.table[lexTable.size - 2].lexema[0] == LEX_LEFTTHESIS && lexTable.table[lexTable.size - 3].lexema[0] == LEX_ID
-						&& lexTable.table[lexTable.size - 3].idxTI == idTable.size - 1 && idTable.table[idTable.size - 1].idtype == IT::F)
-					{
-						cur_iden.idtype = IT::P;
-						countParms++;
-						if (lexTable.table[lexTable.size - 1].lexema[0] == LEX_STRING && stringFlag) {
-							cur_iden.iddatatype = IT::STR;
-							std::strcpy(cur_iden.value.vstr->str, "");
-							stringFlag = false;
-						}
-						if (lexTable.table[lexTable.size - 1].lexema[0] == LEX_UINTEGER && uintFlag) {
-							cur_iden.iddatatype = IT::UINT;
-							std::strcpy(cur_iden.value.vstr->str, "");
-							uintFlag = false;
-						}
-						if (lexTable.table[lexTable.size - 1].lexema[0] == LEX_BOOL && boolFlag) {
-							cur_iden.iddatatype = IT::BOOL;
-							std::strcpy(cur_iden.value.vstr->str, "");
-							boolFlag = false;
-						}
-						if (lexTable.table[lexTable.size - 1].lexema[0] == LEX_DOUBLE && doubleFlag) {
-							cur_iden.iddatatype = IT::DOUBLE;
-							std::strcpy(cur_iden.value.vstr->str, "");
-							doubleFlag = false;
-						}
-						indexIT = IT::search(idTable, cur_iden);
-						if (indexIT >= 0) {
-							throw ERROR_THROW_IN(105, currentLine, pos);
-						}
-						lexResult.functions[cur_scope].push_back(cur_iden.iddatatype);
-						cur_lex.idxTI = idTable.size;
-						IT::Add(idTable, cur_iden);
-						pushToIT = true;
-						uintFlag = false;
-						boolFlag = false;
-						stringFlag = false;
-						doubleFlag = false;
-					}
-					if (lexTable.table[lexTable.size - 2].lexema[0] == LEX_COMMA && idTable.table[lexTable.table[lexTable.size - 3].idxTI].idtype == IT::P) {
-						cur_iden.idtype = IT::P;
-						countParms++;
-						if (countParms > 8) {
-							throw ERROR_THROW_IN(108, currentLine, pos);
-						}
-						if (lexTable.table[lexTable.size - 1].lexema[0] == LEX_STRING && stringFlag) {
-							cur_iden.iddatatype = IT::STR;
-							std::strcpy(cur_iden.value.vstr->str, "");
-							stringFlag = false;
-						}
-						if (lexTable.table[lexTable.size - 1].lexema[0] == LEX_UINTEGER && uintFlag) {
-							cur_iden.iddatatype = IT::UINT;
-							std::strcpy(cur_iden.value.vstr->str, "");
-							uintFlag = false;
-						}
-						if (lexTable.table[lexTable.size - 1].lexema[0] == LEX_BOOL && boolFlag) {
-							cur_iden.iddatatype = IT::BOOL;
-							std::strcpy(cur_iden.value.vstr->str, "");
-							boolFlag = false;
-						}
-						if (lexTable.table[lexTable.size - 1].lexema[0] == LEX_DOUBLE && doubleFlag) {
-							cur_iden.iddatatype = IT::DOUBLE;
-							std::strcpy(cur_iden.value.vstr->str, "");
-							doubleFlag = false;
-						}
-						indexIT = IT::search(idTable, cur_iden);
-						if (indexIT >= 0) {
-							throw ERROR_THROW_IN(105, currentLine, pos);
-						}
-						IT::Add(idTable, cur_iden);
-						lexResult.functions[cur_scope].push_back(cur_iden.iddatatype);
-						pushToIT = true;
-						uintFlag = false;
-						boolFlag = false;
-						stringFlag = false;
-						doubleFlag = false;
-					}
-					if (lexTable.table[lexTable.size - 1].lexema[0] == LEX_DOUBLE && doubleFlag) {
-						cur_iden.iddatatype = IT::DOUBLE;
-						std::strcpy(cur_iden.value.vstr->str, "");
-						indexIT = IT::search(idTable, cur_iden);
-						if (indexIT >= 0) {
-							throw ERROR_THROW_IN(105, currentLine, pos);
-						}
-						IT::Add(idTable, cur_iden);
-						pushToIT = true;
-						doubleFlag = false;
-					}
-					if (lexTable.table[lexTable.size - 1].lexema[0] == LEX_UINTEGER && uintFlag) {
-						cur_iden.iddatatype = IT::UINT;
-						std::strcpy(cur_iden.value.vstr->str, "");
-						indexIT = IT::search(idTable, cur_iden);
-						if (indexIT >= 0) {
-							throw ERROR_THROW_IN(105, currentLine, pos);
-						}
-						IT::Add(idTable, cur_iden);
-						pushToIT = true;
-						uintFlag = false;
-					}
-					if (lexTable.table[lexTable.size - 1].lexema[0] == LEX_BOOL && boolFlag) {
-						cur_iden.iddatatype = IT::BOOL;
-						std::strcpy(cur_iden.value.vstr->str, "");
-						indexIT = IT::search(idTable, cur_iden);
-						if (indexIT >= 0) {
-							throw ERROR_THROW_IN(105, currentLine, pos);
-						}
-						IT::Add(idTable, cur_iden);
-						pushToIT = true;
-						boolFlag = false;
-					}
-					if (lexTable.table[lexTable.size - 1].lexema[0] == LEX_STRING && stringFlag) {
-						cur_iden.iddatatype = IT::STR;
-						std::strcpy(cur_iden.value.vstr->str, "");
-						indexIT = IT::search(idTable, cur_iden);
-						if (indexIT >= 0) {
-							throw ERROR_THROW_IN(105, currentLine, pos);
-						}
-						IT::Add(idTable, cur_iden);
-						pushToIT = true;
-						stringFlag = false;
-					}
+
+					// If not a declaration, search for existing identifier
 					if (!pushToIT) {
 						indexIT = IT::search(idTable, cur_iden, scope);
 						if (indexIT < 0) {
-							throw ERROR_THROW_IN(106, currentLine, pos);
+							throw ERROR_THROW_IN(106, currentLine, pos); // Identifier not defined
 						}
 						cur_lex.idxTI = indexIT;
 					}
-                                        std::memset(cur_iden.id, 0, 15);
-					cur_iden.iddatatype = IT::UINT;
-                                        cur_iden.value.vint = 0.0;
+                    std::memset(cur_iden.id, 0, 15);
+					cur_iden.iddatatype = IT::UINT; // Reset to default
+                    cur_iden.value.vint = 0.0; // Reset
 					pushToIT = false;
 				}
-				if (cur_lex.lexema[0] == LEX_WHILE) {
-					if (lexTable.table[lexTable.size - 1].lexema[0] == TYPE) {
-						throw ERROR_THROW_IN(104, currentLine, pos);
-					}
+				
+				// Keywords (char, logic, unsigned, integer) that are *not* part of "unsigned integer" combination
+				else if (charTypeFlag && cur_lex.lexema[0] == LEX_ID) {
+					// This case should be handled by the declaration logic above.
+					// This branch might be redundant or indicate an issue if reached.
+					charTypeFlag = false;
+				}
+				else if (logicTypeFlag && cur_lex.lexema[0] == LEX_ID) {
+					logicTypeFlag = false;
+				}
+
+
+				if (cur_lex.lexema[0] == LEX_BECAUSE) {
 					prev_scope = cur_scope;
-					cur_scope = UNTIL + to_string(number_until++);
+					cur_scope = UNTIL_SCOPE + to_string(number_because++); // Using UNTIL_SCOPE string literal from LexA.h
 					scope[cur_scope] = prev_scope;
 				}
 				if (cur_lex.lexema[0] == LEX_IF) {
-					if (lexTable.table[lexTable.size - 1].lexema[0] == TYPE) {
-						throw ERROR_THROW_IN(104, currentLine, pos);
-					}
 					prev_scope = cur_scope;
-					cur_scope = IF + to_string(number_if++);
+					cur_scope = IF_SCOPE + to_string(number_if++); // Using IF_SCOPE string literal from LexA.h
 					scope[cur_scope] = prev_scope;
 				}
-				if (cur_lex.lexema[0] == LEX_ELSE) {
-					if (lexTable.table[lexTable.size - 1].lexema[0] == TYPE) {
-						throw ERROR_THROW_IN(104, currentLine, pos);
-					}
+				if (cur_lex.lexema[0] == LEX_DIFFER) {
 					prev_scope = cur_scope;
-					cur_scope = ELSE + to_string(number_else++);
+					cur_scope = ELSE_SCOPE + to_string(number_differ++); // Using ELSE_SCOPE string literal from LexA.h
 					scope[cur_scope] = prev_scope;
 				}
-				if (lexTable.table[lexTable.size - 1].lexema[0] == TYPE && cur_lex.lexema[0] != LEX_ID) {
-					throw ERROR_THROW_IN(104, currentLine, pos);
-				}
+				// if (lexTable.table[lexTable.size - 1].lexema[0] == TYPE && cur_lex.lexema[0] != LEX_ID) { // TYPE is removed
+				// 	throw ERROR_THROW_IN(104, currentLine, pos);
+				// }
 				if (in.text[i] != MARK) {
 					bufferIndex = 0;
-                                        std::memset(str, 0, bufferIndex + 1);
+                    std::memset(str, 0, bufferIndex + 1);
 				}
 			}
-                        if (cur_lex.lexema[0] != '\0')
+            if (cur_lex.lexema[0] != '\0') // Only add if a valid lexeme was found
 			{
 				cur_lex.sn = currentLine;
 				LT::Add(lexTable, cur_lex);
@@ -558,31 +516,42 @@ namespace LexA
 			{
 			case MARK:
 				litflag = true;
-				if (str[0] == MARK)
+				if (str[0] == MARK) // If the mark was the first character in str
 				{
+					// This block handles string literals like 'abc'
 					cur_lex.idxTI = idTable.size;
-					str[bufferIndex] = MARK;
+					str[bufferIndex] = MARK; // Add closing mark
 					bufferIndex++;
 					str[bufferIndex] = '\0';
 					litflag = false;
 					cur_lex.lexema[0] = LEX_LITERAL;
 					std::sprintf(cur_iden.id, "L%d", number_literal);
 					number_literal++;
-					cur_iden.iddatatype = IT::STR;
+					cur_iden.iddatatype = IT::CHAR; // LSA-2025 char literals are single char
 					cur_iden.idtype = IT::L;
 					cur_iden.idxfirstLE = currentLine;
-					for (int i = 0; i < strlen(str); i++)
-					{
-						cur_iden.value.vstr->str[i] = str[i];
+					// Ensure str length is 1 for char literal
+					if (strlen(str) != 3 || (strlen(str) == 3 && str[1] == '\\' && str[2] != 'n')) { // 'c' or '\n'
+						// Special handling for '\n'
+						if (strcmp(str, "'\\n'") != 0)
+							throw ERROR_THROW_IN(120, currentLine, pos); // Invalid char literal format
 					}
-					cur_iden.value.vstr->str[strlen(str)] = '\0';
-					cur_iden.value.vstr->len = strlen(cur_iden.value.vstr->str);
+
+					// Copy char literal content. For LSA-2025, it's a single char.
+					// The vstr structure might need adjustment for single char.
+					// For now, assume a single char.
+					// The value.vstr is a char array inside a union. It's used for strings,
+					// so a single char is effectively a string of length 1.
+					cur_iden.value.vstr->str[0] = str[1]; // Get the character itself (e.g. 'A' from "'A'")
+					cur_iden.value.vstr->str[1] = '\0';
+					cur_iden.value.vstr->len = 1;
+
 					cur_lex.sn = currentLine;
 					cur_iden.scope_name = cur_scope;
 					LT::Add(lexTable, cur_lex);
 					IT::Add(idTable, cur_iden);
 					bufferIndex = 0;
-                                        std::memset(str, 0, bufferIndex + 1);
+                    std::memset(str, 0, bufferIndex + 1);
 					cur_lex.lexema[0] = '\0';
 					break;
 				}
@@ -602,14 +571,14 @@ namespace LexA
 				cur_lex.lexema[0] = '\0';
 				if (lexTable.table[lexTable.size - 2].lexema[0] == LEX_BRACELET)
 				{
-					if (cur_scope.find(UNTIL) != -1) {
-						whileflag = false;
+					if (cur_scope.find(UNTIL_SCOPE) != -1) { // Renamed
+						whileflag = false; // Flag for 'because' loop
 					}
-					else if (cur_scope.find(IF) != -1) {
+					else if (cur_scope.find(IF_SCOPE) != -1) { // Renamed
 						ifflag = false;
 					}
-					else if (cur_scope.find(ELSE) != -1) {
-						elseflag = false;
+					else if (cur_scope.find(ELSE_SCOPE) != -1) { // Renamed for 'differ'
+						differflag = false; // Flag for 'differ'
 					}
 					else {
 						declareFunc = false;
@@ -652,17 +621,18 @@ namespace LexA
 				cur_lex.sn = currentLine;
 				LT::Add(lexTable, cur_lex);
 				cur_lex.lexema[0] = '\0';
-				if (whileflag || ifflag) {
+				if (whileflag || ifflag) { // Flags for 'because' or 'if'
+					// Keep behavior for now, might need refinement
 					continue;
 				}
 				else if (declareFunc)
 				{
 					parmFlag = true;
-					for (int i = idTable.size - 1; i >= 0; i--) {
-						if (idTable.table[i].idtype == IT::F) {
-							scope[idTable.table[i].id] = cur_scope;
+					for (int i_it = idTable.size - 1; i_it >= 0; i_it--) {
+						if (idTable.table[i_it].idtype == IT::F) {
+							scope[idTable.table[i_it].id] = cur_scope;
 							prev_scope = cur_scope;
-							cur_scope = idTable.table[i].id;
+							cur_scope = idTable.table[i_it].id;
 							countParms = 0;
 							break;
 						}
@@ -677,13 +647,24 @@ namespace LexA
 				parmFlag = false;
 				break;
 			case LEX_PLUS:
-				cur_lex.lexema[0] = LEX_PLUS;
+				if (in.text[i + 1] == LEX_PLUS) { // ++ operator
+					cur_lex.lexema[0] = LEX_INCREMENT;
+					i++;
+				} else {
+					cur_lex.lexema[0] = LEX_PLUS;
+				}
 				cur_lex.sn = currentLine;
 				LT::Add(lexTable, cur_lex);
 				cur_lex.lexema[0] = '\0';
 				break;
 			case LEX_MINUS:
-				cur_lex.lexema[0] = LEX_MINUS;
+				if (in.text[i + 1] == LEX_MINUS) { // -- operator
+					cur_lex.lexema[0] = LEX_DECREMENT;
+					i++;
+				} else {
+					cur_lex.lexema[0] = LEX_MINUS;
+				}
+				cur_lex.sn = currentLine;
 				LT::Add(lexTable, cur_lex);
 				cur_lex.lexema[0] = '\0';
 				break;
@@ -693,80 +674,58 @@ namespace LexA
 				LT::Add(lexTable, cur_lex);
 				cur_lex.lexema[0] = '\0';
 				break;
-			case LEX_DIRSLASH:
-				cur_lex.lexema[0] = LEX_DIRSLASH;
+			case LEX_COLON: // New division operator
+				cur_lex.lexema[0] = LEX_COLON;
 				cur_lex.sn = currentLine;
 				LT::Add(lexTable, cur_lex);
 				cur_lex.lexema[0] = '\0';
 				break;
 			case LEX_EQUAL:
-				if (in.text[i + 1] == LEX_EQUAL && in.text[i - 1] != LEX_EQUAL) {
+				if (in.text[i + 1] == LEX_EQUAL) { // == operator
 					cur_lex.lexema[0] = LEX_ISEQUAL;
 					i++;
-					cur_lex.sn = currentLine;
-					LT::Add(lexTable, cur_lex);
-					cur_lex.lexema[0] = '\0';
-					break;
-				}
-				if (in.text[i - 1] != LEX_EQUAL && in.text[i + 1] != LEX_EQUAL) {
-					cur_lex.lexema[0] = LEX_EQUAL;
-					// if (lexTable.table[lexTable.size - 1].lexema[0] != LEX_ID) {
-					// 	throw ERROR_THROW_IN(602, currentLine, pos);
-					// }
-					cur_lex.sn = currentLine;
-					LT::Add(lexTable, cur_lex);
-					cur_lex.lexema[0] = '\0';
-					break;
-				}
-				else {
-					throw ERROR_THROW_IN(601, currentLine, pos);
-				}
-			case LEX_NOT:
-				if (in.text[i + 1] == LEX_EQUAL) {
-					cur_lex.lexema[0] = LEX_NOT_EQUAL;
-					i++;
-				}
-				else {
-					throw ERROR_THROW_IN(601, currentLine, pos);
+				} else {
+					cur_lex.lexema[0] = LEX_EQUAL; // Assignment operator
 				}
 				cur_lex.sn = currentLine;
 				LT::Add(lexTable, cur_lex);
 				cur_lex.lexema[0] = '\0';
 				break;
 			case LEX_MORE:
-				cur_lex.lexema[0] = LEX_MORE;
-				if (in.text[i + 1] == EQUAL) {
+				if (in.text[i + 1] == LEX_EQUAL) { // >= operator
 					cur_lex.lexema[0] = LEX_MORE_OR_EQUAL;
 					i++;
+				} else {
+					cur_lex.lexema[0] = LEX_MORE;
 				}
 				cur_lex.sn = currentLine;
 				LT::Add(lexTable, cur_lex);
 				cur_lex.lexema[0] = '\0';
 				break;
 			case LEX_LESS:
-				cur_lex.lexema[0] = LEX_LESS;
-				if (in.text[i + 1] == EQUAL) {
+				if (in.text[i + 1] == LEX_EQUAL) { // <= operator
 					cur_lex.lexema[0] = LEX_LESS_OR_EQUAL;
 					i++;
+				} else {
+					cur_lex.lexema[0] = LEX_LESS;
 				}
 				cur_lex.sn = currentLine;
 				LT::Add(lexTable, cur_lex);
 				cur_lex.lexema[0] = '\0';
 				break;
-			case LEX_OST:
-				cur_lex.lexema[0] = LEX_OST;
+			case LEX_BITNOT: // ~ operator
+				cur_lex.lexema[0] = LEX_BITNOT;
 				cur_lex.sn = currentLine;
 				LT::Add(lexTable, cur_lex);
 				cur_lex.lexema[0] = '\0';
 				break;
-			case LEX_AND:
-				cur_lex.lexema[0] = LEX_AND;
-				cur_lex.sn = currentLine;
-				LT::Add(lexTable, cur_lex);
-				cur_lex.lexema[0] = '\0';
-				break;
-			case LEX_OR:
-				cur_lex.lexema[0] = LEX_OR;
+			case '!': // Only for != (not equal)
+				if (in.text[i + 1] == LEX_EQUAL) {
+					cur_lex.lexema[0] = LEX_NOT_EQUAL;
+					i++;
+				} else {
+					throw ERROR_THROW_IN(601, currentLine, pos); // Invalid operator '!'
+				}
 				cur_lex.sn = currentLine;
 				LT::Add(lexTable, cur_lex);
 				cur_lex.lexema[0] = '\0';
@@ -800,14 +759,13 @@ namespace LexA
 		for (int i = 0; i < idTable.size; i++) {
 			cur_iden = IT::GetEntry(idTable, i);
 			IT_file << std::setw(10) << cur_iden.id;
-			if (cur_iden.iddatatype == 1)
+			if (cur_iden.iddatatype == IT::UINT)
 				IT_file << std::setw(20) << "UINT";
-			if (cur_iden.iddatatype == 2)
-				IT_file << std::setw(20) << "STR";
-			if (cur_iden.iddatatype == 3)
-				IT_file << std::setw(20) << "BOOL";
-			if (cur_iden.iddatatype == 4)
-				IT_file << std::setw(20) << "DOUBLE";
+			if (cur_iden.iddatatype == IT::CHAR) // Changed
+				IT_file << std::setw(20) << "CHAR"; // Changed
+			if (cur_iden.iddatatype == IT::LOGIC) // Changed
+				IT_file << std::setw(20) << "LOGIC"; // Changed
+			
 			if (cur_iden.idtype == IT::V)
 				IT_file << std::setw(20) << "V";
 			if (cur_iden.idtype == IT::L)
@@ -818,16 +776,16 @@ namespace LexA
 				IT_file << std::setw(20) << "P";
 			IT_file << std::setw(20) << cur_iden.idxfirstLE;
 
-			if ((cur_iden.iddatatype == IT::UINT || cur_iden.iddatatype == IT::DOUBLE || cur_iden.iddatatype == IT::BOOL) && cur_iden.idtype == IT::L) {
+			if ((cur_iden.iddatatype == IT::UINT || cur_iden.iddatatype == IT::LOGIC) && cur_iden.idtype == IT::L) { // Changed
 				IT_file << std::setw(20) << cur_iden.value.vint;
 			}
-			if ((cur_iden.iddatatype == IT::UINT || cur_iden.iddatatype == IT::DOUBLE || cur_iden.iddatatype == IT::BOOL || cur_iden.iddatatype == IT::STR) && cur_iden.idtype != IT::L) {
+			if ((cur_iden.iddatatype == IT::UINT || cur_iden.iddatatype == IT::LOGIC || cur_iden.iddatatype == IT::CHAR) && cur_iden.idtype != IT::L) { // Changed
 				IT_file << std::setw(20) << ' ';
 			}
-			if (cur_iden.iddatatype == IT::STR && cur_iden.idtype == IT::L) {
+			if (cur_iden.iddatatype == IT::CHAR && cur_iden.idtype == IT::L) { // Changed
 				IT_file << std::setw(16);
 				for (int j = 0; j < strlen(cur_iden.value.vstr->str); j++) {
-					IT_file << cur_iden.value.vstr->str[j];
+					IT_file << cur_iden.value.vstr->str[j]);
 				}
 				IT_file << std::setw(20);
 			}
@@ -841,4 +799,5 @@ namespace LexA
 		lexResult.lexTable = lexTable;
 		return lexResult;
 	}
+
 }

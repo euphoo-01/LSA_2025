@@ -9,7 +9,7 @@
 #define TI_STR_MAXSIZE 255 
 
 namespace IT { // таблица идентификаторов
-	enum IDDATATYPE { UINT = 1, STR = 2, BOOL = 3, DOUBLE = 4}; // тип данных идентификаторов
+	enum IDDATATYPE { UINT = 1, CHAR = 2, LOGIC = 3}; // тип данных идентификаторов
 	enum IDTYPE { V = 1, F = 2, P = 3, L = 4 }; // тип идентификаторов: переменная, функция, параметр, литерал
 	struct Entry
 	{
