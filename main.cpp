@@ -2,7 +2,7 @@
 #include "stdafx.h"
 #include <locale>
 #include <cwchar>
-#include "Headers/asmGenerator.h"
+// #include "Headers/asmGenerator.h"
 using namespace std;
 int main(int argc, char* argv[]) {
     wchar_t* wargv[argc];
@@ -31,6 +31,8 @@ int main(int argc, char* argv[]) {
         MFST_TRACE_START(st);
         MFST::Mfst mfst(LeX.lexTable, GRB::getGreibach());
         mfst.start(st);
+        st.flush(); 
+        st.close();
 
         mfst.savededucation();
 

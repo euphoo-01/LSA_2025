@@ -22,12 +22,9 @@ add_executable(LSA_2025
         Sources/IT.cpp
         Sources/LexA.cpp
         Sources/LT.cpp
-        Sources/SemA.cpp
-        Sources/RPN.cpp
         Sources/Log.cpp
         Sources/FST.cpp
         Sources/GRB.cpp
-        Sources/asmGenerator.cpp
 )
 
 target_sources(LSA_2025 PRIVATE
@@ -39,11 +36,8 @@ target_sources(LSA_2025 PRIVATE
         Headers/IT.h
         Headers/LexA.h
         Headers/LT.h
-        Headers/SemA.h
         Headers/Rules.h
-        Headers/RPN.h
         Headers/Log.h
         Headers/FST.h
         Headers/GRB.h
-        Headers/asmGenerator.h
 )

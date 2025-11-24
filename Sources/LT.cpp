@@ -1,7 +1,11 @@
 #include <iostream>
 #include "../stdafx.h"
 #include "../Headers/LT.h"
+#include <fstream>
+using namespace std;
 
+#include <fstream>
+using namespace std;
 namespace LT {
 
     LexTable Create(int size) {
@@ -21,6 +25,9 @@ namespace LT {
         }
         lextable.table[lextable.size] = entry;
         lextable.size++;
+        ofstream log_lt("cmake-build-debug/LT_ADD_LOG.txt", ios::app);
+        log_lt << "Added lexeme: '" << entry.lexema[0] << "' at line " << entry.sn << endl;
+        log_lt.close();
     }
 
     Entry GetEntry(LexTable& lextable, int n) {

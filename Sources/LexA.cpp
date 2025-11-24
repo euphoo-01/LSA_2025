@@ -551,24 +551,6 @@ namespace LexA
 				cur_lex.sn = currentLine;
 				LT::Add(lexTable, cur_lex);
 				cur_lex.lexema[0] = '\0';
-				if (lexTable.table[lexTable.size - 2].lexema[0] == LEX_BRACELET)
-				{
-					if (cur_scope.find(UNTIL_SCOPE) != -1) { // Renamed
-						whileflag = false; // Flag for 'because' loop
-					}
-					else if (cur_scope.find(IF_SCOPE) != -1) { // Renamed
-						ifflag = false;
-					}
-					else if (cur_scope.find(ELSE_SCOPE) != -1) { // Renamed for 'differ'
-						differflag = false; // Flag for 'differ'
-					}
-					else {
-						declareFunc = false;
-						callFunc = false;
-					}
-					cur_scope = prev_scope;
-					prev_scope = scope[cur_scope];
-				}
 				break;
 			case LEX_COMMA:
 				cur_lex.lexema[0] = LEX_COMMA;
@@ -594,6 +576,23 @@ namespace LexA
 				cur_lex.sn = currentLine;
 				LT::Add(lexTable, cur_lex);
 				cur_lex.lexema[0] = '\0';
+
+                // Scope-ending logic
+                if (cur_scope.find(UNTIL_SCOPE) != -1) { // "because"
+                    whileflag = false;
+                }
+                else if (cur_scope.find(IF_SCOPE) != -1) { // "if"
+                    ifflag = false;
+                }
+                else if (cur_scope.find(ELSE_SCOPE) != -1) { // "differ"
+                    differflag = false;
+                }
+                else { // End of function or main
+                    declareFunc = false;
+                    callFunc = false;
+                }
+                cur_scope = prev_scope;
+                prev_scope = scope[cur_scope];
 				break;
 			case LEX_LEFTTHESIS:
 				cur_lex.lexema[0] = LEX_LEFTTHESIS;

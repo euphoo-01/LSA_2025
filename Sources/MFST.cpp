@@ -54,6 +54,7 @@ namespace MFST {
     }
 
     Mfst::RC_STEP Mfst::step(std::ofstream& wr) {
+        wr.flush();
         RC_STEP rc = SURPRISE;
         if (lenta_position < lenta_size) {
             if (GRB::Rule::Chain::isN(st.top())) {
@@ -126,6 +127,7 @@ namespace MFST {
     };
 
     bool Mfst::start(std::ofstream& wr) {
+		wr.flush();
         bool rc = false;
         RC_STEP rc_step = SURPRISE;
         char buf[MFST_DIAGN_MAXSIZE]{};
