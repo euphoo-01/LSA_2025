@@ -16,8 +16,8 @@ namespace LexA
 	bool whileflag = false; // Для because
 	bool ifflag = false;
 	bool differflag = false; // Для differ
-	bool unsignedKeywordFlag = false; // Для "unsigned"
-	bool integerKeywordFlag = false; // Для "integer"
+	// bool unsignedKeywordFlag = false; // Для "unsigned"
+	// bool integerKeywordFlag = false; // Для "integer"
 	bool charTypeFlag = false; // Для "char" type
 	bool logicTypeFlag = false; // Для "logic" type
 	bool parmFlag = false;
@@ -55,12 +55,10 @@ namespace LexA
 		FST_IDEN
 
 		if (FST::execute(_unsigned)) {
-			unsignedKeywordFlag = true;
-			return '\0';
+			return LEX_UNSIGNED;
 		}
 		if (FST::execute(_integer)) {
-			integerKeywordFlag = true;
-			return '\0';
+			return LEX_INTEGER;
 		}
 		if (FST::execute(_char_type_keyword)) {
 			charTypeFlag = true;
@@ -160,26 +158,6 @@ namespace LexA
 					cur_lex.lexema[0] = '\0';
 				}
 
-				// Special handling for "unsigned integer"
-				if (unsignedKeywordFlag) {
-					if (integerKeywordFlag) {
-						cur_lex.lexema[0] = LEX_UINT_TYPE;
-						unsignedKeywordFlag = false;
-						integerKeywordFlag = false;
-					} else { // "unsigned" was detected, but "integer" was not the next keyword
-						// This indicates an error or "unsigned" used alone, which is invalid
-						// For now, treat as invalid keyword sequence, FST already returned '\0'
-						// If FST returned '\0', cur_lex.lexema[0] is already '\0' so it will be ignored later.
-						// The unsignedKeywordFlag should be reset immediately if not followed by 'integer'.
-						// Re-lex 'unsigned' as an identifier or throw an error.
-						// For now, assume a correct 'unsigned integer' sequence or it's an error handled later
-						unsignedKeywordFlag = false; // Reset flag
-					}
-				} else if (integerKeywordFlag) { // 'integer' was found without 'unsigned' before it.
-					// Also an error, 'integer' is not a standalone type keyword.
-					integerKeywordFlag = false; // Reset flag
-				}
-				
 				// Handle single-character tokens (if bufferIndex was 0)
 				// The FST() result takes precedence if bufferIndex > 0.
 				// If bufferIndex was 0, it means we are dealing with a separator or operator.
@@ -359,18 +337,15 @@ namespace LexA
 							declareFunc = true;
 
 							// Determine function return type based on previous type keyword
-							if (charTypeFlag) {
+							// The previous lexeme must be a type token
+							char typeLex = lexTable.table[lexTable.size - 1].lexema[0];
+							if (typeLex == LEX_CHAR_TYPE) {
 								cur_iden.iddatatype = IT::CHAR;
-								charTypeFlag = false;
-							} else if (logicTypeFlag) {
+							} else if (typeLex == LEX_LOGIC_TYPE) {
 								cur_iden.iddatatype = IT::LOGIC;
-								logicTypeFlag = false;
-							} else if (unsignedKeywordFlag && integerKeywordFlag) { // "unsigned integer"
+							} else if (typeLex == LEX_UINT_TYPE) {
 								cur_iden.iddatatype = IT::UINT;
-								unsignedKeywordFlag = false;
-								integerKeywordFlag = false;
 							} else {
-								// Default to UINT or throw error if func declaration type is missing/invalid
 								throw ERROR_THROW_IN(120, currentLine, pos); // Invalid type for function
 							}
 
@@ -389,27 +364,29 @@ namespace LexA
 						else if (prevLex == LEX_LEFTTHESIS || prevLex == LEX_COMMA) {
 							// Look further back to see if it's a function parameter
 							bool is_param = false;
-							if (lexTable.size >= 2 && idTable.table[lexTable.table[lexTable.size - (prevLex == LEX_LEFTTHESIS ? 2 : 3)].idxTI].idtype == IT::F) {
-								is_param = true;
+							// Find the type lexeme, it's either just before LEX_ID or LEX_COMMA (for subsequent params)
+							char typeLex = '\0';
+							if (prevLex == LEX_LEFTTHESIS) { // First parameter, type is before '('
+								if (lexTable.size >= 2) typeLex = lexTable.table[lexTable.size - 2].lexema[0];
+							} else { // Subsequent parameters, type is before ','
+								if (lexTable.size >= 2) typeLex = lexTable.table[lexTable.size - 2].lexema[0];
 							}
-							if (is_param && declareFunc) { // Only if currently declaring a function
+
+							// Check if the parameter's parent is a function declaration
+							if (declareFunc) {
 								cur_iden.idtype = IT::P;
 								countParms++;
 								if (countParms > 8) { // Max parameters, as per previous code
 									throw ERROR_THROW_IN(108, currentLine, pos);
 								}
 
-								// Determine parameter type based on previous type keyword
-								if (charTypeFlag) {
+								// Determine parameter type based on the type lexeme
+								if (typeLex == LEX_CHAR_TYPE) {
 									cur_iden.iddatatype = IT::CHAR;
-									charTypeFlag = false;
-								} else if (logicTypeFlag) {
+								} else if (typeLex == LEX_LOGIC_TYPE) {
 									cur_iden.iddatatype = IT::LOGIC;
-									logicTypeFlag = false;
-								} else if (unsignedKeywordFlag && integerKeywordFlag) { // "unsigned integer"
+								} else if (typeLex == LEX_UINT_TYPE) {
 									cur_iden.iddatatype = IT::UINT;
-									unsignedKeywordFlag = false;
-									integerKeywordFlag = false;
 								} else {
 									throw ERROR_THROW_IN(120, currentLine, pos); // Invalid type for parameter
 								}
@@ -425,18 +402,14 @@ namespace LexA
 							}
 						}
 						// Variable declaration
-						else if (charTypeFlag || logicTypeFlag || (unsignedKeywordFlag && integerKeywordFlag)) {
+						else if (prevLex == LEX_CHAR_TYPE || prevLex == LEX_LOGIC_TYPE || prevLex == LEX_UINT_TYPE) { // Check prevLex directly
 							cur_iden.idtype = IT::V;
-							if (charTypeFlag) {
+							if (prevLex == LEX_CHAR_TYPE) {
 								cur_iden.iddatatype = IT::CHAR;
-								charTypeFlag = false;
-							} else if (logicTypeFlag) {
+							} else if (prevLex == LEX_LOGIC_TYPE) {
 								cur_iden.iddatatype = IT::LOGIC;
-								logicTypeFlag = false;
-							} else if (unsignedKeywordFlag && integerKeywordFlag) {
+							} else if (prevLex == LEX_UINT_TYPE) {
 								cur_iden.iddatatype = IT::UINT;
-								unsignedKeywordFlag = false;
-								integerKeywordFlag = false;
 							}
 
 							indexIT = IT::search(idTable, cur_iden);
@@ -464,15 +437,15 @@ namespace LexA
 				}
 				
 				// Keywords (char, logic, unsigned, integer) that are *not* part of "unsigned integer" combination
+				// These checks are no longer needed as the flags have been removed.
+				/*
 				else if (charTypeFlag && cur_lex.lexema[0] == LEX_ID) {
-					// This case should be handled by the declaration logic above.
-					// This branch might be redundant or indicate an issue if reached.
 					charTypeFlag = false;
 				}
 				else if (logicTypeFlag && cur_lex.lexema[0] == LEX_ID) {
 					logicTypeFlag = false;
 				}
-
+				*/
 
 				if (cur_lex.lexema[0] == LEX_BECAUSE) {
 					prev_scope = cur_scope;
@@ -499,6 +472,15 @@ namespace LexA
 			}
             if (cur_lex.lexema[0] != '\0') // Only add if a valid lexeme was found
 			{
+				// New logic here:
+				if (cur_lex.lexema[0] == LEX_INTEGER && lexTable.size > 0 && lexTable.table[lexTable.size - 1].lexema[0] == LEX_UNSIGNED) {
+					// Found "unsigned" then "integer". Combine them.
+					lexTable.size--; // Pop LEX_UNSIGNED from table
+					cur_lex.lexema[0] = LEX_UINT_TYPE; // Change current lexeme to LEX_UINT_TYPE
+					// The new cur_lex (LEX_UINT_TYPE) will be added below.
+				}
+				// End new logic
+
 				cur_lex.sn = currentLine;
 				LT::Add(lexTable, cur_lex);
 				cur_lex.lexema[0] = '\0';
@@ -785,7 +767,7 @@ namespace LexA
 			if (cur_iden.iddatatype == IT::CHAR && cur_iden.idtype == IT::L) { // Changed
 				IT_file << std::setw(16);
 				for (int j = 0; j < strlen(cur_iden.value.vstr->str); j++) {
-					IT_file << cur_iden.value.vstr->str[j]);
+					IT_file << cur_iden.value.vstr->str[j];
 				}
 				IT_file << std::setw(20);
 			}

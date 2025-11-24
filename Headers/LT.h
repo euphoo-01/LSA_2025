@@ -9,6 +9,8 @@
 #define LEX_LOGIC_TYPE 'G' // лексема для logic
 
 // Ключевые слова LSA-2025
+#define LEX_UNSIGNED 'u'
+#define LEX_INTEGER 'n'
 #define LEX_ID 'i' // лексема для идентификатора
 #define LEX_MAIN 'm' // лексема для main
 #define LEX_LITERAL 'l' // лексема для литерала
