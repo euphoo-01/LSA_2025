@@ -591,9 +591,6 @@ namespace LexA
 				break;
 			case LEX_BRACELET:
 				cur_lex.lexema[0] = LEX_BRACELET;
-				if (in.text[i + 1] != ';') {
-					throw ERROR_THROW_IN(601, currentLine, 0);
-				}
 				cur_lex.sn = currentLine;
 				LT::Add(lexTable, cur_lex);
 				cur_lex.lexema[0] = '\0';
