@@ -2,7 +2,7 @@
 #include "GRB.h"
 #include "Error.h"
 #include "LT.h"
-#include "LexA.h"
+#include "Lex.h"
 #define NS(n) GRB::Rule::Chain::N(n)
 #define TS(n) GRB::Rule::Chain::T(n)
 #define ISNS(n)	GRB::Rule::Chain::isN(n)

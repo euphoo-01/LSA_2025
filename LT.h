@@ -2,18 +2,17 @@
 #define LEXEMA_FIXSIZE 1 // фиксированный размер лексемы
 #define LT_MAXSIZE 4096 // максимальное число строк в таблице лексем
 #define LT_TI_NULLIDX -1 // нет элемента таблицы идентификаторов
-#define LEX_UINTEGER 't' // лексема для integer
-#define LEX_STRING 't' // лексема для string
-#define LEX_BOOL 't'
-#define LEX_DOUBLE 't'
+#define LEX_UNSIGNED 'u'
+#define LEX_INTEGER 't'
+#define LEX_CHAR 't' // лексема для char
+#define LEX_LOGIC 't' // лексема для logic
 #define LEX_ID 'i' // лексема для идентификатора
 #define LEX_MAIN 'm' // лексема для main
 #define LEX_LITERAL 'l' // лексема для литерала
-#define LEX_FUNCTION 'f' // лексема для function
-#define LEX_RETURN 'r' // лексема для return
-#define LEX_PRINT 'p' // лексема для print
-#define LEX_PRINTLN 'x'
-#define LEX_READ 'h'
+#define LEX_FUNC 'f' // лексема для function
+#define LEX_SEND 's' // лексема для send
+#define LEX_WRITECH 'w' // лексема для writech
+#define LEX_READCH 'r' // лексема для readch
 #define LEX_SEMICOLON ';' // лексема для ;
 #define LEX_COMMA ',' // лексема для ,
 #define LEX_LEFTBRACE '{' // лексема для {
@@ -22,24 +21,25 @@
 #define LEX_RIGHTTHESIS ')' // лексема для )
 #define LEX_PLUS '+' // лексема для +
 #define LEX_MINUS '-' // лексема для -
+#define LEX_INC 'I' // лексема для ++
+#define LEX_DEC 'D' // лексема для --
 #define LEX_STAR '*' // лексема для *
-#define LEX_DIRSLASH '/' // лексема для /
+#define LEX_COLON ':' // лексема для /
 #define LEX_EQUAL '=' // лексема для =
 #define LEX_ISEQUAL 'c' // лексема для ==
-#define LEX_MORE '>'
-#define LEX_LESS '<'
-#define LEX_NOT '!'
-#define LEX_OST '%'
-#define LEX_NOT_EQUAL 'n'
-#define LEX_MORE_OR_EQUAL 'e'
-#define LEX_LESS_OR_EQUAL 'o'
+#define LEX_MORE '>' // лексема для >
+#define LEX_LESS '<' // лексема для <
+#define LEX_BIT_NOT '~' // лексема для ~
+#define LEX_NOT '!' // лексема для !
+#define LEX_OST '%' // лексема для %
+#define LEX_NOT_EQUAL 'n' // лексема для !=
+#define LEX_MORE_OR_EQUAL 'e' // лексема для >=
+#define LEX_LESS_OR_EQUAL 'v' // лексема для <=
 #define LEX_IF 'y' // лексема для if
-#define LEX_ELSE 'd'
-#define LEX_WHILE 'w' // лексема для while
+#define LEX_DIFFER 'd' // лексема для differ
+#define LEX_BECAUSE 'b' // лексема для because
 #define LEX_LEN 'a'
-#define LEX_COMP 'b'
-#define LEX_AND '&'
-#define LEX_OR '|'
+#define LEX_COMP 'g'
 
 namespace LT { // таблица лексем
 	struct Entry { // строка таблицы лексем

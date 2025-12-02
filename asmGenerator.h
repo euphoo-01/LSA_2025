@@ -1,5 +1,5 @@
 #pragma once
-#include "LexA.h"
+#include "Lex.h"
 
 #define HEAD ".586\n.MODEL FLAT, stdcall\nincludelib kernel32.lib\nincludelib user32.lib\nincludelib libucrt.lib\nincludelib msvcrtd.lib\nincludelib \"..\\Debug\\MyLib.lib\""
 
@@ -12,5 +12,5 @@
 
 namespace ASMGenerator
 {
-	void asmGenerator(LexA::LEX lext, wchar_t outfile[]);
+	void asmGenerator(Lex::LEX lext, wchar_t outfile[]);
 }

@@ -7,10 +7,10 @@
 #define PARM_LOG_DEFAULT_EXT L".log" //расширение файла журнала по умолчанию
 
 namespace Parm {
-	struct PARm { // входные параметры
+	struct Parm { // входные параметры
 		wchar_t in[PARM_MAX_SIZE]; // имя файла исходного кода
 		wchar_t out[PARM_MAX_SIZE]; // имя файла объектного кода
 		wchar_t log[PARM_MAX_SIZE]; // имя log файла
 	};
-	PARm getparm(int argc, wchar_t* argv[]); // функция для получения параметров
+	Parm getParm(int argc, wchar_t* argv[]); // функция для получения параметров
 }

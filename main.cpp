@@ -11,13 +11,13 @@
 #include "Log.h"
 #include "Out.h"
 #include "In.h"
-#include "LexA.h"
-#include "MFST.h"
-#include "GRB.h"
-#include "SemA.h"
-#include "RPN.h"
+#include "Lex.h"
+// #include "MFST.h"
+// #include "GRB.h"
+// #include "SemA.h"
+// #include "RPN.h"
 #include "LT.h"
-#include "asmGenerator.h"
+// #include "asmGenerator.h"
 
 using namespace std;
 
@@ -36,38 +36,38 @@ int main(int argc, char* argv[]) {
 		argv_w[i] = argv_w_data[i].data();
 	}
 
-	Parm::PARm parm;
+	Parm::Parm parm;
 	Log::LOG log;
-	Out::OUt out;
+	Out::OUT out;
 	try
 	{
-		parm = Parm::getparm(argc, argv_w.data()); // Pass converted args
+		parm = Parm::getParm(argc, argv_w.data());
 		log = Log::INITLOG;
 		out = Out::INITOUT;
 		out = Out::getout(parm.out);
 		log = Log::getlog(parm.log);
-		In::iN in_result = In::getin(parm.in);
+		In::IN in_result = In::getin(parm.in);
 		Log::WriteLog(log);
 		Log::WriteParm(log, parm);
 		//Out::WriteOut(in_result, out.outfile);
 		Log::WriteIn(log, in_result);
-		LexA::LEX LeX = LexA::LexA(parm, in_result);
-		ofstream st("ST.txt");
-		MFST_TRACE_START(st);
-		MFST::Mfst mfst(LeX.lexTable, GRB::getGreibach());
-		mfst.start(st);
+		Lex::LEX LeX = Lex::LexA(parm, in_result);
+		// ofstream st("ST.txt");
+		// MFST_TRACE_START(st);
+		// MFST::Mfst mfst(LeX.lexTable, GRB::getGreibach());
+		// mfst.start(st);
 
-		mfst.savededucation();
+		// mfst.savededucation();
 
-		mfst.printrules(st);
-		SemA::checkSemantic(LeX.lexTable, LeX.idTable, LeX.functions);
-		RPN::searchNextPosForCheck(LeX.lexTable, LeX.idTable);
-		LT::WriteInFile(LeX.lexTable);
-		ASMGenerator::asmGenerator(LeX, parm.out);
+		// mfst.printrules(st);
+		// SemA::checkSemantic(LeX.lexTable, LeX.idTable, LeX.functions);
+		// RPN::searchNextPosForCheck(LeX.lexTable, LeX.idTable);
+		// LT::WriteInFile(LeX.lexTable);
+		// ASMGenerator::asmGenerator(LeX, parm.out);
 		Log::Close(log);
 		Out::Close(out);
 	}
-	catch (Error::ERROr e)
+	catch (Error::ERROR e)
 	{
 		cout << "Ошибка " << e.id << ':' << e.message << "\n\n";
 		if (e.inext.line != -1 && e.inext.col != -1) {

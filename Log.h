@@ -16,8 +16,8 @@ namespace Log { // работа с протоколом
 	void WriteLine(LOG log, char* c, ...); // запись строки в протокол
 	void WriteLine(LOG log, wchar_t* c, ...); // запись строки в протокол
 	void WriteLog(LOG log); // запись заголовка в протокол
-	void WriteParm(LOG log, Parm::PARm parm); // запись информации о входных параметрах
-	void WriteIn(LOG log, In::iN in); // запись о содержании файла
-	void WriteError(LOG log, Error::ERROr error); // вывод информации об ошибке
+	void WriteParm(LOG log, Parm::Parm parm); // запись информации о входных параметрах
+	void WriteIn(LOG log, In::IN in); // запись о содержании файла
+	void WriteError(LOG log, Error::ERROR error); // вывод информации об ошибке
 	void Close(LOG log); // закрытие потока для записи
 }

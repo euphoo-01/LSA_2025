@@ -9,7 +9,7 @@
 #define UNTILI "while"
 
 namespace ASMGenerator {
-	void asmGenerator(LexA::LEX lex, wchar_t outfile[]) {
+	void asmGenerator(Lex::LEX lex, wchar_t outfile[]) {
 		char narrow_outfile[300];
 		wcstombs(narrow_outfile, outfile, 300);
 		ofstream asmout(narrow_outfile);

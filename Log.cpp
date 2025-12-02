@@ -49,7 +49,7 @@ namespace Log {
 		strftime(buf, 50, "%Y.%m.%d %H:%M:%S", &local_tm_struct); // преобразуем дату и время в строку по заданному формату
 		*log.stream << "---- Протокол ---- " << buf << " ----------" << '\n';
 	}
-	void WriteParm(LOG log, Parm::PARm parm) { // функция для вывода информации о выходных параметрах
+	void WriteParm(LOG log, Parm::Parm parm) { // функция для вывода информации о выходных параметрах
 		*log.stream << "---- Параметры ----" << '\n';
 		char buf[PARM_MAX_SIZE]; // буферная переменная
 		wcstombs(buf, parm.log, PARM_MAX_SIZE);  // преобразование wchar_t* в char*
@@ -59,13 +59,13 @@ namespace Log {
 		wcstombs(buf, parm.in, PARM_MAX_SIZE); // преобразование wchar_t* в char*
 		*log.stream << "-in: " << buf << '\n'; // записываем про in
 	}
-	void WriteIn(LOG log, In::iN in) { // вывод информации о тексте в файле
+	void WriteIn(LOG log, In::IN in) { // вывод информации о тексте в файле
 		*log.stream << "---- Исходные данные ----" << '\n';
 		*log.stream << "Количество символов: " << in.size << '\n';
 		*log.stream << "Проигнорировано    :" << in.ignore << '\n';
 		*log.stream << "Количество строк   :" << in.lines << '\n';
 	}
-	void WriteError(LOG log, Error::ERROr er) { // вывод информации об ошибке
+	void WriteError(LOG log, Error::ERROR er) { // вывод информации об ошибке
 		if (log.stream) { // если открыт поток для записи
 			*log.stream << "Ошибка " << er.id << ": " << er.message; // выводим сообщение об ошибке
 			if (er.inext.line != -1) { // если имеется информации о месте ошибке, то выводим и эту информацию

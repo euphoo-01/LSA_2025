@@ -4,8 +4,8 @@
 #pragma warning(disable:4996)
 
 namespace Out {
-	OUt getout(wchar_t outfile[]) { // создание и открытие потокового вывода выходного файла
-		OUt out;
+	OUT getout(wchar_t outfile[]) { // создание и открытие потокового вывода выходного файла
+		OUT out;
 		out.stream = new ofstream; // создаем новый поток для записи
 		char narrow_outfile[300];
 		wcstombs(narrow_outfile, outfile, 300);
@@ -16,14 +16,14 @@ namespace Out {
 		std::wcscpy(out.outfile, outfile); // копируем название файла
 		return out;
 	}
-	void WriteOut(In::iN in, wchar_t outfile[]) { // функция для вывода преобразованного текста в файл
+	void WriteOut(In::IN in, wchar_t outfile[]) { // функция для вывода преобразованного текста в файл
 		char narrow_outfile[300];
 		wcstombs(narrow_outfile, outfile, 300);
 		ofstream fout(narrow_outfile);
 		fout << in.text;
 		fout.close();
 	}
-	void WriteError(OUt out, Error::ERROr er) { // вывод информации об ошибке
+	void WriteError(OUT out, Error::ERROR er) { // вывод информации об ошибке
 		if (out.stream) { // если открыт поток для записи
 			*out.stream << "Ошибка " << er.id << ": " << er.message; // выводим сообщение об ошибке
 			if (er.inext.line != -1) { // если имеется информации о месте ошибке, то выводим и эту информацию
@@ -38,7 +38,7 @@ namespace Out {
 			cout << "Строка " << er.inext.line << ", позиция " << er.inext.col << '\n';
 		}
 	}
-	void Close(OUt out) { // закрываем поток
+	void Close(OUT out) { // закрываем поток
 		out.stream->close();
 		delete out.stream;
 	}

@@ -16,7 +16,7 @@
 #include "Out.h"
 #include "IT.h"		
 #include "LT.h"
-#include "LexA.h"
+#include "Lex.h"
 #include "FST.h"		
 #include "GRB.h"
 #include "MFST.h"

@@ -14,7 +14,7 @@
 #define ERROR_MAX_ENTRY 1000
 namespace Error
 {
-	struct ERROr
+	struct ERROR
 	{
 		int id;
 		char message[ERROR_MAXSIZE_MESSAGE];
@@ -23,6 +23,6 @@ namespace Error
 			short col;
 		}inext;
 	};
-	ERROr geterror(int id);
-	ERROr geterrorin(int id, int line, int col);
+	ERROR geterror(int id);
+	ERROR geterrorin(int id, int line, int col);
 }

@@ -175,7 +175,7 @@ namespace MFST {
 		int lpos = -1;
 		if (n < MFST_DIAGN_NUMBER && (lpos = diagnosis[n].lenta_position) >= 0) {
 			errid = grebach.getRule(diagnosis[n].nrule).iderror;
-			Error::ERROr err = Error::geterror(errid);
+			Error::ERROR err = Error::geterror(errid);
 			std::sprintf(buf, "%d: строка %d,%s", err.id, lex.table[lpos].sn, err.message);
 			throw ERROR_THROW_IN(errid, lex.table[lpos].sn, 0);
 			rc = buf;

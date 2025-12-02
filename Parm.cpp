@@ -4,8 +4,8 @@
 #include <cwchar>
 
 namespace Parm {
-	PARm getparm(int argc, wchar_t* argv[]) { // получение параметров
-		PARm parm;
+	Parm getParm(int argc, wchar_t* argv[]) { // получение параметров
+		Parm parm;
 		bool in = 0, out = 0, log = 0;
 		for (int i = 1; i < argc; i++) {
 			if (wcslen(argv[i]) > PARM_MAX_SIZE) { // если превышен допустимый размер параметра

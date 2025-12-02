@@ -10,7 +10,7 @@
 #define TI_STR_MAXSIZE 255 
 
 namespace IT { // таблица идентификаторов
-	enum IDDATATYPE { UINT = 1, STR = 2, BOOL = 3, DOUBLE = 4}; // тип данных идентификаторов
+	enum IDDATATYPE { UNSIGNED = 1, CHAR = 2, LOGIC = 3}; // тип данных идентификаторов
 	enum IDTYPE { V = 1, F = 2, P = 3, L = 4 }; // тип идентификаторов: переменная, функция, параметр, литерал
 	struct Entry
 	{
@@ -21,12 +21,12 @@ namespace IT { // таблица идентификаторов
 		string scope_name;
 		union
 		{
-			double vint = NULL;
+			double vint;
 			struct
 			{
 				int len;
 				char str[TI_STR_MAXSIZE - 1];
-			}	vstr[TI_STR_MAXSIZE];
+			}	vstr;
 		} value;
 		Entry(int IdxfirstLE, const char* Id, IDDATATYPE Datatype, IDTYPE Type, string Scope, int value)
 		{
