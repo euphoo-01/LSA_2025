@@ -30,17 +30,17 @@ namespace IT {
 		}
 		return idtable.table[n];
 	}
-	int search(IdTable& idtable, IT::Entry entry, map<string, string> scope)
+	int search(IdTable& idtable, IT::Entry entry, map<string, string> scop)
 	{
 		for (int j = 0; j < idtable.size; j++)
 		{
-			// cout << entry.id << " " << entry.scope_name << " " <<  idtable.table[j].id<< ' ' << idtable.table[j].scope_name << '\n';
+			//cout << entry.id << " " << entry.scope_name << " " <<  idtable.table[j].id<< ' ' << idtable.table[j].scope_name << '\n';
 			if (std::strcmp(entry.id, idtable.table[j].id) == 0 && entry.scope_name == idtable.table[j].scope_name)
 			{
 				return j;
 			}
 		}
-		string buf = scope[entry.scope_name];
+		string buf = scop[entry.scope_name];
 		while (buf != "") {
 			for (int j = 0; j < idtable.size; j++)
 			{
@@ -50,7 +50,7 @@ namespace IT {
 					return j;
 				}
 			}
-			buf = scope[buf];
+			buf = scop[buf];
 		}
 		return -1;
 	}

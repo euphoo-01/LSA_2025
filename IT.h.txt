@@ -51,7 +51,7 @@ namespace IT { // таблица идентификаторов
 	};
 	IdTable Create(int size); // создать таблицу идентификаторов
 	void Add(IdTable& idtable, Entry entry); // добавить строку в таблицу идентификаторов 
-	int search(IdTable& idtable, IT::Entry entry, map<string, string> scope);
+	int search(IdTable& idtable, IT::Entry entry, map<string, string> scop);
 	int search(IdTable& idtable, IT::Entry entry);
 	Entry GetEntry(IdTable& idtable, int n); // получить строку из таблицы идентификаторов
 	void Delete(IdTable& idtable); // удалить таблицу идентификаторов

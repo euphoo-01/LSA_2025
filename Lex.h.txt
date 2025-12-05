@@ -191,10 +191,12 @@ namespace Lex {
     struct LEX {
         IT::IdTable idTable;
         LT::LexTable lexTable;
-        map<std::string, vector<IT::IDDATATYPE> > functions;
+        map<string, vector<IT::IDDATATYPE> > functions;
     };
 
     char FST(char *str);
+
+    void Add_LT(int line, char token);
 
     LEX Lex(Parm::Parm parm, In::IN in);
 }
