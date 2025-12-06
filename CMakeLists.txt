@@ -8,8 +8,8 @@ set(SOURCES
     Error.h
     FST.cpp
     FST.h
-#    GRB.cpp
-#    GRB.h
+    GRB.cpp
+    GRB.h
     In.cpp
     In.h
     IT.cpp
@@ -21,15 +21,15 @@ set(SOURCES
     LT.cpp
     LT.h
     main.cpp
-#    MFST.cpp
-#    MFST.h
+    MFST.cpp
+    MFST.h
     Out.cpp
     Out.h
         Parm.cpp
         Parm.h
 #    RPN.cpp
 #    RPN.h
-#    Rules.h
+    Rules.h
 #    SemA.cpp
 #    SemA.h
     stdafx.h

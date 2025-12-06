@@ -26,7 +26,16 @@ namespace In {
         char *tmp = new char[IN_MAX_LEN_TEXT];
 
         while (file.getline(tmp, 1000)) {
-            for (int position = 0; position < strlen(tmp); position++) {
+            int len = strlen(tmp); // Вычисляем длину строки
+            for (int position = 0; position < len; position++) {
+
+                // --- НАЧАЛО ДОБАВЛЕНИЯ: Обработка комментариев ---
+                // Если встречаем "//", прекращаем обработку текущей строки
+                if (tmp[position] == '/' && position + 1 < len && tmp[position + 1] == '/') {
+                    break;
+                }
+                // --- КОНЕЦ ДОБАВЛЕНИЯ ---
+
                 switch (in_result.code[int((unsigned char) tmp[position])]) {
                     case IN::T: {
                         in_result.text[in_result.size] = (unsigned) tmp[position];
@@ -39,6 +48,7 @@ namespace In {
                         break;
                     }
                     case IN::S: {
+                        // Ваша логика обработки пробелов
                         if (position == 0) {
                             while (tmp[position] == SPACE || tmp[position] == TAB) {
                                 position++;
@@ -46,13 +56,14 @@ namespace In {
                             position--;
                             break;
                         }
-                        if (in_result.code[int((unsigned char) tmp[position - 1])] == IN::Z || in_result.code[int(
-                                (unsigned char) tmp[position + 1])] == IN::Z) {
+                        // Проверка границ массива перед доступом к position+1
+                        if (position + 1 < len && (in_result.code[int((unsigned char) tmp[position - 1])] == IN::Z || in_result.code[int(
+                                (unsigned char) tmp[position + 1])] == IN::Z)) {
                             in_result.ignore++;
                             break;
                         }
-                        if (in_result.code[int((unsigned char) tmp[position + 1])] == IN::S || in_result.code[int(
-                                (unsigned char) tmp[position - 1])] == IN::S) {
+                        if (position + 1 < len && (in_result.code[int((unsigned char) tmp[position + 1])] == IN::S || in_result.code[int(
+                                (unsigned char) tmp[position - 1])] == IN::S)) {
                             in_result.ignore++;
                             break;
                         }
@@ -66,7 +77,7 @@ namespace In {
                 }
             }
             in_result.lines++;
-            in_result.text[in_result.size] = '`';
+            in_result.text[in_result.size] = '`'; // Ваш символ новой строки
             in_result.size++;
         }
         in_result.text[in_result.size] = '\0';

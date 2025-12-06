@@ -38,7 +38,6 @@ namespace Lex {
     bool declareFunc = false;
     bool pushToIT = false;
 
-    // запуск конечных автоматов для определения типа лексемы
     char FST() {
         FST_UNSIGNED_INTEGER FST_CHAR FST_LOGIC FST_FUNC FST_SEND FST_MAIN FST_WRITECH FST_READCH FST_TRUE FST_FALSE FST_BECAUSE FST_IF FST_LITERAL FST_IDEN FST_DIFFER
         if (FST::execute(_unsigned_integer)) { unsignedIntFlag = true; return LEX_UNSIGNED_INTEGER; }
@@ -66,7 +65,7 @@ namespace Lex {
         lexTable.size = 0;
         idTable.size = 0;
 
-        // регистрация функций стандартной библиотеки через конструктор
+        // регистрация функций стандартной библиотеки
         auto addStFunc = [&](const char* name, IT::IDDATATYPE retType, std::vector<IT::IDDATATYPE> parms) {
             IT::Entry entry(-1, name, retType, IT::F, "global", 0);
             IT::Add(idTable, entry);
@@ -105,11 +104,9 @@ namespace Lex {
 
         std::memset(str, NULL, TI_MAXSIZE);
 
-        // основной цикл разбора
         for (int i = 0; i < in.size; i++) {
             pos++;
 
-            // проверка допустимых символов
             bool isValidChar = (in.text[i] >= 'A' && in.text[i] <= 'Z') ||
                                (in.text[i] >= 'a' && in.text[i] <= 'z') ||
                                (in.text[i] >= '0' && in.text[i] <= '9') ||
@@ -121,7 +118,6 @@ namespace Lex {
             bool isLiteralBody = (in.text[i] != MARK && litFlag);
             bool isLiteralStart = (in.text[i] == MARK && !litFlag);
 
-            // накопление символов лексемы
             if ((isValidChar && in.text[i] != SPACE) || isUnsignedSpace || isLiteralStart || isLiteralBody) {
                 if (in.text[i] == MARK) litFlag = true;
                 str[bufferIndex] = in.text[i];
@@ -133,7 +129,7 @@ namespace Lex {
                 if (bufferIndex > 0) cur_lex.lexema[0] = FST();
                 else cur_lex.lexema[0] = NULL;
 
-                // обработка точки входа main
+                // MAIN
                 if (cur_lex.lexema[0] == LEX_MAIN) {
                     if (callFunc) throw ERROR_THROW_IN(600, currentLine, 0);
                     mainFlag = true;
@@ -143,6 +139,7 @@ namespace Lex {
                     std::strncpy(cur_iden.id, str, 15);
                     cur_iden.iddatatype = IT::UNSIGNED;
                     cur_iden.idtype = IT::F;
+                    cur_iden.value.vint = 0;
                     cur_iden.idxfirstLE = currentLine;
                     cur_iden.scope_name = cur_scope;
 
@@ -150,7 +147,7 @@ namespace Lex {
                     IT::Add(idTable, cur_iden);
                 }
 
-                // обработка литералов
+                // LITERAL
                 if (cur_lex.lexema[0] == LEX_LITERAL) {
                     cur_iden = IT::Entry();
                     cur_iden.iddatatype = IT::UNSIGNED;
@@ -166,7 +163,6 @@ namespace Lex {
                     } else if (falseFlag) {
                         cur_iden.iddatatype = IT::LOGIC; cur_iden.value.vint = 0; falseFlag = false;
                     } else {
-                        // обработка отрицательных чисел
                         bool isNegative = false;
                         if (lexTable.size >= 2) {
                             int len = (int)strlen(str);
@@ -199,17 +195,17 @@ namespace Lex {
                     }
                 }
 
-                // обработка идентификаторов
+                // IDENTIFIERS (Variables, Functions, Params)
                 if (cur_lex.lexema[0] == LEX_ID) {
                     cur_iden = IT::Entry();
                     std::strncpy(cur_iden.id, str, 15);
                     cur_iden.idtype = IT::V;
                     cur_iden.scope_name = cur_scope;
-                    cur_lex.idxTI = idTable.size;
+                    // cur_lex.idxTI = idTable.size; // УБРАНО! Присваиваем только при добавлении
                     cur_iden.iddatatype = IT::UNSIGNED;
                     cur_iden.idxfirstLE = currentLine;
 
-                    // объявление функции
+                    // 1. Объявление функции
                     if (lexTable.size >= 2 && lexTable.table[lexTable.size - 2].lexema[0] == LEX_FUNC) {
                         if (callFunc) throw ERROR_THROW_IN(600, currentLine, 0);
                         callFunc = true;
@@ -222,12 +218,13 @@ namespace Lex {
 
                         if (IT::search(idTable, cur_iden) >= 0) throw ERROR_THROW_IN(107, currentLine, pos);
                         lexResult.functions[cur_iden.id] = {};
-                        cur_lex.idxTI = idTable.size;
+
+                        cur_lex.idxTI = idTable.size; // <-- ВАЖНО: Привязываем лексему к таблице ID
                         IT::Add(idTable, cur_iden);
                         pushToIT = true;
                     }
 
-                    // параметры функции (первый)
+                    // 2. Объявление параметров (первый)
                     if (lexTable.size >= 3 &&
                         lexTable.table[lexTable.size - 2].lexema[0] == LEX_LEFTTHESIS &&
                         lexTable.table[lexTable.size - 3].lexema[0] == LEX_ID &&
@@ -242,12 +239,13 @@ namespace Lex {
 
                         if (IT::search(idTable, cur_iden) >= 0) throw ERROR_THROW_IN(105, currentLine, pos);
                         lexResult.functions[cur_scope].push_back(cur_iden.iddatatype);
-                        cur_lex.idxTI = idTable.size;
+
+                        cur_lex.idxTI = idTable.size; // <-- ВАЖНО
                         IT::Add(idTable, cur_iden);
                         pushToIT = true;
                     }
 
-                    // параметры функции (последующие)
+                    // 3. Объявление параметров (следующие)
                     if (lexTable.size >= 3 &&
                         lexTable.table[lexTable.size - 2].lexema[0] == LEX_COMMA &&
                         idTable.table[lexTable.table[lexTable.size - 3].idxTI].idtype == IT::P) {
@@ -261,29 +259,40 @@ namespace Lex {
                         else if (logicFlag) { cur_iden.iddatatype = IT::LOGIC; logicFlag = false; }
 
                         if (IT::search(idTable, cur_iden) >= 0) throw ERROR_THROW_IN(105, currentLine, pos);
+
+                        cur_lex.idxTI = idTable.size; // <-- ВАЖНО
                         IT::Add(idTable, cur_iden);
                         lexResult.functions[cur_scope].push_back(cur_iden.iddatatype);
                         pushToIT = true;
                     }
 
-                    // объявление переменных
+                    // 4. Объявление переменных
                     if (unsignedIntFlag) {
                         cur_iden.iddatatype = IT::UNSIGNED; unsignedIntFlag = false;
                         if (IT::search(idTable, cur_iden) >= 0) throw ERROR_THROW_IN(105, currentLine, pos);
-                        IT::Add(idTable, cur_iden); pushToIT = true;
+
+                        cur_lex.idxTI = idTable.size; // <-- ВАЖНО: Иначе ссылка будет на 0 (sqrt)
+                        IT::Add(idTable, cur_iden);
+                        pushToIT = true;
                     }
                     else if (logicFlag) {
                         cur_iden.iddatatype = IT::LOGIC; logicFlag = false;
                         if (IT::search(idTable, cur_iden) >= 0) throw ERROR_THROW_IN(105, currentLine, pos);
-                        IT::Add(idTable, cur_iden); pushToIT = true;
+
+                        cur_lex.idxTI = idTable.size; // <-- ВАЖНО
+                        IT::Add(idTable, cur_iden);
+                        pushToIT = true;
                     }
                     else if (charFlag) {
                         cur_iden.iddatatype = IT::CHAR; charFlag = false;
                         if (IT::search(idTable, cur_iden) >= 0) throw ERROR_THROW_IN(105, currentLine, pos);
-                        IT::Add(idTable, cur_iden); pushToIT = true;
+
+                        cur_lex.idxTI = idTable.size; // <-- ВАЖНО
+                        IT::Add(idTable, cur_iden);
+                        pushToIT = true;
                     }
 
-                    // поиск идентификатора с использованием чистого объекта
+                    // 5. Использование существующей переменной/функции
                     if (!pushToIT) {
                         IT::Entry searchEntry;
                         std::strncpy(searchEntry.id, str, 15);
@@ -298,7 +307,7 @@ namespace Lex {
                     pushToIT = false;
                 }
 
-                // обработка ключевых слов блоков
+                // Blocks
                 if (cur_lex.lexema[0] == LEX_BECAUSE) {
                     if (lexTable.size > 0 && lexTable.table[lexTable.size - 1].lexema[0] == TYPE) throw ERROR_THROW_IN(104, currentLine, pos);
                     prev_scope = cur_scope;
@@ -327,21 +336,20 @@ namespace Lex {
                 }
             }
 
-            // добавление в таблицу лексем
+            // Добавление в таблицу
             if (cur_lex.lexema[0] != NULL) {
                 cur_lex.sn = currentLine;
                 LT::Add(lexTable, cur_lex);
                 cur_lex.lexema[0] = NULL;
             }
 
-            // пропуск содержимого строковых литералов
             if (litFlag && in.text[i] == MARK && bufferIndex == 1) continue;
             else if (litFlag && in.text[i] != MARK) {
                 if (in.text[i] == '`') throw ERROR_THROW_IN(125, currentLine, pos);
                 continue;
             }
 
-            // обработка односимвольных токенов
+            // Односимвольные токены
             switch (in.text[i]) {
                 case MARK:
                     litFlag = true;
@@ -375,7 +383,6 @@ namespace Lex {
                     LT::Add(lexTable, cur_lex);
                     cur_lex.lexema[0] = NULL;
 
-                    // выход из области видимости
                     if (lexTable.size >= 2 && lexTable.table[lexTable.size - 2].lexema[0] == LEX_BRACELET) {
                         if (cur_scope.find(BECAUSE) != string::npos) differFlag = false;
                         else if (cur_scope.find(IF) != string::npos) ifFlag = false;
@@ -411,8 +418,14 @@ namespace Lex {
                     }
                     break;
                 case LEX_RIGHTTHESIS: cur_lex.lexema[0] = LEX_RIGHTTHESIS; cur_lex.sn = currentLine; LT::Add(lexTable, cur_lex); cur_lex.lexema[0] = NULL; parmFlag = false; break;
-                case LEX_PLUS: cur_lex.lexema[0] = LEX_PLUS; cur_lex.sn = currentLine; LT::Add(lexTable, cur_lex); cur_lex.lexema[0] = NULL; break;
-                case LEX_MINUS: cur_lex.lexema[0] = LEX_MINUS; LT::Add(lexTable, cur_lex); cur_lex.lexema[0] = NULL; break;
+                case LEX_PLUS:
+                    if (in.text[i + 1] == LEX_PLUS) { cur_lex.lexema[0] = LEX_INC; i++; }
+                    else cur_lex.lexema[0] = LEX_PLUS;
+                    cur_lex.sn = currentLine; LT::Add(lexTable, cur_lex); cur_lex.lexema[0] = NULL; break;
+                case LEX_MINUS:
+                    if (in.text[i + 1] == LEX_MINUS) { cur_lex.lexema[0] = LEX_DEC; i++; }
+                    else cur_lex.lexema[0] = LEX_MINUS;
+                    cur_lex.sn = currentLine; LT::Add(lexTable, cur_lex); cur_lex.lexema[0] = NULL; break;
                 case LEX_STAR: cur_lex.lexema[0] = LEX_STAR; cur_lex.sn = currentLine; LT::Add(lexTable, cur_lex); cur_lex.lexema[0] = NULL; break;
                 case LEX_COLON: cur_lex.lexema[0] = LEX_COLON; cur_lex.sn = currentLine; LT::Add(lexTable, cur_lex); cur_lex.lexema[0] = NULL; break;
                 case LEX_EQUAL:
@@ -435,7 +448,7 @@ namespace Lex {
             }
         }
 
-        // запись результатов в файлы
+        // Запись в файлы
         currentLine = 1;
         LT_file << currentLine << '\t';
         for (int i = 0; i < lexTable.size; i++) {
@@ -450,8 +463,8 @@ namespace Lex {
             cur_iden = IT::GetEntry(idTable, i);
             IT_file << std::setw(10) << cur_iden.id;
             if (cur_iden.iddatatype == IT::UNSIGNED) IT_file << std::setw(20) << "UNSIGNED";
-            else if (cur_iden.iddatatype == IT::CHAR) IT_file << std::setw(20) << "CHAR";
             else if (cur_iden.iddatatype == IT::LOGIC) IT_file << std::setw(20) << "LOGIC";
+            else if (cur_iden.iddatatype == IT::CHAR) IT_file << std::setw(20) << "CHAR";
 
             if (cur_iden.idtype == IT::V) IT_file << std::setw(20) << "V";
             else if (cur_iden.idtype == IT::L) IT_file << std::setw(20) << "L";

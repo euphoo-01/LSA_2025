@@ -3,119 +3,205 @@
 #include "Error.h"
 #include "LT.h"
 #include "Lex.h"
+
+/*
+    Полный список правил грамматики языка LSA-2025
+    в Нормальной Форме Грейбах (GNF).
+*/
+
 #define NS(n) GRB::Rule::Chain::N(n)
 #define TS(n) GRB::Rule::Chain::T(n)
-#define ISNS(n)	GRB::Rule::Chain::isN(n)
+#define ISNS(n) GRB::Rule::Chain::isN(n)ф
 #define GRB_ERROR_SERIES 600
 
+// TODO: Корректные правила
+// TODO: Передача переменных в качестве параметров функции вызывает ошибку
+
 namespace GRB {
-	Greibach greibach(NS('S'), TS('$'),
-		8,
-		Rule(NS('S'), GRB_ERROR_SERIES + 0,
-			12,
-			Rule::Chain(9, TS(LEX_MAIN), TS(LEX_LEFTBRACE), NS('N'), TS(LEX_RETURN), TS(LEX_ID), TS(LEX_SEMICOLON), TS(LEX_BRACELET), TS(LEX_SEMICOLON), NS('S')),
-			Rule::Chain(8, TS(LEX_MAIN), TS(LEX_LEFTBRACE), NS('N'), TS(LEX_RETURN), TS(LEX_ID), TS(LEX_SEMICOLON), TS(LEX_BRACELET), TS(LEX_SEMICOLON)),
-			Rule::Chain(9, TS(LEX_MAIN), TS(LEX_LEFTBRACE), NS('N'), TS(LEX_RETURN), TS(LEX_LITERAL), TS(LEX_SEMICOLON), TS(LEX_BRACELET), TS(LEX_SEMICOLON), NS('S')),
-			Rule::Chain(8, TS(LEX_MAIN), TS(LEX_LEFTBRACE), NS('N'), TS(LEX_RETURN), TS(LEX_LITERAL), TS(LEX_SEMICOLON), TS(LEX_BRACELET), TS(LEX_SEMICOLON)),
+    Greibach greibach(NS('S'), TS('$'),
+        6, // Количество нетерминалов (S, N, F, W, E, M)
 
-			Rule::Chain(14, TS(LEX_FUNCTION), TS(TYPE), TS(LEX_ID), TS(LEX_LEFTTHESIS), NS('F'), TS(LEX_RIGHTTHESIS), TS(LEX_LEFTBRACE), NS('N'), TS(LEX_RETURN), TS(LEX_ID), TS(LEX_SEMICOLON), TS(LEX_BRACELET), TS(LEX_SEMICOLON), NS('S')),
-			Rule::Chain(13, TS(LEX_FUNCTION), TS(TYPE), TS(LEX_ID), TS(LEX_LEFTTHESIS), NS('F'), TS(LEX_RIGHTTHESIS), TS(LEX_LEFTBRACE), NS('N'), TS(LEX_RETURN), TS(LEX_ID), TS(LEX_SEMICOLON), TS(LEX_BRACELET), TS(LEX_SEMICOLON)),
-			Rule::Chain(14, TS(LEX_FUNCTION), TS(TYPE), TS(LEX_ID), TS(LEX_LEFTTHESIS), NS('F'), TS(LEX_RIGHTTHESIS), TS(LEX_LEFTBRACE), NS('N'), TS(LEX_RETURN), TS(LEX_LITERAL), TS(LEX_SEMICOLON), TS(LEX_BRACELET), TS(LEX_SEMICOLON), NS('S')),
-			Rule::Chain(13, TS(LEX_FUNCTION), TS(TYPE), TS(LEX_ID), TS(LEX_LEFTTHESIS), NS('F'), TS(LEX_RIGHTTHESIS), TS(LEX_LEFTBRACE), NS('N'), TS(LEX_RETURN), TS(LEX_LITERAL), TS(LEX_SEMICOLON), TS(LEX_BRACELET), TS(LEX_SEMICOLON)),
+        // ------------------------------------------------------------------------------------------------
+        // Правило S (Start): Глобальная область видимости
+        // Ожидает объявления функций или точку входа main.
+        // ------------------------------------------------------------------------------------------------
+        Rule(NS('S'), GRB_ERROR_SERIES + 0,
+            3,
+            // 1. main { ... } ;
+            Rule::Chain(5, TS(LEX_MAIN), TS(LEX_LEFTBRACE), NS('N'), TS(LEX_BRACELET), TS(LEX_SEMICOLON)),
 
-			Rule::Chain(13, TS(LEX_FUNCTION), TS(TYPE), TS(LEX_ID), TS(LEX_LEFTTHESIS), NS('F'), TS(LEX_RIGHTTHESIS), TS(LEX_LEFTBRACE), TS(LEX_RETURN), TS(LEX_ID), TS(LEX_SEMICOLON), TS(LEX_BRACELET), TS(LEX_SEMICOLON), NS('S')),
-			Rule::Chain(12, TS(LEX_FUNCTION), TS(TYPE), TS(LEX_ID), TS(LEX_LEFTTHESIS), NS('F'), TS(LEX_RIGHTTHESIS), TS(LEX_LEFTBRACE), TS(LEX_RETURN), TS(LEX_ID), TS(LEX_SEMICOLON), TS(LEX_BRACELET), TS(LEX_SEMICOLON)),
-			Rule::Chain(13, TS(LEX_FUNCTION), TS(TYPE), TS(LEX_ID), TS(LEX_LEFTTHESIS), NS('F'), TS(LEX_RIGHTTHESIS), TS(LEX_LEFTBRACE), TS(LEX_RETURN), TS(LEX_LITERAL), TS(LEX_SEMICOLON), TS(LEX_BRACELET), TS(LEX_SEMICOLON), NS('S')),
-			Rule::Chain(12, TS(LEX_FUNCTION), TS(TYPE), TS(LEX_ID), TS(LEX_LEFTTHESIS), NS('F'), TS(LEX_RIGHTTHESIS), TS(LEX_LEFTBRACE), TS(LEX_RETURN), TS(LEX_LITERAL), TS(LEX_SEMICOLON), TS(LEX_BRACELET), TS(LEX_SEMICOLON))
-		),
-		Rule(NS('N'), GRB_ERROR_SERIES + 1,
-			22,
-			Rule::Chain(4, TS(TYPE), TS(LEX_ID), TS(LEX_SEMICOLON), NS('N')),
-			Rule::Chain(3, TS(TYPE), TS(LEX_ID), TS(LEX_SEMICOLON)),
+            // 2. func type id ( параметры ) { ... } ; S  (рекурсия для следующих функций)
+            Rule::Chain(11, TS(LEX_FUNC), TS(TYPE), TS(LEX_ID), TS(LEX_LEFTTHESIS), NS('F'), TS(LEX_RIGHTTHESIS), TS(LEX_LEFTBRACE), NS('N'), TS(LEX_BRACELET), TS(LEX_SEMICOLON), NS('S')),
 
-			Rule::Chain(6, TS(TYPE), TS(LEX_ID), TS(LEX_EQUAL), NS('E'), TS(LEX_SEMICOLON), NS('N')),
-			Rule::Chain(5, TS(TYPE), TS(LEX_ID), TS(LEX_EQUAL), NS('E'), TS(LEX_SEMICOLON)),
+            // 3. func type id ( ) { ... } ; S (функция без параметров)
+            Rule::Chain(10, TS(LEX_FUNC), TS(TYPE), TS(LEX_ID), TS(LEX_LEFTTHESIS), TS(LEX_RIGHTTHESIS), TS(LEX_LEFTBRACE), NS('N'), TS(LEX_BRACELET), TS(LEX_SEMICOLON), NS('S'))
+        ),
 
-			Rule::Chain(5, TS(LEX_ID), TS(LEX_EQUAL), NS('E'), TS(LEX_SEMICOLON), NS('N')),
-			Rule::Chain(4, TS(LEX_ID), TS(LEX_EQUAL), NS('E'), TS(LEX_SEMICOLON)),
+        // ------------------------------------------------------------------------------------------------
+        // Правило N (Nodes): Инструкции внутри блока кода
+        // Описывает все возможные операторы (объявления, циклы, условия, вызовы).
+        // ------------------------------------------------------------------------------------------------
+        Rule(NS('N'), GRB_ERROR_SERIES + 1,
+            33, // Количество вариантов цепочек
 
-			Rule::Chain(4, TS(LEX_PRINT), TS(LEX_ID), TS(LEX_SEMICOLON), NS('N')),
-			Rule::Chain(3, TS(LEX_PRINT), TS(LEX_ID), TS(LEX_SEMICOLON)),
+            // --- 1. Оператор возврата (send) ---
+            Rule::Chain(3, TS(LEX_SEND), NS('E'), TS(LEX_SEMICOLON)), // send E ;
 
-			Rule::Chain(4, TS(LEX_PRINT), TS(LEX_LITERAL), TS(LEX_SEMICOLON), NS('N')),
-			Rule::Chain(3, TS(LEX_PRINT), TS(LEX_LITERAL), TS(LEX_SEMICOLON)),
+            // --- 2. Объявление переменных ---
+            // type id = expr ; N
+            Rule::Chain(6, TS(TYPE), TS(LEX_ID), TS(LEX_EQUAL), NS('E'), TS(LEX_SEMICOLON), NS('N')),
+            // type id = expr ; (конец блока)
+            Rule::Chain(5, TS(TYPE), TS(LEX_ID), TS(LEX_EQUAL), NS('E'), TS(LEX_SEMICOLON)),
+            // type id ; N
+            Rule::Chain(4, TS(TYPE), TS(LEX_ID), TS(LEX_SEMICOLON), NS('N')),
+            // type id ; (конец блока)
+            Rule::Chain(3, TS(TYPE), TS(LEX_ID), TS(LEX_SEMICOLON)),
 
-			Rule::Chain(4, TS(LEX_PRINTLN), TS(LEX_ID), TS(LEX_SEMICOLON), NS('N')),
-			Rule::Chain(3, TS(LEX_PRINTLN), TS(LEX_ID), TS(LEX_SEMICOLON)),
+            // --- 3. Присваивание ---
+            // id = expr ; N
+            Rule::Chain(5, TS(LEX_ID), TS(LEX_EQUAL), NS('E'), TS(LEX_SEMICOLON), NS('N')),
+            // id = expr ; (конец блока)
+            Rule::Chain(4, TS(LEX_ID), TS(LEX_EQUAL), NS('E'), TS(LEX_SEMICOLON)),
 
-			Rule::Chain(4, TS(LEX_PRINTLN), TS(LEX_LITERAL), TS(LEX_SEMICOLON), NS('N')),
-			Rule::Chain(3, TS(LEX_PRINTLN), TS(LEX_LITERAL), TS(LEX_SEMICOLON)),
+            // --- 4. Вызов функций ---
+            // id ( args ) ; N
+            Rule::Chain(6, TS(LEX_ID), TS(LEX_LEFTTHESIS), NS('W'), TS(LEX_RIGHTTHESIS), TS(LEX_SEMICOLON), NS('N')),
+            // id ( args ) ; (конец блока)
+            Rule::Chain(5, TS(LEX_ID), TS(LEX_LEFTTHESIS), NS('W'), TS(LEX_RIGHTTHESIS), TS(LEX_SEMICOLON)),
+            // id ( ) ; N
+            Rule::Chain(5, TS(LEX_ID), TS(LEX_LEFTTHESIS), TS(LEX_RIGHTTHESIS), TS(LEX_SEMICOLON), NS('N')),
+            // id ( ) ; (конец блока)
+            Rule::Chain(4, TS(LEX_ID), TS(LEX_LEFTTHESIS), TS(LEX_RIGHTTHESIS), TS(LEX_SEMICOLON)),
 
-			Rule::Chain(4, TS(LEX_READ), TS(LEX_ID), TS(LEX_SEMICOLON), NS('N')),
-			Rule::Chain(3, TS(LEX_READ), TS(LEX_ID), TS(LEX_SEMICOLON)),
+            // --- 5. Стандартный вывод (writech) ---
+            Rule::Chain(6, TS(LEX_WRITECH), TS(LEX_LEFTTHESIS), NS('E'), TS(LEX_RIGHTTHESIS), TS(LEX_SEMICOLON), NS('N')),
+            Rule::Chain(5, TS(LEX_WRITECH), TS(LEX_LEFTTHESIS), NS('E'), TS(LEX_RIGHTTHESIS), TS(LEX_SEMICOLON)),
 
-			Rule::Chain(7, TS(LEX_WHILE), NS('U'), TS(LEX_LEFTBRACE), NS('N'), TS(LEX_BRACELET), TS(LEX_SEMICOLON), NS('N')),
-			Rule::Chain(6, TS(LEX_WHILE), NS('U'), TS(LEX_LEFTBRACE), NS('N'), TS(LEX_BRACELET), TS(LEX_SEMICOLON)),
+            // --- 6. Условный оператор (IF / IF-DIFFER) ---
+            // ВАЖНО: if...differ должен идти ПЕРВЫМ, чтобы парсер выбрал самую длинную цепочку.
 
-			Rule::Chain(7, TS(LEX_IF), NS('U'), TS(LEX_LEFTBRACE), NS('N'), TS(LEX_BRACELET), TS(LEX_SEMICOLON), NS('N')), 
-			Rule::Chain(6, TS(LEX_IF), NS('U'), TS(LEX_LEFTBRACE), NS('N'), TS(LEX_BRACELET), TS(LEX_SEMICOLON)),
+            // if (...) { ... } ; differ { ... } ; N
+            Rule::Chain(14, TS(LEX_IF), TS(LEX_LEFTTHESIS), NS('E'), TS(LEX_RIGHTTHESIS), TS(LEX_LEFTBRACE), NS('N'), TS(LEX_BRACELET), TS(LEX_SEMICOLON), TS(LEX_DIFFER), TS(LEX_LEFTBRACE), NS('N'), TS(LEX_BRACELET), TS(LEX_SEMICOLON), NS('N')),
+            // if (...) { ... } ; differ { ... } ; (конец блока)
+            Rule::Chain(13, TS(LEX_IF), TS(LEX_LEFTTHESIS), NS('E'), TS(LEX_RIGHTTHESIS), TS(LEX_LEFTBRACE), NS('N'), TS(LEX_BRACELET), TS(LEX_SEMICOLON), TS(LEX_DIFFER), TS(LEX_LEFTBRACE), NS('N'), TS(LEX_BRACELET), TS(LEX_SEMICOLON)),
 
-			Rule::Chain(12, TS(LEX_IF), NS('U'), TS(LEX_LEFTBRACE), NS('N'), TS(LEX_BRACELET), TS(LEX_SEMICOLON), TS(LEX_ELSE), TS(LEX_LEFTBRACE), NS('N'), TS(LEX_BRACELET), TS(LEX_SEMICOLON), NS('N')),
-			Rule::Chain(11, TS(LEX_IF), NS('U'), TS(LEX_LEFTBRACE), NS('N'), TS(LEX_BRACELET), TS(LEX_SEMICOLON), TS(LEX_ELSE), TS(LEX_LEFTBRACE), NS('N'), TS(LEX_BRACELET), TS(LEX_SEMICOLON))
+            // if (...) { ... } ; N
+            Rule::Chain(9, TS(LEX_IF), TS(LEX_LEFTTHESIS), NS('E'), TS(LEX_RIGHTTHESIS), TS(LEX_LEFTBRACE), NS('N'), TS(LEX_BRACELET), TS(LEX_SEMICOLON), NS('N')),
+            // if (...) { ... } ; (конец блока)
+            Rule::Chain(8, TS(LEX_IF), TS(LEX_LEFTTHESIS), NS('E'), TS(LEX_RIGHTTHESIS), TS(LEX_LEFTBRACE), NS('N'), TS(LEX_BRACELET), TS(LEX_SEMICOLON)),
 
-		),
-		Rule(NS('E'), GRB_ERROR_SERIES + 2, 
-			8,
-			Rule::Chain(1, TS(LEX_ID)),
-			Rule::Chain(2, TS(LEX_ID), NS('M')),
-			Rule::Chain(1, TS(LEX_LITERAL)),
-			Rule::Chain(2, TS(LEX_LITERAL), NS('M')),
-			Rule::Chain(3, TS(LEX_LEFTTHESIS), NS('E'), TS(LEX_RIGHTTHESIS)),
-			Rule::Chain(4, TS(LEX_LEFTTHESIS), NS('E'), TS(LEX_RIGHTTHESIS), NS('M')),
-			Rule::Chain(4, TS(LEX_ID), TS(LEX_LEFTTHESIS), NS('W'), TS(LEX_RIGHTTHESIS)),
-			Rule::Chain(5, TS(LEX_ID), TS(LEX_LEFTTHESIS), NS('W'), TS(LEX_RIGHTTHESIS), NS('M'))
-		),
-		Rule(NS('F'), GRB_ERROR_SERIES + 3, 
-			2,
-			Rule::Chain(2, TS(TYPE), TS(LEX_ID)),
-			Rule::Chain(4, TS(TYPE), TS(LEX_ID), TS(LEX_COMMA), NS('F'))
-		),
-		Rule(NS('W'), GRB_ERROR_SERIES + 4,
-			4,
-			Rule::Chain(1, TS(LEX_ID)),
-			Rule::Chain(3, TS(LEX_ID), TS(LEX_COMMA), NS('W')),
-			Rule::Chain(1, TS(LEX_LITERAL)),
-			Rule::Chain(3, TS(LEX_LITERAL), TS(LEX_COMMA), NS('W'))
-		),
-		Rule(NS('M'), GRB_ERROR_SERIES + 5,
-			13,
-			Rule::Chain(2, TS(LEX_PLUS), NS('E')),
-			Rule::Chain(2, TS(LEX_MINUS), NS('E')),
-			Rule::Chain(2, TS(LEX_STAR), NS('E')),
-			Rule::Chain(2, TS(LEX_DIRSLASH), NS('E')),
-			Rule::Chain(2, TS(LEX_MORE), NS('E')),
-			Rule::Chain(2, TS(LEX_LESS), NS('E')),
-			Rule::Chain(2, TS(LEX_ISEQUAL), NS('E')),
-			Rule::Chain(2, TS(LEX_NOT_EQUAL), NS('E')),
-			Rule::Chain(2, TS(LEX_MORE_OR_EQUAL), NS('E')),
-			Rule::Chain(2, TS(LEX_LESS_OR_EQUAL), NS('E')),
-			Rule::Chain(2, TS(LEX_OST), NS('E')),
-			Rule::Chain(2, TS(LEX_AND), NS('E')),
-			Rule::Chain(2, TS(LEX_OR), NS('E'))
-		),
-		Rule(NS('U'), GRB_ERROR_SERIES + 6,
-			6,
-			Rule::Chain(5, TS(LEX_LEFTTHESIS), NS('L'), TS(LEX_MORE), NS('L'), TS(LEX_RIGHTTHESIS)),
-			Rule::Chain(5, TS(LEX_LEFTTHESIS), NS('L'), TS(LEX_LESS), NS('L'), TS(LEX_RIGHTTHESIS)),
-			Rule::Chain(5, TS(LEX_LEFTTHESIS), NS('L'), TS(LEX_ISEQUAL), NS('L'), TS(LEX_RIGHTTHESIS)),
-			Rule::Chain(5, TS(LEX_LEFTTHESIS), NS('L'), TS(LEX_NOT_EQUAL), NS('L'), TS(LEX_RIGHTTHESIS)),
-			Rule::Chain(5, TS(LEX_LEFTTHESIS), NS('L'), TS(LEX_MORE_OR_EQUAL), NS('L'), TS(LEX_RIGHTTHESIS)),
-			Rule::Chain(5, TS(LEX_LEFTTHESIS), NS('L'), TS(LEX_LESS_OR_EQUAL), NS('L'), TS(LEX_RIGHTTHESIS))
-		),
-		Rule(NS('L'), GRB_ERROR_SERIES + 7,
-			2,
-			Rule::Chain(1, TS(LEX_ID)),
-			Rule::Chain(1, TS(LEX_LITERAL))
-		)
-	);
+            // --- 7. Цикл BECAUSE (аналог for) ---
+
+            // Вариант А: С объявлением новой переменной -> because (type id = E; E; update)
+
+            // Update: id++
+            Rule::Chain(17, TS(LEX_BECAUSE), TS(LEX_LEFTTHESIS), TS(TYPE), TS(LEX_ID), TS(LEX_EQUAL), NS('E'), TS(LEX_SEMICOLON), NS('E'), TS(LEX_SEMICOLON), TS(LEX_ID), TS(LEX_INC), TS(LEX_RIGHTTHESIS), TS(LEX_LEFTBRACE), NS('N'), TS(LEX_BRACELET), TS(LEX_SEMICOLON), NS('N')),
+            Rule::Chain(16, TS(LEX_BECAUSE), TS(LEX_LEFTTHESIS), TS(TYPE), TS(LEX_ID), TS(LEX_EQUAL), NS('E'), TS(LEX_SEMICOLON), NS('E'), TS(LEX_SEMICOLON), TS(LEX_ID), TS(LEX_INC), TS(LEX_RIGHTTHESIS), TS(LEX_LEFTBRACE), NS('N'), TS(LEX_BRACELET), TS(LEX_SEMICOLON)),
+
+            // Update: id--
+            Rule::Chain(17, TS(LEX_BECAUSE), TS(LEX_LEFTTHESIS), TS(TYPE), TS(LEX_ID), TS(LEX_EQUAL), NS('E'), TS(LEX_SEMICOLON), NS('E'), TS(LEX_SEMICOLON), TS(LEX_ID), TS(LEX_DEC), TS(LEX_RIGHTTHESIS), TS(LEX_LEFTBRACE), NS('N'), TS(LEX_BRACELET), TS(LEX_SEMICOLON), NS('N')),
+            Rule::Chain(16, TS(LEX_BECAUSE), TS(LEX_LEFTTHESIS), TS(TYPE), TS(LEX_ID), TS(LEX_EQUAL), NS('E'), TS(LEX_SEMICOLON), NS('E'), TS(LEX_SEMICOLON), TS(LEX_ID), TS(LEX_DEC), TS(LEX_RIGHTTHESIS), TS(LEX_LEFTBRACE), NS('N'), TS(LEX_BRACELET), TS(LEX_SEMICOLON)),
+
+            // Update: id = E
+            Rule::Chain(19, TS(LEX_BECAUSE), TS(LEX_LEFTTHESIS), TS(TYPE), TS(LEX_ID), TS(LEX_EQUAL), NS('E'), TS(LEX_SEMICOLON), NS('E'), TS(LEX_SEMICOLON), TS(LEX_ID), TS(LEX_EQUAL), NS('E'), TS(LEX_RIGHTTHESIS), TS(LEX_LEFTBRACE), NS('N'), TS(LEX_BRACELET), TS(LEX_SEMICOLON), NS('N')),
+            Rule::Chain(18, TS(LEX_BECAUSE), TS(LEX_LEFTTHESIS), TS(TYPE), TS(LEX_ID), TS(LEX_EQUAL), NS('E'), TS(LEX_SEMICOLON), NS('E'), TS(LEX_SEMICOLON), TS(LEX_ID), TS(LEX_EQUAL), NS('E'), TS(LEX_RIGHTTHESIS), TS(LEX_LEFTBRACE), NS('N'), TS(LEX_BRACELET), TS(LEX_SEMICOLON)),
+
+            // Вариант Б: С использованием существующей переменной -> because (id = E; E; update)
+
+            // Update: id++
+            Rule::Chain(16, TS(LEX_BECAUSE), TS(LEX_LEFTTHESIS), TS(LEX_ID), TS(LEX_EQUAL), NS('E'), TS(LEX_SEMICOLON), NS('E'), TS(LEX_SEMICOLON), TS(LEX_ID), TS(LEX_INC), TS(LEX_RIGHTTHESIS), TS(LEX_LEFTBRACE), NS('N'), TS(LEX_BRACELET), TS(LEX_SEMICOLON), NS('N')),
+            Rule::Chain(15, TS(LEX_BECAUSE), TS(LEX_LEFTTHESIS), TS(LEX_ID), TS(LEX_EQUAL), NS('E'), TS(LEX_SEMICOLON), NS('E'), TS(LEX_SEMICOLON), TS(LEX_ID), TS(LEX_INC), TS(LEX_RIGHTTHESIS), TS(LEX_LEFTBRACE), NS('N'), TS(LEX_BRACELET), TS(LEX_SEMICOLON)),
+
+            // Update: id--
+            Rule::Chain(16, TS(LEX_BECAUSE), TS(LEX_LEFTTHESIS), TS(LEX_ID), TS(LEX_EQUAL), NS('E'), TS(LEX_SEMICOLON), NS('E'), TS(LEX_SEMICOLON), TS(LEX_ID), TS(LEX_DEC), TS(LEX_RIGHTTHESIS), TS(LEX_LEFTBRACE), NS('N'), TS(LEX_BRACELET), TS(LEX_SEMICOLON), NS('N')),
+            Rule::Chain(15, TS(LEX_BECAUSE), TS(LEX_LEFTTHESIS), TS(LEX_ID), TS(LEX_EQUAL), NS('E'), TS(LEX_SEMICOLON), NS('E'), TS(LEX_SEMICOLON), TS(LEX_ID), TS(LEX_DEC), TS(LEX_RIGHTTHESIS), TS(LEX_LEFTBRACE), NS('N'), TS(LEX_BRACELET), TS(LEX_SEMICOLON)),
+
+            // Update: id = E
+            Rule::Chain(18, TS(LEX_BECAUSE), TS(LEX_LEFTTHESIS), TS(LEX_ID), TS(LEX_EQUAL), NS('E'), TS(LEX_SEMICOLON), NS('E'), TS(LEX_SEMICOLON), TS(LEX_ID), TS(LEX_EQUAL), NS('E'), TS(LEX_RIGHTTHESIS), TS(LEX_LEFTBRACE), NS('N'), TS(LEX_BRACELET), TS(LEX_SEMICOLON), NS('N')),
+            Rule::Chain(17, TS(LEX_BECAUSE), TS(LEX_LEFTTHESIS), TS(LEX_ID), TS(LEX_EQUAL), NS('E'), TS(LEX_SEMICOLON), NS('E'), TS(LEX_SEMICOLON), TS(LEX_ID), TS(LEX_EQUAL), NS('E'), TS(LEX_RIGHTTHESIS), TS(LEX_LEFTBRACE), NS('N'), TS(LEX_BRACELET), TS(LEX_SEMICOLON)),
+
+            // --- 8. Инкремент и Декремент как отдельные инструкции ---
+            // id++; N
+            Rule::Chain(3, TS(LEX_ID), TS(LEX_INC), TS(LEX_SEMICOLON), NS('N')),
+            Rule::Chain(2, TS(LEX_ID), TS(LEX_INC), TS(LEX_SEMICOLON)),
+            // id--; N
+            Rule::Chain(3, TS(LEX_ID), TS(LEX_DEC), TS(LEX_SEMICOLON), NS('N')),
+            Rule::Chain(2, TS(LEX_ID), TS(LEX_DEC), TS(LEX_SEMICOLON))
+        ),
+
+        // ------------------------------------------------------------------------------------------------
+        // Правило F (Parameters): Параметры при объявлении функции
+        // Пример: unsigned integer x, char y
+        // ------------------------------------------------------------------------------------------------
+        Rule(NS('F'), GRB_ERROR_SERIES + 2,
+            2,
+            Rule::Chain(2, TS(TYPE), TS(LEX_ID)),
+            Rule::Chain(4, TS(TYPE), TS(LEX_ID), TS(LEX_COMMA), NS('F'))
+        ),
+
+        // ------------------------------------------------------------------------------------------------
+        // Правило W (Arguments): Аргументы при вызове функции
+        // Пример: x, 5, 'a'
+        // ------------------------------------------------------------------------------------------------
+        Rule(NS('W'), GRB_ERROR_SERIES + 3,
+            4,
+            Rule::Chain(1, NS('E')), // Выражение
+            Rule::Chain(3, NS('E'), TS(LEX_COMMA), NS('W')),
+            Rule::Chain(1, TS(LEX_LITERAL)), // Литерал
+            Rule::Chain(3, TS(LEX_LITERAL), TS(LEX_COMMA), NS('W'))
+        ),
+
+        // ------------------------------------------------------------------------------------------------
+        // Правило E (Expressions): Выражения
+        // Возвращает значение (число, символ, логику)
+        // ------------------------------------------------------------------------------------------------
+        Rule(NS('E'), GRB_ERROR_SERIES + 4,
+            12,
+            // 1. Идентификатор (возможно с продолжением операции M)
+            Rule::Chain(1, TS(LEX_ID)),
+            Rule::Chain(2, TS(LEX_ID), NS('M')),
+
+            // 2. Литерал
+            Rule::Chain(1, TS(LEX_LITERAL)),
+            Rule::Chain(2, TS(LEX_LITERAL), NS('M')),
+
+            // 3. Вызов функции внутри выражения: foo(x) + 5
+            Rule::Chain(4, TS(LEX_ID), TS(LEX_LEFTTHESIS), NS('W'), TS(LEX_RIGHTTHESIS)),
+            Rule::Chain(5, TS(LEX_ID), TS(LEX_LEFTTHESIS), NS('W'), TS(LEX_RIGHTTHESIS), NS('M')),
+            // Вызов без аргументов
+            Rule::Chain(3, TS(LEX_ID), TS(LEX_LEFTTHESIS), TS(LEX_RIGHTTHESIS)),
+            Rule::Chain(4, TS(LEX_ID), TS(LEX_LEFTTHESIS), TS(LEX_RIGHTTHESIS), NS('M')),
+
+            // 4. Выражение в скобках: (a + b)
+            Rule::Chain(3, TS(LEX_LEFTTHESIS), NS('E'), TS(LEX_RIGHTTHESIS)),
+            Rule::Chain(4, TS(LEX_LEFTTHESIS), NS('E'), TS(LEX_RIGHTTHESIS), NS('M')),
+
+            // 5. Ввод данных: readch()
+            Rule::Chain(3, TS(LEX_READCH), TS(LEX_LEFTTHESIS), TS(LEX_RIGHTTHESIS)),
+
+            // 6. Унарная побитовая инверсия: ~x
+            Rule::Chain(2, TS(LEX_BIT_NOT), NS('E'))
+        ),
+
+        // ------------------------------------------------------------------------------------------------
+        // Правило M (Math suffix): Продолжение выражения (бинарные операции)
+        // Пример: + 5, * y, <= 10
+        // ------------------------------------------------------------------------------------------------
+        Rule(NS('M'), GRB_ERROR_SERIES + 5,
+            11,
+            Rule::Chain(2, TS(LEX_PLUS), NS('E')),
+            Rule::Chain(2, TS(LEX_MINUS), NS('E')),
+            Rule::Chain(2, TS(LEX_STAR), NS('E')),
+            Rule::Chain(2, TS(LEX_COLON), NS('E')), // Деление обозначается двоеточием (:)
+            Rule::Chain(2, TS(LEX_OST), NS('E')),   // Остаток от деления (%)
+
+            // Операции сравнения
+            Rule::Chain(2, TS(LEX_MORE), NS('E')),
+            Rule::Chain(2, TS(LEX_LESS), NS('E')),
+            Rule::Chain(2, TS(LEX_ISEQUAL), NS('E')),
+            Rule::Chain(2, TS(LEX_NOT_EQUAL), NS('E')),
+            Rule::Chain(2, TS(LEX_MORE_OR_EQUAL), NS('E')),
+            Rule::Chain(2, TS(LEX_LESS_OR_EQUAL), NS('E'))
+        )
+    );
 }

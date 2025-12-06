@@ -52,14 +52,14 @@ int main(int argc, char* argv[]) {
 		//Out::WriteOut(in_result, out.outfile);
 		Log::WriteIn(log, in_result);
 		Lex::LEX LeX = Lex::Lex(parm, in_result);
-		// ofstream st("ST.txt");
-		// MFST_TRACE_START(st);
-		// MFST::Mfst mfst(LeX.lexTable, GRB::getGreibach());
-		// mfst.start(st);
+		ofstream st("ST.txt");
+		MFST_TRACE_START(st);
+		MFST::Mfst mfst(LeX.lexTable, GRB::getGreibach());
+		mfst.start(st);
 
-		// mfst.savededucation();
+		mfst.savededucation();
 
-		// mfst.printrules(st);
+		mfst.printrules(st);
 		// SemA::checkSemantic(LeX.lexTable, LeX.idTable, LeX.functions);
 		// RPN::searchNextPosForCheck(LeX.lexTable, LeX.idTable);
 		// LT::WriteInFile(LeX.lexTable);
