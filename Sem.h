@@ -3,6 +3,6 @@
 #include "Error.h"
 #include <vector>
 
-namespace SemA {
+namespace Sem {
 	void checkSemantic(LT::LexTable lextable, IT::IdTable idtable, map<string, vector<IT::IDDATATYPE>> funcs);
 }

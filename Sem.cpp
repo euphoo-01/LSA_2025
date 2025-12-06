@@ -1,7 +1,7 @@
 #include "SemA.h"
 #include <vector>
 
-namespace SemA {
+namespace Sem {
 	bool flagMain = false;
 	int curpos = 0;
 	int curline = 1;
