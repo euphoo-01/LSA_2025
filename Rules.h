@@ -173,7 +173,4 @@ Greibach greibach(NS('S'), TS('$'),
         Rule::Chain(2, TS(LEX_LESS), NS('E'))
     )
 );
-
-
-
 }

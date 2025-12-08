@@ -12,12 +12,12 @@
 #include "Out.h"
 #include "In.h"
 #include "Lex.h"
-// #include "MFST.h"
-// #include "GRB.h"
-// #include "SemA.h"
-// #include "RPN.h"
+#include "MFST.h"
+#include "GRB.h"
+#include "Sem.h"
+#include "RPN.h"
 #include "LT.h"
-// #include "asmGenerator.h"
+#include "NasmGen.h"
 
 using namespace std;
 
@@ -51,19 +51,19 @@ int main(int argc, char* argv[]) {
 		Log::WriteParm(log, parm);
 		//Out::WriteOut(in_result, out.outfile);
 		Log::WriteIn(log, in_result);
-		Lex::LEX LeX = Lex::Lex(parm, in_result);
+		Lex::LEX LexStruct = Lex::Lex(parm, in_result);
 		ofstream st("ST.txt");
 		MFST_TRACE_START(st);
-		MFST::Mfst mfst(LeX.lexTable, GRB::getGreibach());
+		MFST::Mfst mfst(LexStruct.lexTable, GRB::getGreibach());
 		mfst.start(st);
 
 		mfst.savededucation();
 
 		mfst.printrules(st);
-		// SemA::checkSemantic(LeX.lexTable, LeX.idTable, LeX.functions);
-		// RPN::searchNextPosForCheck(LeX.lexTable, LeX.idTable);
-		// LT::WriteInFile(LeX.lexTable);
-		// ASMGenerator::asmGenerator(LeX, parm.out);
+		Sem::checkSemantic(LexStruct.lexTable, LexStruct.idTable, LexStruct.functions);
+		RPN::searchAndConvert(LexStruct.lexTable, LexStruct.idTable);
+		LT::WriteInFile(LexStruct.lexTable);
+		NasmGen::asmGenerator(LexStruct, parm.out);
 		Log::Close(log);
 		Out::Close(out);
 	}

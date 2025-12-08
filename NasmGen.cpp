@@ -1,890 +1,411 @@
-#include "asmGenerator.h"
-#include <cstring>
-#include <cstdlib>
-#define PODCHERK '_'
-#define FUNC "func"
-#define LOCAL "local"
-#define IFI "ifi"
-#define ELSEI "elsei"
-#define UNTILI "while"
+#include "NasmGen.h"
+#include "Error.h"
+#include <iomanip>
+#include <ctime>
+#include <stack>
 
-namespace ASMGenerator {
-	void asmGenerator(Lex::LEX lex, wchar_t outfile[]) {
-		char narrow_outfile[300];
-		wcstombs(narrow_outfile, outfile, 300);
-		ofstream asmout(narrow_outfile);
+using namespace std;
 
-		asmout << HEAD;
-		asmout << PROTOS;
+namespace NasmGen {
 
-		for (int i = 0; i < lex.idTable.size; i++) {
-			for (int j = 0; j < lex.idTable.size; j++) {
-				if (i == j) {
-					continue;
+// структура для управления вложенными блоками (if, because, func)
+struct LabelBlock {
+	int type;      // тип блока: 0-if, 1-else, 2-because, 3-func
+	int label_1;   // метка для else/начала цикла
+	int label_2;   // метка для выхода из блока
+	int paramSize; // размер параметров функции для очистки стека
+};
+
+// стандартный заголовок nasm
+const string ASM_HEAD = "global _start\ndefault rel\nsection .text\n\n";
+
+// стандартная библиотека
+const string ASM_STDLIB =
+	"exit_prog:\n    mov rax, 60\n    syscall\n\n"
+	"writech:\n    push rbp\n    mov rbp, rsp\n    mov rax, 1\n    mov rdi, 1\n    lea rsi, [rbp+16]\n    mov rdx, 1\n    syscall\n    pop rbp\n    ret 8\n\n"
+	"writeuint:\n    push rbp\n    mov rbp, rsp\n    mov rax, [rbp+16]\n    mov rcx, 10\n    sub rsp, 32\n    mov rsi, rsp\n    add rsi, 31\n    mov byte [rsi], 0\n    dec rsi\n    test rax, rax\n    jnz .loop\n    mov byte [rsi], '0'\n    dec rsi\n    jmp .print\n.loop:\n    test rax, rax\n    jz .print\n    xor rdx, rdx\n    div rcx\n    add dl, '0'\n    mov [rsi], dl\n    dec rsi\n    jmp .loop\n.print:\n    inc rsi\n    lea rdx, [rsp+31]\n    sub rdx, rsi\n    mov rdi, 1\n    mov rax, 1\n    syscall\n    mov rsp, rbp\n    pop rbp\n    ret 8\n\n"
+	"readch:\n    push rbp\n    mov rbp, rsp\n    sub rsp, 8\n    mov rax, 0\n    mov rdi, 0\n    lea rsi, [rsp]\n    mov rdx, 1\n    syscall\n    movzx rax, byte [rsp]\n    add rsp, 8\n    pop rbp\n    ret\n\n"
+	"pow:\n    push rbp\n    mov rbp, rsp\n    mov rbx, [rbp+16]\n    mov rcx, [rbp+24]\n    mov rax, 1\n    cmp rcx, 0\n    je .end\n.loop:\n    imul rax, rbx\n    dec rcx\n    cmp rcx, 0\n    jg .loop\n.end:\n    pop rbp\n    ret 16\n\n"
+	"sqrt:\n    push rbp\n    mov rbp, rsp\n    mov rdi, [rbp+16]\n    mov rax, 0\n.loop:\n    mov rbx, rax\n    inc rbx\n    imul rbx, rbx\n    cmp rbx, rdi\n    ja .end\n    inc rax\n    jmp .loop\n.end:\n    pop rbp\n    ret 8\n\n"
+	"isPrime:\n    push rbp\n    mov rbp, rsp\n    mov rdi, [rbp+16]\n    cmp rdi, 2\n    jl .false\n    je .true\n    mov rcx, 2\n.loop:\n    mov rax, rcx\n    imul rax, rax\n    cmp rax, rdi\n    ja .true\n    mov rax, rdi\n    xor rdx, rdx\n    div rcx\n    cmp rdx, 0\n    je .false\n    inc rcx\n    jmp .loop\n.true:\n    mov rax, 1\n    jmp .end\n.false:\n    mov rax, 0\n.end:\n    pop rbp\n    ret 8\n\n"
+	"getMin:\n    push rbp\n    mov rbp, rsp\n    mov rax, [rbp+16]\n    mov rbx, [rbp+24]\n    cmp rax, rbx\n    jle .end\n    mov rax, rbx\n.end:\n    pop rbp\n    ret 16\n\n"
+	"getMax:\n    push rbp\n    mov rbp, rsp\n    mov rax, [rbp+16]\n    mov rbx, [rbp+24]\n    cmp rax, rbx\n    jge .end\n    mov rax, rbx\n.end:\n    pop rbp\n    ret 16\n\n"
+	"toUpper:\n    push rbp\n    mov rbp, rsp\n    mov rax, [rbp+16]\n    cmp al, 'a'\n    jl .end\n    cmp al, 'z'\n    jg .end\n    sub al, 32\n.end:\n    pop rbp\n    ret 8\n\n";
+
+// генерация искаженного имени для избежания конфликтов
+string getMangledName(IT::Entry& entry) {
+	return entry.scope_name + "_" + entry.id;
+}
+
+// обработка постфиксного выражения
+void processExpression(int start, int end, Lex::LEX& lex, ofstream& file) {
+	for (int i = start; i < end; i++) {
+		LT::Entry& t = lex.lexTable.table[i];
+		if (t.lexema[0] == NULL) continue;
+
+		switch (t.lexema[0]) {
+		// обработка литералов
+		case LEX_LITERAL: {
+			if (t.idxTI == LT_TI_NULLIDX) break;
+			IT::Entry& lit = lex.idTable.table[t.idxTI];
+			if (lit.iddatatype == IT::CHAR) {
+				char val = ' ';
+				if (lit.value.vstr.len > 0) {
+					if (lit.value.vstr.str[0] == '\'') {
+						if (lit.value.vstr.len > 1) val = lit.value.vstr.str[1];
+					} else {
+						val = lit.value.vstr.str[0];
+					}
 				}
-				if (lex.idTable.table[i].idtype == IT::F) {
-					continue;
-				}
-				if (strcmp(lex.idTable.table[i].id, lex.idTable.table[j].id) == 0) {
-					size_t length = strlen(lex.idTable.table[i].id);
-
-					lex.idTable.table[i].id[length] = PODCHERK;
-					lex.idTable.table[i].id[length + 1] = '\0';
-					j = -1;
-				}
+				file << "    push " << (int)(unsigned char)val << "\n";
+			} else {
+				file << "    push " << lit.value.vint << "\n";
 			}
+			break;
 		}
-		asmout << ".CONST\n";
-		asmout << "\tnull_division BYTE \'ERROR: DIVISION BY ZERO\', 0\n";
-		asmout << "\terror_read BYTE \'ERROR: READING ERROR\', 0\n";
-		asmout << "\tTRUE BYTE \'true\', 0\n";
-		asmout << "\tFALSE BYTE \'false\', 0\n";
-		for (int i = 0; i < lex.idTable.size; i++) {
-			if (lex.idTable.table[i].idtype == IT::L) {
-				if (lex.idTable.table[i].iddatatype == IT::UINT) {
-					asmout << "\t" << lex.idTable.table[i].id << " DWORD " << (unsigned int)lex.idTable.table[i].value.vint << '\n';
-				}
-				else if (lex.idTable.table[i].iddatatype == IT::DOUBLE) {
-					asmout << "\t" << lex.idTable.table[i].id << " real8 " << (double)lex.idTable.table[i].value.vint;
-					if ((double)(int)lex.idTable.table[i].value.vint == lex.idTable.table[i].value.vint) {
-						asmout << ".0";
-					}
-					asmout << '\n';
-				}
-				else if (lex.idTable.table[i].iddatatype == IT::STR) {
-					asmout << "\t" << lex.idTable.table[i].id << " BYTE ";
-					for (int k = 0; k < lex.idTable.table[i].value.vstr->len; k++) {
-						if (lex.idTable.table[i].value.vstr->str[k] == MARK) {
-							asmout << MARK;
-						}
-						else {
-							asmout << lex.idTable.table[i].value.vstr->str[k];
-						}
-					}
-					asmout << ", 0\n";
-				}
-				else if (lex.idTable.table[i].iddatatype == IT::BOOL) {
-					asmout << "\t" << lex.idTable.table[i].id << " DWORD " << static_cast<int>(lex.idTable.table[i].value.vint) << "\n";
-				}
+		// обработка идентификаторов (переменные и функции)
+		case LEX_ID: {
+			if (t.idxTI == LT_TI_NULLIDX) break;
+			if (lex.idTable.table[t.idxTI].idtype == IT::F) {
+				string name = lex.idTable.table[t.idxTI].id;
+				file << "    call " << name << "\n";
+				file << "    push rax\n";
+			} else {
+				file << "    push qword [" << getMangledName(lex.idTable.table[t.idxTI]) << "]\n";
 			}
+			break;
 		}
-		asmout << "\n.DATA\n";
-		for (int i = 0; i < lex.idTable.size; i++) {
-			if (lex.idTable.table[i].idtype == IT::V) {
-				if (lex.idTable.table[i].iddatatype == IT::BOOL) {
-					asmout << "\t" << lex.idTable.table[i].id << " DWORD 0\n";
-				}
-				else if (lex.idTable.table[i].iddatatype == IT::UINT) {
-					asmout << "\t" << lex.idTable.table[i].id << " DWORD 0\n";
-				}
-				else if (lex.idTable.table[i].iddatatype == IT::DOUBLE) {
-					asmout << "\t" << lex.idTable.table[i].id << " real8 0.0\n";
-				}
-				else if (lex.idTable.table[i].iddatatype == IT::STR) {
-					asmout << "\t" << lex.idTable.table[i].id << " BYTE 128 dup(0)\n";
-				}
+		// арифметические и логические операции
+		case LEX_PLUS: file << "    pop rbx\n    pop rax\n    add rax, rbx\n    push rax\n"; break;
+		case LEX_MINUS: file << "    pop rbx\n    pop rax\n    sub rax, rbx\n    push rax\n"; break;
+		case LEX_STAR: file << "    pop rbx\n    pop rax\n    imul rax, rbx\n    push rax\n"; break;
+		case LEX_COLON: file << "    pop rbx\n    pop rax\n    xor rdx, rdx\n    div rbx\n    push rax\n"; break;
+		case LEX_OST: file << "    pop rbx\n    pop rax\n    xor rdx, rdx\n    div rbx\n    push rdx\n"; break;
+		case LEX_BIT_NOT: file << "    pop rax\n    not rax\n    push rax\n"; break;
+		case LEX_MORE: case LEX_LESS: case LEX_ISEQUAL: case LEX_NOT_EQUAL: case LEX_MORE_OR_EQUAL: case LEX_LESS_OR_EQUAL: {
+			file << "    pop rbx\n    pop rax\n    cmp rax, rbx\n";
+			string setOp;
+			switch (t.lexema[0]) {
+			case LEX_MORE: setOp = "setg"; break;
+			case LEX_LESS: setOp = "setl"; break;
+			case LEX_ISEQUAL: setOp = "sete"; break;
+			case LEX_NOT_EQUAL: setOp = "setne"; break;
+			case LEX_MORE_OR_EQUAL: setOp = "setge"; break;
+			case LEX_LESS_OR_EQUAL: setOp = "setle"; break;
 			}
-			else if (lex.idTable.table[i].idtype == IT::P && lex.idTable.table[i].iddatatype == IT::STR) {
-				asmout << "\t" << lex.idTable.table[i].id << " BYTE 128 dup(0)\n";
-			}
+			file << "    " << setOp << " al\n    movzx rax, al\n    push rax\n";
+			break;
 		}
-		stack<pair<string, int>> parms; // СЃС‚РµРє РґР»СЏ РїР°СЂРјРµС‚СЂРѕРІ С„СѓРЅРєС†РёРё Рё С‚РёРїРѕРІ
-		map<string, vector<string>> funcwithSTR; // С„СѓРЅРєС†РёРё СЃРѕ СЃС‚СЂРѕРєРѕРІС‹РјРё РїР°СЂР°РјРµС‚СЂР°РјРё
-		stack<string> STRp; // РґР»СЏ РЅР°Р·РІР°РЅРёР№ РїРµСЂРµРјРµРЅРЅС‹С… СЃС‚СЂРѕРєРѕРІРѕРіРѕ С‚РёРїР° РІ С„СѓРЅРєС†РёРё
-		stack<string> STRs; // РґР»СЏ РЅР°Р·РІР°РЅРёР№ РїРµСЂРµРјРµРЅРЅС‹С… СЃС‚СЂРєРѕРІРѕРіРѕ С‚РёРїР°, РєРѕС‚РѕСЂС‹Рµ СЏРІР»СЏСЋС‚СЃСЏ СЂРµСЃСѓСЂСЃР°РјРё
-		stack<string> OSTPARMS; // РѕСЃС‚Р°Р»СЊРЅС‹Рµ РїР°СЂР°РјРµС‚СЂС‹ РІ С„СѓРЅРєС†РёРё
-		stack<string> stk; // СЃС‚РµРє РґР»СЏ РѕС‚СЃР»РµР¶РёРІР°РЅРёСЏ С‚РµРєСѓС‰РµРіРѕ Р±Р»РѕРєР°(С„СѓРЅРєС†РёСЏ, СѓСЃР»РѕРІРЅС‹Р№, С†РёРєР»)
-		stack<int> ifi; // СЃС‚РµРє РґР»СЏ РѕС‚СЃР»РµР¶РёРІР°РЅРёСЏ С‚РµРєСѓС‰РµРіРѕ РЅРѕРјРµСЂР° СѓСЃР»РѕРІРёСЏ
-		stack<int> whilei;// СЃС‚РµРє РґР»СЏ РѕС‚СЃР»РµР¶РёРІР°РЅРёСЏ С‚РµРєСѓС‰РµРіРѕ РЅРѕРјРµСЂР° С†РёРєР»Р°
-		int num_of_ret = 0,
-			num_of_logical = 0,
-			num_of_if = 0,
-			num_of_while = 0,
-			num_of_func = 0;
-		string namefunc = "";
-		bool funcFlag = false,
-			mainFlag = false,
-			flag_return = false,
-			flag_else = false,
-			flag_if = false,
-			flag_while = false;
-		asmout << "\n\n.CODE\n;push 1251d\n;call SetConsoleOutputCP\n;push 1251d\n;call SetConsoleCP\n\n";
-		asmout << END << '\n';
-		for (int i = 0; i < lex.lexTable.size; i++)
-		{
-			switch (lex.lexTable.table[i].lexema[0])
-			{
-			case LEX_FUNCTION:
-			{
-				namefunc = lex.idTable.table[lex.lexTable.table[i += 2].idxTI].id;
-				string buf = FUNC + to_string(num_of_func);
-				if (lex.idTable.table[lex.lexTable.table[i].idxTI].iddatatype == IT::DOUBLE) {
-					buf += 'r';
-				}
-				num_of_func++;
-				stk.push(buf);
-				asmout << namefunc << " PROC ";
-				int index = i;
-				while (lex.lexTable.table[index].lexema[0] != LEX_RIGHTTHESIS) {
-					index++;
-				}
-
-				i = index;
-				while (lex.lexTable.table[index].lexema[0] != LEX_LEFTTHESIS)
-				{
-					if (lex.lexTable.table[index].lexema[0] == LEX_COMMA)
-					{
-						asmout << ", ";
-					}
-					if (lex.lexTable.table[index].lexema[0] == LEX_ID) {
-						if (lex.idTable.table[lex.lexTable.table[index].idxTI].idtype == IT::P)
-						{
-							if (lex.idTable.table[lex.lexTable.table[index].idxTI].iddatatype == IT::DOUBLE)
-							{
-								asmout << lex.idTable.table[lex.lexTable.table[index].idxTI].id << " : ";
-								asmout << "real8";
-							}
-							else if (lex.idTable.table[lex.lexTable.table[index].idxTI].iddatatype == IT::UINT)
-							{
-								asmout << lex.idTable.table[lex.lexTable.table[index].idxTI].id << " : ";
-								asmout << "DWORD";
-							}
-							else if (lex.idTable.table[lex.lexTable.table[index].idxTI].iddatatype == IT::BOOL)
-							{
-								asmout << lex.idTable.table[lex.lexTable.table[index].idxTI].id << " : ";
-								asmout << "DWORD";
-							}
-							else if (lex.idTable.table[lex.lexTable.table[index].idxTI].iddatatype == IT::STR)
-							{
-								funcwithSTR[namefunc].push_back(lex.idTable.table[lex.lexTable.table[index].idxTI].id);
-							}
-						}
-					}
-					index--;
-				}
-				funcFlag = true;
-				asmout << '\n';
-				break;
+		case LEX_READCH:
+			file << "    call readch\n    push rax\n";
+			break;
+		// постфиксные инкремент/декремент
+		case LEX_INC:
+		case LEX_DEC: {
+			int k = i - 1;
+			while (k >= start && lex.lexTable.table[k].lexema[0] == NULL) k--;
+			if (k >= start && lex.lexTable.table[k].lexema[0] == LEX_ID && lex.lexTable.table[k].idxTI != LT_TI_NULLIDX) {
+				IT::Entry& varEntry = lex.idTable.table[lex.lexTable.table[k].idxTI];
+				file << "    pop rax\n";
+				string op = (t.lexema[0] == LEX_INC) ? "inc" : "dec";
+				file << "    " << op << " qword [" << getMangledName(varEntry) << "]\n";
 			}
-			case LEX_MAIN:
-			{
-				stk.push("main");
-				mainFlag = true;
-				asmout << "main PROC\n";
-				break;
-			}
-			case LEX_EQUAL:
-			{
-				int respos = i - 1;
-				while (lex.lexTable.table[i].lexema[0] != LEX_SEMICOLON)
-				{
-					switch (lex.lexTable.table[i].lexema[0])
-					{
-					case LEX_LITERAL:
-					{
-						if (lex.idTable.table[lex.lexTable.table[i].idxTI].iddatatype == IT::IDDATATYPE::STR)
-						{
-							parms.push(make_pair(lex.idTable.table[lex.lexTable.table[i].idxTI].id, 4));
-						}
-						else if (lex.idTable.table[lex.lexTable.table[i].idxTI].iddatatype == IT::IDDATATYPE::DOUBLE)
-						{
-							parms.push(make_pair(lex.idTable.table[lex.lexTable.table[i].idxTI].id, 2));
-						}
-						else if(lex.idTable.table[lex.lexTable.table[i].idxTI].iddatatype == IT::IDDATATYPE::UINT)
-						{
-							parms.push(make_pair(lex.idTable.table[lex.lexTable.table[i].idxTI].id, 1));
-						}
-						else {
-							parms.push(make_pair(lex.idTable.table[lex.lexTable.table[i].idxTI].id, 3));
-						}
-						break;
-					}
-					case LEX_ID:
-					{
-						if (lex.idTable.table[lex.lexTable.table[i].idxTI].idtype == IT::IDTYPE::F && lex.idTable.table[lex.lexTable.table[i].idxTI].iddatatype == IT::IDDATATYPE::DOUBLE)
-						{
-							int kol = lex.functions[lex.idTable.table[lex.lexTable.table[i].idxTI].id].size();
-							if (funcwithSTR.find(lex.idTable.table[lex.lexTable.table[i].idxTI].id) != funcwithSTR.end()) {
-								auto o = funcwithSTR[lex.idTable.table[lex.lexTable.table[i].idxTI].id];
-								for (int i = 0; i < o.size(); i++) {
-									STRp.push(o[i]);
-								}
-							}
-							for (int i = 0; i < kol - 1; i++) {	
-								pair<string, int> buf = parms.top();
-								parms.pop();
-								if (buf.second != 4) {
-									OSTPARMS.push(buf.first);
-								}
-								else{
-									STRs.push(buf.first);
-								}
-							}
-							pair<string, int> buf = parms.top();
-							parms.pop();
-							if(buf.second != 4){
-								OSTPARMS.push(buf.first);
-							}
-							else {
-								STRs.push(buf.first);
-							}
-							while (!STRp.empty()) {
-								asmout << "\tlea esi, [" << STRs.top() << "]\n";
-								asmout << "\tlea edi, [" << STRp.top() << "]\n";
-								asmout << "\tmov ecx, lengthof " << STRs.top() << '\n';
-								asmout << "\trep movsb" << '\n';
-								STRp.pop();
-								STRs.pop();
-							}
-							asmout << "\tINVOKE " << lex.idTable.table[lex.lexTable.table[i].idxTI].id;
-							while (!OSTPARMS.empty()) {
-								asmout << ", " << OSTPARMS.top();
-								OSTPARMS.pop();
-							}
-							asmout << '\n';
-						}
-						else if (lex.idTable.table[lex.lexTable.table[i].idxTI].idtype == IT::IDTYPE::F)
-						{
-							if (strcmp(lex.idTable.table[lex.lexTable.table[i].idxTI].id, "compare") == 0) {
-								asmout << "\tINVOKE " << lex.idTable.table[lex.lexTable.table[i].idxTI].id;
-								string buf = parms.top().first;
-								parms.pop();
-								asmout << ", addr " << parms.top().first;
-								parms.pop();
-								asmout << ", addr " << buf;
-								asmout << '\n';
-								asmout << "\tpush eax\n";
-								i++;
-								continue;
-							}
-							if (strcmp(lex.idTable.table[lex.lexTable.table[i].idxTI].id, "len") == 0) {
-								asmout << "\tINVOKE " << lex.idTable.table[lex.lexTable.table[i].idxTI].id;
-								asmout << ", addr " << parms.top().first;
-								parms.pop();
-								asmout << '\n';
-								asmout << "\tpush eax\n";
-								i++;
-								continue;
-							}
-							int kol = lex.functions[lex.idTable.table[lex.lexTable.table[i].idxTI].id].size();
-							if (funcwithSTR.find(lex.idTable.table[lex.lexTable.table[i].idxTI].id) != funcwithSTR.end()) {
-								auto o = funcwithSTR[lex.idTable.table[lex.lexTable.table[i].idxTI].id];
-								for (int i = 0; i < o.size(); i++) {
-									STRp.push(o[i]);
-								}
-							}
-							for (int i = 0; i < kol - 1; i++) {
-								pair<string, int> buf = parms.top();
-								parms.pop();
-								if (buf.second != 4) {
-									OSTPARMS.push(buf.first);
-								}
-								else {
-									STRs.push(buf.first);
-								}
-							}
-							pair<string, int> buf = parms.top();
-							parms.pop();
-							if (buf.second != 4) {
-								OSTPARMS.push(buf.first);
-							}
-							else {
-								STRs.push(buf.first);
-							}
-							while (!STRp.empty()) {
-								asmout << "\tlea esi, [" << STRs.top() << "]\n";
-								asmout << "\tlea edi, [" << STRp.top() << "]\n";
-								asmout << "\tmov ecx, lengthof " << STRs.top() << '\n';
-								asmout << "\trep movsb" << '\n';
-								STRp.pop();
-								STRs.pop();
-							}
-							asmout << "\tINVOKE " << lex.idTable.table[lex.lexTable.table[i].idxTI].id;
-							while (!OSTPARMS.empty()) {
-								asmout << ", " << OSTPARMS.top();
-								OSTPARMS.pop();
-							}
-							asmout << "\n\tpush eax\n";
-						}
-						else if(lex.idTable.table[lex.lexTable.table[i].idxTI].iddatatype == IT::IDDATATYPE::DOUBLE)
-						{
-							parms.push(make_pair(lex.idTable.table[lex.lexTable.table[i].idxTI].id, 2));
-						}
-						else if (lex.idTable.table[lex.lexTable.table[i].idxTI].iddatatype == IT::IDDATATYPE::UINT)
-						{
-							parms.push(make_pair(lex.idTable.table[lex.lexTable.table[i].idxTI].id, 1));
-						}
-						else if (lex.idTable.table[lex.lexTable.table[i].idxTI].iddatatype == IT::IDDATATYPE::STR)
-						{
-							parms.push(make_pair(lex.idTable.table[lex.lexTable.table[i].idxTI].id, 4));
-						}
-						else if (lex.idTable.table[lex.lexTable.table[i].idxTI].iddatatype == IT::IDDATATYPE::BOOL)
-						{
-							parms.push(make_pair(lex.idTable.table[lex.lexTable.table[i].idxTI].id, 3));
-						}
-						break;
-					}
-					case LEX_STAR:
-					{
-						if (lex.idTable.table[lex.lexTable.table[respos].idxTI].iddatatype == IT::IDDATATYPE::DOUBLE)
-						{
-							if (!parms.empty()) {
-								if (parms.top().second == 2) {
-									asmout << "\tfld " << parms.top().first << '\n';
-									parms.pop();
-								}
-							}
-							if (!parms.empty()) {
-								if (parms.top().second == 2) {
-									asmout << "\tfld " << parms.top().first << '\n';
-									parms.pop();
-								}
-							}
-							asmout << "\tfmul\n"; 
-						}
-						else
-						{
-							if (!parms.empty()) {
-								if (parms.top().second == 1) {
-									asmout << "\tpush " << parms.top().first << '\n';
-									parms.pop();
-								}
-							}
-							if (!parms.empty()) {
-								if (parms.top().second == 1) {
-									asmout << "\tpush " << parms.top().first << '\n';
-									parms.pop();
-								}
-							}
-							asmout << "\tpop eax\n\tpop ebx\n";
-							asmout << "\tmul ebx\n\tpush eax\n";
-						}
-						break;
-					}
-					case LEX_PLUS:
-					{
-						if (lex.idTable.table[lex.lexTable.table[respos].idxTI].iddatatype == IT::IDDATATYPE::DOUBLE)
-						{
-							if (!parms.empty()) {
-								if (parms.top().second == 2) {
-									asmout << "\tfld " << parms.top().first << '\n';
-									parms.pop();
-								}
-							}
-							if (!parms.empty()) {
-								if (parms.top().second == 2) {
-									asmout << "\tfld " << parms.top().first << '\n';
-									parms.pop();
-								}
-							}
-							asmout << "\tfadd\n";
-						}
-						else
-						{
-							if (!parms.empty()) {
-								if (parms.top().second == 1) {
-									asmout << "\tpush " << parms.top().first << '\n';
-									parms.pop();
-								}
-							}
-							if (!parms.empty()) {
-								if (parms.top().second == 1) {
-									asmout << "\tpush " << parms.top().first << '\n';
-									parms.pop();
-								}
-							}
-							asmout << "\tpop eax\n\tpop ebx\n";
-							asmout << "\tadd eax, ebx\n\tpush eax\n";
-						}
-						break;
-					}
-					case LEX_MINUS:
-					{
-						if (lex.idTable.table[lex.lexTable.table[respos].idxTI].iddatatype == IT::IDDATATYPE::DOUBLE)
-						{
-							if (!parms.empty()) {
-								if (parms.top().second == 2) {
-									asmout << "\tfld " << parms.top().first << '\n';
-									parms.pop();
-								}
-							}
-							if (!parms.empty()) {
-								if (parms.top().second == 2) {
-									asmout << "\tfld " << parms.top().first << '\n';
-									parms.pop();
-								}
-							}
-							asmout << "\tfsub\n"; 
-						}
-						else
-						{
-							if (!parms.empty()) {
-								if (parms.top().second == 1) {
-									asmout << "\tpush " << parms.top().first << '\n';
-									parms.pop();
-								}
-							}
-							if (!parms.empty()) {
-								if (parms.top().second == 1) {
-									asmout << "\tpush " << parms.top().first << '\n';
-									parms.pop();
-								}
-							}
-							asmout << "\tpop eax\n\tpop ebx\n";
-							asmout << "\tsub eax, ebx\n\tpush eax\n";
-						}
-						break;
-					}
-					case LEX_DIRSLASH:
-					{
-						if (lex.idTable.table[lex.lexTable.table[respos].idxTI].iddatatype == IT::IDDATATYPE::DOUBLE)
-						{
-							if (!parms.empty()) {
-								if (parms.top().second == 2) {
-									asmout << "\tfld " << parms.top().first << '\n';
-									parms.pop();
-								}
-							}
-							if (!parms.empty()) {
-								if (parms.top().second == 2) {
-									asmout << "\tfld " << parms.top().first << '\n';
-									parms.pop();
-								}
-							}
-							asmout << "\tfldz\n"; 
-							asmout << "\tfcomip st(0), st(1)\n"; 
-							asmout << "\tje SOMETHINGWRONG\n"; 
-							asmout << "\tfdiv\n"; 
-						}
-						else
-						{
-							if (!parms.empty()) {
-								if (parms.top().second == 1) {
-									asmout << "\tpush " << parms.top().first << '\n';
-									parms.pop();
-								}
-							}
-							if (!parms.empty()) {
-								if (parms.top().second == 1) {
-									asmout << "\tpush " << parms.top().first << '\n';
-									parms.pop();
-								}
-							}
-							asmout << "\tpop eax\n\tpop ebx\n";
-							asmout << "\tcmp ebx, 0\n\tje SOMETHINGWRONG\n";
-							asmout << "\tcdq\n";
-							asmout << "\tidiv ebx\n\tpush eax\n"; 
-						}
-						break;
-					}
-					case LEX_OST: 
-					{
-						if (!parms.empty()) {
-							if (parms.top().second == 1) {
-								asmout << "\tpush " << parms.top().first << '\n';
-								parms.pop();
-							}
-						}
-						if (!parms.empty()) {
-							if (parms.top().second == 1) {
-								asmout << "\tpush " << parms.top().first << '\n';
-								parms.pop();
-							}
-						}
-						asmout << "\tpop eax\n\tpop ebx\n";
-						asmout << "\tcmp ebx, 0\n\tje SOMETHINGWRONG\n";
-						asmout << "\tcdq\n";
-						asmout << "\tidiv ebx\n\tpush edx\n"; // РћСЃС‚Р°С‚РѕРє РїРѕРјРµС‰Р°РµС‚СЃСЏ РІ edx
-						break;
-					}
-					case LEX_AND:
-					{
-						if (!parms.empty()) {
-							if (parms.top().second == 1) {
-								asmout << "\tpush " << parms.top().first << '\n';
-								parms.pop();
-							}
-						}
-						if (!parms.empty()) {
-							if (parms.top().second == 1) {
-								asmout << "\tpush " << parms.top().first << '\n';
-								parms.pop();
-							}
-						}
-						asmout << "\tpop ebx\n";  
-						asmout << "\tpop eax\n";  
-						asmout << "\tand eax, ebx\n"; 
-						asmout << "\tpush eax\n"; 
-						break;
-					}
-
-					case LEX_OR:
-					{
-						if (!parms.empty()) {
-							if (parms.top().second == 1) {
-								asmout << "\tpush " << parms.top().first << '\n';
-								parms.pop();
-							}
-						}
-						if (!parms.empty()) {
-							if (parms.top().second == 1) {
-								asmout << "\tpush " << parms.top().first << '\n';
-								parms.pop();
-							}
-						}
-						asmout << "\tpop ebx\n";  
-						asmout << "\tpop eax\n";  
-						asmout << "\tor eax, ebx\n"; 
-						asmout << "\tpush eax\n";
-						break;
-					}
-					default:
-						break;
-					}
-					i++;
-				}
-				if (lex.idTable.table[lex.lexTable.table[respos].idxTI].iddatatype == IT::IDDATATYPE::DOUBLE) {
-					if (!parms.empty()) {
-						asmout << "\tfld " << parms.top().first << '\n';
-						parms.pop();
-					}
-					asmout << "\tfstp " << lex.idTable.table[lex.lexTable.table[respos].idxTI].id << "\n\n";
-				}
-				else if (lex.idTable.table[lex.lexTable.table[respos].idxTI].iddatatype == IT::IDDATATYPE::STR) {
-					if (parms.top().second == 4) {
-						if (!parms.empty()) {
-							asmout << "\tlea esi, [" << parms.top().first << "]\n";
-							asmout << "\tlea edi, [" << lex.idTable.table[lex.lexTable.table[respos].idxTI].id << "]\n";
-							asmout << "\tmov ecx, lengthof " << parms.top().first << "\n";
-							asmout << "\trep movsb\n";
-							parms.pop();
-						}
-					}
-				}
-				else {
-							if (!parms.empty()) {
-								asmout << "\tpush " << parms.top().first << '\n';
-								parms.pop();
-							}
-							asmout << "\tpop " << lex.idTable.table[lex.lexTable.table[respos].idxTI].id << "\n\n";
-						}
-						break;
-					}
-			case LEX_RETURN:
-			{
-				i++;
-				if (lex.idTable.table[lex.lexTable.table[i].idxTI].iddatatype == IT::IDDATATYPE::DOUBLE)
-					{
-						asmout << "\tfld ";
-						asmout << lex.idTable.table[lex.lexTable.table[i++].idxTI].id << '\n';
-					}
-					else {
-							asmout << "\tpush ";
-							asmout << lex.idTable.table[lex.lexTable.table[i++].idxTI].id << '\n';
-					}
-				if (funcFlag)
-				{
-					asmout << "\tjmp local" << num_of_ret << endl;
-					flag_return = true;
-				}
-				if (mainFlag)
-				{
-					asmout << "\tjmp theend\n";
-					flag_return = true;
-				}
-				break;
-			}
-			case LEX_BRACELET:
-			{
-				string buf = stk.top();
-				stk.pop();
-				if (buf == "main") {
-					if (flag_return)
-					{
-						//asmout << "theend:\n";
-						flag_return = false;
-					}
-					asmout << FOOTER;
-					break;
-				}
-				if (buf.find(FUNC) != string::npos)
-				{
-					if (flag_return)
-					{
-						asmout << LOCAL << num_of_ret++ << ":\n";
-						if (buf.find("r") != string::npos) {
-							asmout << "\t\n\tret\n";
-						}
-						else {
-							asmout << "\tpop eax\n\tret\n";
-						}
-						flag_return = false;
-					}
-					asmout << namefunc << " ENDP\n\n";
-					funcFlag = false;
-				}
-				if (buf.find(IF) != string::npos)
-				{
-					if (lex.lexTable.table[i + 2].lexema[0] == LEX_ELSE) {
-						asmout << "\tjmp ifEnd" << ifi.top() << "\n";
-						asmout << ELSEI << ifi.top() << ":\n";
-					}
-					else {
-						asmout << ELSEI << ifi.top() << ":\n";
-						ifi.pop();
-					}
-				}
-				if (buf.find(ELSEI) != string::npos)
-				{
-						asmout << "ifEnd" << ifi.top() << ":\n";
-						ifi.pop();
-				}
-				if (buf.find(UNTILI) != string::npos)
-				{
-					asmout << "jmp while" << whilei.top() << '\n';
-					asmout << "notwhile" << whilei.top() << ":\n";
-					whilei.pop();
-				}
-				break;
-			}
-			case LEX_LEFTBRACE:
-				if (flag_if)
-				{
-					asmout << IFI << ifi.top() << ":\n";
-					flag_if = false;
-				}
-				if (flag_else) {
-					flag_else = false;
-				}
-				if (flag_while)
-				{
-					asmout << UNTILI << whilei.top() << ":\n";
-					flag_while = false;
-					asmout << "\tmov al, \'" << lex.lexTable.table[i - 3].lexema[0] << "\'\n";
-					asmout << "\tpush eax\n";
-					if (lex.idTable.table[lex.lexTable.table[i - 2].idxTI].idtype == IT::P && lex.idTable.table[lex.lexTable.table[i - 2].idxTI].iddatatype != IT::DOUBLE) {
-						asmout << "\tlea eax, " << lex.idTable.table[lex.lexTable.table[i - 2].idxTI].id << '\n';
-						asmout << "\tpush eax\n";
-					}
-					else {
-						asmout << "\tpush OFFSET " << lex.idTable.table[lex.lexTable.table[i - 2].idxTI].id << '\n';
-					}
-					if (lex.idTable.table[lex.lexTable.table[i - 2].idxTI].iddatatype == IT::UINT) {
-						asmout << "\tpush 1\n";
-					}
-					else if (lex.idTable.table[lex.lexTable.table[i - 2].idxTI].iddatatype == IT::DOUBLE) {
-						asmout << "\tpush 2\n";
-					}
-					else if (lex.idTable.table[lex.lexTable.table[i - 2].idxTI].iddatatype == IT::BOOL) {
-						asmout << "\tpush 3\n";
-					}
-					else if (lex.idTable.table[lex.lexTable.table[i - 2].idxTI].iddatatype == IT::STR) {
-						asmout << "\tpush 4\n";
-					}
-
-					if (lex.idTable.table[lex.lexTable.table[i - 4].idxTI].idtype == IT::P && lex.idTable.table[lex.lexTable.table[i - 4].idxTI].iddatatype != IT::DOUBLE) {
-						asmout << "\tlea eax, " << lex.idTable.table[lex.lexTable.table[i - 4].idxTI].id << '\n';
-						asmout << "\tpush eax\n";
-					}
-					else {
-						asmout << "\tpush OFFSET " << lex.idTable.table[lex.lexTable.table[i - 4].idxTI].id << '\n';
-					}
-					if (lex.idTable.table[lex.lexTable.table[i - 4].idxTI].iddatatype == IT::UINT) {
-						asmout << "\tpush 1\n";
-					}
-					else if (lex.idTable.table[lex.lexTable.table[i - 4].idxTI].iddatatype == IT::DOUBLE) {
-						asmout << "\tpush 2\n";
-					}
-					else if (lex.idTable.table[lex.lexTable.table[i - 4].idxTI].iddatatype == IT::BOOL) {
-						asmout << "\tpush 3\n";
-					}
-					else if (lex.idTable.table[lex.lexTable.table[i - 4].idxTI].iddatatype == IT::STR) {
-						asmout << "\tpush 4\n";
-					}
-					asmout << "\tcall compnum\n";
-					asmout << "\tcmp eax, -1\n\tje THEENDER\n";
-					asmout << "\tcmp eax, 0\n\tje notwhile" << whilei.top() << '\n';
-
-	/*				asmout << "\tmov eax, " << lex.idTable.table[lex.lexTable.table[i - 4].idxTI].id << '\n';
-					asmout << "\tcmp eax, " << lex.idTable.table[lex.lexTable.table[i - 2].idxTI].id << '\n';
-					if (lex.lexTable.table[i - 3].lexema[0] == LEX_MORE)
-					{
-						asmout << "\tjle notwhile" << whilei.top() << '\n';
-					}
-					else if (lex.lexTable.table[i - 3].lexema[0] == LEX_LESS)
-					{
-						asmout << "\tjge notwhile" << whilei.top() << '\n';
-					}
-					else if (lex.lexTable.table[i - 3].lexema[0] == LEX_ISEQUAL)
-					{
-						asmout << "\tjnz notwhile" << whilei.top() << '\n';
-					}
-					else if (lex.lexTable.table[i - 3].lexema[0] == LEX_NOT_EQUAL)
-					{
-						asmout << "\tjz notwhile" << whilei.top() << '\n';
-					}
-					else if (lex.lexTable.table[i - 3].lexema[0] == LEX_MORE_OR_EQUAL)
-					{
-						asmout << "\tjl notwhile" << whilei.top() << '\n';
-					}
-					else if (lex.lexTable.table[i - 3].lexema[0] == LEX_LESS_OR_EQUAL)
-					{
-						asmout << "\tjg notwhile" << whilei.top() << '\n';
-					}*/
-				}
-				break;
-			case LEX_IF:
-			{
-				flag_if = true;
-				string buf = IF + to_string(num_of_if);
-				stk.push(buf);
-				ifi.push(num_of_if);
-				num_of_if++;
-				break;
-			}
-			case LEX_WHILE:
-			{
-				flag_while = true;
-				string buf = UNTILI + to_string(num_of_while);
-				stk.push(buf);
-				whilei.push(num_of_while);
-				num_of_while++;
-				break;
-			}
-			case LEX_ELSE:
-			{
-				flag_else = true;
-				string buf = ELSEI + to_string(num_of_if - 1);
-				stk.push(buf);
-				break;
-			}
-			case LEX_LEFTTHESIS:
-			{
-				if (num_of_if && lex.lexTable.table[i - 1].lexema[0] == LEX_IF)
-				{
-					asmout << "\tmov al, \'" << lex.lexTable.table[i + 2].lexema[0] << "\'\n";
-					asmout << "\tpush eax\n";
-					if (lex.idTable.table[lex.lexTable.table[i + 3].idxTI].idtype == IT::P && lex.idTable.table[lex.lexTable.table[i + 3].idxTI].iddatatype != IT::DOUBLE) {
-						asmout << "\tlea eax, " << lex.idTable.table[lex.lexTable.table[i + 3].idxTI].id << '\n';
-						asmout << "\tpush eax\n";
-					}
-					else {
-						asmout << "\tpush OFFSET " << lex.idTable.table[lex.lexTable.table[i + 3].idxTI].id << '\n';
-					}
-					if (lex.idTable.table[lex.lexTable.table[i + 3].idxTI].iddatatype == IT::UINT) {
-						asmout << "\tpush 1\n";
-					}
-					else if (lex.idTable.table[lex.lexTable.table[i + 3].idxTI].iddatatype == IT::DOUBLE) {
-						asmout << "\tpush 2\n";
-					}
-					else if (lex.idTable.table[lex.lexTable.table[i + 3].idxTI].iddatatype == IT::BOOL) {
-						asmout << "\tpush 3\n";
-					}
-					else if (lex.idTable.table[lex.lexTable.table[i + 3].idxTI].iddatatype == IT::STR) {
-						asmout << "\tpush 4\n";
-					}
-
-					if (lex.idTable.table[lex.lexTable.table[i + 1].idxTI].idtype == IT::P && lex.idTable.table[lex.lexTable.table[i + 1].idxTI].iddatatype != IT::DOUBLE) {
-						asmout << "\tlea eax, " << lex.idTable.table[lex.lexTable.table[i + 1].idxTI].id << '\n';
-						asmout << "\tpush eax\n";
-					}
-					else {
-						asmout << "\tpush OFFSET " << lex.idTable.table[lex.lexTable.table[i + 1].idxTI].id << '\n';
-					}
-					if (lex.idTable.table[lex.lexTable.table[i + 1].idxTI].iddatatype == IT::UINT) {
-						asmout << "\tpush 1\n";
-					}
-					else if (lex.idTable.table[lex.lexTable.table[i + 1].idxTI].iddatatype == IT::DOUBLE) {
-						asmout << "\tpush 2\n";
-					}
-					else if (lex.idTable.table[lex.lexTable.table[i + 1].idxTI].iddatatype == IT::BOOL) {
-						asmout << "\tpush 3\n";
-					}
-					else if (lex.idTable.table[lex.lexTable.table[i + 1].idxTI].iddatatype == IT::STR) {
-						asmout << "\tpush 4\n";
-					}
-					asmout << "\tcall compnum\n";
-					asmout << "\tcmp eax, -1\n\tje THEENDER\n";
-					asmout << "\tcmp eax, 1\n\tje ifi" << ifi.top() << '\n';
-					asmout << "\tcmp eax, 0\n\tje elsei" << ifi.top() << '\n';
-
-				}
-
-				break;
-			}
-			case LEX_PRINT:
-			{
-				switch (lex.idTable.table[lex.lexTable.table[i + 1].idxTI].iddatatype)
-				{
-				case IT::IDDATATYPE::UINT: {
-					asmout << "\n\tINVOKE printss, 1, addr " << lex.idTable.table[lex.lexTable.table[i + 1].idxTI].id << "\n";
-					break;
-				}
-				case IT::IDDATATYPE::BOOL: {
-					asmout << "\n\tINVOKE printss, 3, addr " << lex.idTable.table[lex.lexTable.table[i + 1].idxTI].id << "\n";
-					break;
-				}
-				case IT::IDDATATYPE::STR: {
-					asmout << "\n\tINVOKE printss, 4, addr " << lex.idTable.table[lex.lexTable.table[i + 1].idxTI].id << "\n";
-					break;
-				}
-				case IT::IDDATATYPE::DOUBLE: {
-					asmout << "\n\tINVOKE printss, 2, addr " << lex.idTable.table[lex.lexTable.table[i + 1].idxTI].id << "\n";
-					break;
-				}
-				}
-				break;
-			}
-			case LEX_PRINTLN:
-			{
-				switch (lex.idTable.table[lex.lexTable.table[i + 1].idxTI].iddatatype)
-				{
-				case IT::IDDATATYPE::UINT: {
-					asmout << "\n\tINVOKE printssln, 1, addr " << lex.idTable.table[lex.lexTable.table[i + 1].idxTI].id << "\n";
-					break;
-				}
-				case IT::IDDATATYPE::BOOL: {
-					asmout << "\n\tINVOKE printssln, 3, addr " << lex.idTable.table[lex.lexTable.table[i + 1].idxTI].id << "\n";
-					break;
-				}
-				case IT::IDDATATYPE::STR: {
-					asmout << "\n\tINVOKE printssln, 4, addr " << lex.idTable.table[lex.lexTable.table[i + 1].idxTI].id << "\n";
-					break;
-				}
-				case IT::IDDATATYPE::DOUBLE: {
-					asmout << "\n\tINVOKE printssln, 2, addr " << lex.idTable.table[lex.lexTable.table[i + 1].idxTI].id << "\n";
-					break;
-				}
-				}
-				break;
-			}
-			case LEX_READ:
-			{
-				switch (lex.idTable.table[lex.lexTable.table[i + 1].idxTI].iddatatype)
-				{
-				case IT::IDDATATYPE::UINT: {
-					asmout << "\n\tINVOKE readss, 1, addr " << lex.idTable.table[lex.lexTable.table[i + 1].idxTI].id << "\n";
-					break;
-				}
-				case IT::IDDATATYPE::BOOL: {
-					asmout << "\n\tINVOKE readss, 3, addr " << lex.idTable.table[lex.lexTable.table[i + 1].idxTI].id << "\n";
-					break;
-				}
-				case IT::IDDATATYPE::STR: {
-					asmout << "\n\tINVOKE readss, 4, addr " << lex.idTable.table[lex.lexTable.table[i + 1].idxTI].id << "\n";
-					break;
-				}
-				case IT::IDDATATYPE::DOUBLE: {
-					asmout << "\n\tINVOKE readss, 2, addr " << lex.idTable.table[lex.lexTable.table[i + 1].idxTI].id << "\n";
-					break;
-				}
-				}
-					asmout << "\tcmp eax, -1\n\tjz THEENDER\n"; 
-
-				break;
-			}
-			}
+			break;
 		}
-		asmout.close();
+		}
 	}
+}
+
+// Определение типа выражения
+IT::IDDATATYPE getExprType(int start, int end, Lex::LEX& lex) {
+	IT::IDDATATYPE type = IT::CHAR;
+	for (int i = start; i < end; i++) {
+		if (lex.lexTable.table[i].lexema[0] == LEX_ID || lex.lexTable.table[i].lexema[0] == LEX_LITERAL) {
+			int idx = lex.lexTable.table[i].idxTI;
+			if (idx != LT_TI_NULLIDX) {
+				IT::IDDATATYPE t = lex.idTable.table[idx].iddatatype;
+				if (t == IT::UNSIGNED) type = IT::UNSIGNED;
+			}
+		}
+		else if (lex.lexTable.table[i].lexema[0] == LEX_PLUS ||
+			lex.lexTable.table[i].lexema[0] == LEX_MINUS ||
+			lex.lexTable.table[i].lexema[0] == LEX_STAR ||
+			lex.lexTable.table[i].lexema[0] == LEX_DIRSLASH ||
+			lex.lexTable.table[i].lexema[0] == LEX_OST ||
+			lex.lexTable.table[i].lexema[0] == LEX_COLON) {
+			type = IT::UNSIGNED;
+		}
+	}
+	return type;
+}
+
+// основной генератор
+void asmGenerator(Lex::LEX& lex, wchar_t outfile[]) {
+	// подготовка файла
+	char narrow_outfile[300];
+	wcstombs(narrow_outfile, outfile, 300);
+	ofstream file(narrow_outfile);
+	if (!file.is_open()) throw ERROR_THROW(113);
+
+	file << ASM_HEAD << ASM_STDLIB;
+	// секция .bss для неинициализированных данных
+	file << "section .bss\n";
+	for (int i = 0; i < lex.idTable.size; i++) {
+		IT::Entry& entry = lex.idTable.table[i];
+		if (entry.idtype == IT::V || entry.idtype == IT::P) {
+			file << "    " << getMangledName(entry) << " resq 1\n";
+		}
+	}
+	file << "\nsection .text\n";
+
+	stack<LabelBlock> blockStack;
+	int labelCounter = 0;
+
+	// главный цикл по таблице лексем
+	for (int i = 0; i < lex.lexTable.size; i++) {
+		LT::Entry& t = lex.lexTable.table[i];
+		if (t.lexema[0] == NULL) continue;
+
+		switch (t.lexema[0]) {
+		// точка входа
+		case LEX_MAIN: {
+			file << "\n_start:\n    call main\n    mov rdi, rax\n    jmp exit_prog\n";
+			file << "\nmain:\n    push rbp\n    mov rbp, rsp\n";
+			blockStack.push({ 3, 0, 0, 0 });
+			break;
+		}
+		// объявление функции
+		case LEX_FUNC: {
+			int idIdx = lex.lexTable.table[i + 2].idxTI;
+			string funcName = lex.idTable.table[idIdx].id;
+			file << "\n" << funcName << ":\n    push rbp\n    mov rbp, rsp\n";
+			// копирование параметров из стека в переменные
+			int k = i + 4;
+			int paramOffset = 16;
+			int paramCount = 0;
+			while (lex.lexTable.table[k].lexema[0] != LEX_RIGHTTHESIS) {
+				if (lex.lexTable.table[k].lexema[0] == LEX_ID) {
+					IT::Entry& pEntry = lex.idTable.table[lex.lexTable.table[k].idxTI];
+					file << "    mov rax, [rbp + " << paramOffset << "]\n";
+					file << "    mov [" << getMangledName(pEntry) << "], rax\n";
+					paramOffset += 8;
+					paramCount++;
+				}
+				k++;
+			}
+			blockStack.push({ 3, 0, 0, paramCount * 8 });
+			i = k;
+			break;
+		}
+		// возврат из функции
+		case LEX_SEND: {
+			int endExpr = i + 1;
+			while (endExpr < lex.lexTable.size && lex.lexTable.table[endExpr].lexema[0] != LEX_SEMICOLON) endExpr++;
+			processExpression(i + 1, endExpr, lex, file);
+			int retBytes = 0;
+			if (!blockStack.empty()) {
+				stack<LabelBlock> temp = blockStack;
+				while (!temp.empty()) {
+					if (temp.top().type == 3) { retBytes = temp.top().paramSize; break; }
+					temp.pop();
+				}
+			}
+			file << "    pop rax\n    mov rsp, rbp\n    pop rbp\n";
+			if (retBytes > 0) file << "    ret " << retBytes << "\n";
+			else file << "    ret\n";
+			i = endExpr;
+			break;
+		}
+		// вызов writech
+		case LEX_WRITECH: {
+			int j = i + 1;
+			while (j < lex.lexTable.size && lex.lexTable.table[j].lexema[0] == NULL) j++;
+			if (j < lex.lexTable.size && lex.lexTable.table[j].lexema[0] == LEX_LEFTTHESIS) {
+				int startExpr = j + 1;
+				int endExpr = startExpr;
+				int balance = 1;
+				while (endExpr < lex.lexTable.size) {
+					if (lex.lexTable.table[endExpr].lexema[0] == LEX_LEFTTHESIS) balance++;
+					if (lex.lexTable.table[endExpr].lexema[0] == LEX_RIGHTTHESIS) balance--;
+					if (balance == 0) break;
+					endExpr++;
+				}
+				processExpression(startExpr, endExpr, lex, file);
+				
+				if (getExprType(startExpr, endExpr, lex) == IT::UNSIGNED) {
+					file << "    call writeuint\n";
+				} else {
+					file << "    call writech\n";
+				}
+				i = endExpr;
+			}
+			break;
+		}
+		// присваивание или вызов функции как инструкция
+		case LEX_ID: {
+			if (i + 1 < lex.lexTable.size && lex.lexTable.table[i+1].lexema[0] == LEX_EQUAL) {
+				IT::Entry& varEntry = lex.idTable.table[t.idxTI];
+				int endStmt = i + 2;
+				while (endStmt < lex.lexTable.size && lex.lexTable.table[endStmt].lexema[0] != LEX_SEMICOLON) endStmt++;
+				processExpression(i + 2, endStmt, lex, file);
+				file << "    pop rax\n";
+				file << "    mov [" << getMangledName(varEntry) << "], rax\n";
+				i = endStmt;
+			} else {
+				// выражение, результат которого не используется
+				int endStmt = i + 1;
+				while (endStmt < lex.lexTable.size && lex.lexTable.table[endStmt].lexema[0] != LEX_SEMICOLON) endStmt++;
+				processExpression(i, endStmt, lex, file);
+				file << "    pop rax ; clear stack\n";
+				i = endStmt;
+			}
+			break;
+		}
+		// выражение, результат которого не используется
+		case LEX_LITERAL:
+		case LEX_READCH:
+		case LEX_BIT_NOT:
+		case LEX_INC:
+		case LEX_DEC: {
+			int endStmt = i + 1;
+			while (endStmt < lex.lexTable.size && lex.lexTable.table[endStmt].lexema[0] != LEX_SEMICOLON) endStmt++;
+			processExpression(i, endStmt, lex, file);
+			file << "    pop rax ; clear stack\n";
+			i = endStmt;
+			break;
+		}
+		// условный оператор
+		case LEX_IF: {
+			int l_else = labelCounter++;
+			int l_end = labelCounter++;
+			blockStack.push({ 0, l_else, l_end, 0 });
+			// генерация кода для условия
+			int j = i + 2;
+			int balance = 1;
+			int endCond = j;
+			while (endCond < lex.lexTable.size) {
+				if (lex.lexTable.table[endCond].lexema[0] == LEX_LEFTTHESIS) balance++;
+				if (lex.lexTable.table[endCond].lexema[0] == LEX_RIGHTTHESIS) balance--;
+				if (balance == 0) break;
+				endCond++;
+			}
+			processExpression(j, endCond, lex, file);
+			i = endCond;
+			break;
+		}
+		// переход в блок else
+		case LEX_DIFFER: {
+			if (!blockStack.empty()) blockStack.top().type = 1;
+			break;
+		}
+		// цикл
+		case LEX_BECAUSE: {
+			int l_start = labelCounter++;
+			int l_end = labelCounter++;
+			blockStack.push({ 2, l_start, l_end, 0 });
+			// блок инициализации
+			int j = i + 2;
+			int endInit = j;
+			while (endInit < lex.lexTable.size && lex.lexTable.table[endInit].lexema[0] != LEX_SEMICOLON) endInit++;
+			if (lex.lexTable.table[j].lexema[0] == LEX_ID && lex.lexTable.table[j+1].lexema[0] == LEX_EQUAL) {
+				IT::Entry& varEntry = lex.idTable.table[lex.lexTable.table[j].idxTI];
+				processExpression(j + 2, endInit, lex, file);
+				file << "    pop rax\n    mov [" << getMangledName(varEntry) << "], rax\n";
+			} else {
+				processExpression(j, endInit, lex, file);
+				if (endInit > j) file << "    pop rax ; clear stack init\n";
+			}
+			// метка начала цикла
+			file << "L" << l_start << ":\n";
+			// блок условия
+			int startCond = endInit + 1;
+			int endCond = startCond;
+			while (endCond < lex.lexTable.size && lex.lexTable.table[endCond].lexema[0] != LEX_SEMICOLON) endCond++;
+			processExpression(startCond, endCond, lex, file);
+
+			int startStep = endCond + 1;
+			int endStep = startStep;
+			while (endStep < lex.lexTable.size && lex.lexTable.table[endStep].lexema[0] != LEX_RIGHTTHESIS) endStep++;
+			i = endStep;
+			break;
+		}
+		// начало блока
+		case LEX_LEFTBRACE: {
+			if (!blockStack.empty()) {
+				LabelBlock& b = blockStack.top();
+				// условный переход для if
+				if (b.type == 0) {
+					file << "    pop rax\n    cmp rax, 0\n    je L" << b.label_1 << "\n";
+				// условный переход для because
+				} else if (b.type == 2) {
+					file << "    pop rax\n    cmp rax, 0\n    je L" << b.label_2 << "\n";
+				}
+			}
+			break;
+		}
+		// конец блока
+		case LEX_BRACELET: {
+			if (!blockStack.empty()) {
+				LabelBlock b = blockStack.top();
+				blockStack.pop();
+				// конец блока if
+				if (b.type == 0) {
+					int next = i + 1;
+					while (next < lex.lexTable.size && (lex.lexTable.table[next].lexema[0] == NULL || lex.lexTable.table[next].lexema[0] == LEX_SEMICOLON)) next++;
+					// если есть differ, переходим к его обработке
+					if (next < lex.lexTable.size && lex.lexTable.table[next].lexema[0] == LEX_DIFFER) {
+						file << "    jmp L" << b.label_2 << "\nL" << b.label_1 << ":\n";
+						b.type = 1;
+						blockStack.push(b);
+					// если нет differ, ставим метку конца
+					} else {
+						file << "L" << b.label_1 << ":\n";
+					}
+				}
+				// конец блока else
+				else if (b.type == 1) {
+					file << "L" << b.label_2 << ":\n";
+				}
+				// конец блока because
+				else if (b.type == 2) {
+					// генерация кода для шага цикла
+					int back = i;
+					int braces = 1;
+					while (back > 0) {
+						if (lex.lexTable.table[back].lexema[0] == LEX_BRACELET) braces++;
+						if (lex.lexTable.table[back].lexema[0] == LEX_LEFTBRACE) braces--;
+						if (braces == 0) break;
+						back--;
+					}
+					int stepEnd = back - 1;
+					int stepStart = stepEnd;
+					while (stepStart > 0 && lex.lexTable.table[stepStart].lexema[0] != LEX_SEMICOLON) stepStart--;
+					stepStart++;
+
+					bool isAssign = false;
+					for(int k=stepStart; k<stepEnd; k++) if(lex.lexTable.table[k].lexema[0]==LEX_EQUAL) isAssign=true;
+
+					if (isAssign) {
+						IT::Entry& varEntry = lex.idTable.table[lex.lexTable.table[stepStart].idxTI];
+						processExpression(stepStart+2, stepEnd, lex, file);
+						file << "    pop rax\n    mov [" << getMangledName(varEntry) << "], rax\n";
+					} else {
+						processExpression(stepStart, stepEnd, lex, file);
+					}
+					// переход на новую итерацию
+					file << "    jmp L" << b.label_1 << "\nL" << b.label_2 << ":\n";
+				}
+				// конец блока функции
+				else if (b.type == 3) {
+					file << "    pop rbp\n";
+					if (b.paramSize > 0) file << "    ret " << b.paramSize << "\n";
+					else file << "    ret\n";
+				}
+			}
+			break;
+		}
+		}
+	}
+	file.close();
+}
 }

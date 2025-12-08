@@ -1,247 +1,272 @@
 #include "stdafx.h"
 #include "RPN.h"
+#include <iostream>
 
 using namespace std;
 
-namespace RPN
-{
-	int getPriority(LT::Entry cur_lex)
-	{
-		switch (cur_lex.lexema[0])
-		{
-		case LEX_STAR:
-			return 3;
-		case LEX_DIRSLASH:
-			return 3;
-		case LEX_OST:
-			return 3;
-		case LEX_PLUS:
-			return 2;
-		case LEX_MINUS:
-			return 2;
-		case LEX_AND:
-			return 2;
-		case LEX_OR:
-			return 2;
-		case LEX_COMMA:
-			return 1;
-		case LEX_LEFTTHESIS:
-			return 0;
-		case LEX_RIGHTTHESIS:
-			return 0;
-		default:
-			return -1;
-		}
+namespace RPN {
+int getPriority(char lexema) {
+	switch (lexema) {
+	case LEX_LEFTTHESIS: return 0;
+	case LEX_RIGHTTHESIS: return 0;
+	case LEX_COMMA: return 1;
+
+	case LEX_EQUAL: return 2;
+
+	case LEX_MORE:
+	case LEX_LESS:
+	case LEX_ISEQUAL:
+	case LEX_NOT_EQUAL:
+	case LEX_MORE_OR_EQUAL:
+	case LEX_LESS_OR_EQUAL: return 3;
+
+	case LEX_PLUS:
+	case LEX_MINUS: return 4;
+
+	case LEX_STAR:
+	case LEX_COLON:
+	case LEX_OST:
+		return 5;
+
+	case LEX_BIT_NOT:
+		return 6;
+
+	default: return -1;
 	}
-	void Rpn(LT::LexTable lextable, IT::IdTable idtable, int curPos)
-	{
-		queue<LT::Entry> q;
-		stack<LT::Entry> s;
-		LT::Entry bottom = { '$', LT_TI_NULLIDX, LT_TI_NULLIDX };
-		int curpos = curPos;
-		int kolLex = 0;
-		for (curPos; lextable.table[curPos].lexema[0] != LEX_SEMICOLON; curPos++, kolLex++)
-		{
-			switch (lextable.table[curPos].lexema[0])
-			{
-			case LEX_ID:
-			{
-				if (idtable.table[lextable.table[curPos].idxTI].idtype == IT::IDTYPE::F)
-				{
-					s.push(lextable.table[curPos]);
-					continue;
-				}
-				q.push(lextable.table[curPos]);
-				continue;
+}
+
+bool Rpn(LT::LexTable& lextable, IT::IdTable& idtable, int startPos, int endPos) {
+	stack<LT::Entry> stack;      // Стек операторов
+	vector<LT::Entry> outString; // Выходная строка (RPN)
+
+	for (int i = startPos; i < endPos; i++) {
+		LT::Entry entry = lextable.table[i];
+
+		// игнорируем пустые лексемы
+		if (entry.lexema[0] == NULL) continue;
+
+		switch (entry.lexema[0]) {
+		// операнды
+		case LEX_LITERAL:
+			outString.push_back(entry);
+			break;
+
+		case LEX_ID: {
+			// если это функция — считаем её оператором
+			// если переменная — операндом
+			if (entry.idxTI != LT_TI_NULLIDX && idtable.table[entry.idxTI].idtype == IT::F) {
+				stack.push(entry);
 			}
-			case LEX_LITERAL:
-			{
-				q.push(lextable.table[curPos]);
-				continue;
+			else {
+				outString.push_back(entry);
 			}
-			case LEX_LEFTTHESIS:
-			{
-				s.push(lextable.table[curPos]);
-				continue;
-			}
-			case LEX_RIGHTTHESIS:
-			{
-				if (!s.empty())
-				{
-					while (s.top().lexema[0] != LEX_LEFTTHESIS)
-					{
-						q.push(s.top());
-						s.pop();
-					}
-					s.pop();
-				}
-				continue;
-			}
-			case LEX_STAR: {
-				if (!s.empty())
-				{
-					while (getPriority(lextable.table[curPos]) <= getPriority(s.top()) || idtable.table[s.top().idxTI].idtype == IT::IDTYPE::F)
-					{
-						q.push(s.top());
-						s.pop();
-						if (s.empty())
-							break;
-					}
-				}
-				s.push(lextable.table[curPos]);
-				continue;
-			}
-			case LEX_DIRSLASH: {
-				if (!s.empty())
-				{
-					while (getPriority(lextable.table[curPos]) <= getPriority(s.top()) || idtable.table[s.top().idxTI].idtype == IT::IDTYPE::F)
-					{
-						q.push(s.top());
-						s.pop();
-						if (s.empty())
-							break;
-					}
-				}
-				s.push(lextable.table[curPos]);
-				continue;
-			}
-			case LEX_OST: {
-				if (!s.empty())
-				{
-					while (getPriority(lextable.table[curPos]) <= getPriority(s.top()) || idtable.table[s.top().idxTI].idtype == IT::IDTYPE::F)
-					{
-						q.push(s.top());
-						s.pop();
-						if (s.empty())
-							break;
-					}
-				}
-				s.push(lextable.table[curPos]);
-				continue;
-			}
-			case LEX_PLUS: {
-				if (!s.empty())
-				{
-					while (getPriority(lextable.table[curPos]) <= getPriority(s.top()) || idtable.table[s.top().idxTI].idtype == IT::IDTYPE::F)
-					{
-						q.push(s.top());
-						s.pop();
-						if (s.empty())
-							break;
-					}
-				}
-				s.push(lextable.table[curPos]);
-				continue;
-			}
-			case LEX_MINUS: {
-				if (!s.empty())
-				{
-					while (getPriority(lextable.table[curPos]) <= getPriority(s.top()) || idtable.table[s.top().idxTI].idtype == IT::IDTYPE::F)
-					{
-						q.push(s.top());
-						s.pop();
-						if (s.empty())
-							break;
-					}
-				}
-				s.push(lextable.table[curPos]);
-				continue;
-			}
-			case LEX_AND: {
-				if (!s.empty())
-				{
-					while (getPriority(lextable.table[curPos]) <= getPriority(s.top()) || idtable.table[s.top().idxTI].idtype == IT::IDTYPE::F)
-					{
-						q.push(s.top());
-						s.pop();
-						if (s.empty())
-							break;
-					}
-				}
-				s.push(lextable.table[curPos]);
-				continue;
-			}
-			case LEX_OR: {
-				if (!s.empty())
-				{
-					while (getPriority(lextable.table[curPos]) <= getPriority(s.top()) || idtable.table[s.top().idxTI].idtype == IT::IDTYPE::F)
-					{
-						q.push(s.top());
-						s.pop();
-						if (s.empty())
-							break;
-					}
-				}
-				s.push(lextable.table[curPos]);
-				continue;
-			}
-			case LEX_COMMA:{
-				while (s.top().lexema[0] != LEX_LEFTTHESIS)
-				{
-					q.push(s.top());
-					s.pop();
-				}
-				continue;
-			}
-			default:
-				continue;
-			}
-		}
-		while (!s.empty())
-		{
-			q.push(s.top());
-			s.pop();
+			break;
 		}
 
-		for (int i = 0; i < kolLex; i++)
-		{
-			if (!q.empty())
-			{
-				switch (q.front().lexema[0])
-				{
-				case LEX_ID:
-					if (curpos <= idtable.table[q.front().idxTI].idxfirstLE && idtable.table[q.front().idxTI].idxfirstLE < curpos + kolLex)
-					{
-						lextable.table[curpos + i] = q.front();
-						idtable.table[q.front().idxTI].idxfirstLE = curpos + i;
-						q.pop();
-					}
-					else
-					{
-						lextable.table[curpos + i] = q.front();
-						q.pop();
-					}
-					continue;
-				case LEX_LITERAL:
-					lextable.table[curpos + i] = q.front();
-					idtable.table[q.front().idxTI].idxfirstLE = curpos + i;
-					q.pop();
-					continue;
-				default:
-					lextable.table[curpos + i] = q.front();
-					q.pop();
-					continue;
+		case LEX_LEFTTHESIS:
+			stack.push(entry);
+			break;
+
+		case LEX_RIGHTTHESIS: {
+			bool flag = false;
+			while (!stack.empty()) {
+				LT::Entry top = stack.top();
+				stack.pop();
+				if (top.lexema[0] == LEX_LEFTTHESIS) {
+					flag = true;
+					break;
+				}
+				outString.push_back(top);
+			}
+			if (!flag) {
+				// ошибка баланса скобок
+				return false;
+			}
+			// если после скобок шла функция выталкиваем её
+			if (!stack.empty()) {
+				if (stack.top().idxTI != LT_TI_NULLIDX &&
+					idtable.table[stack.top().idxTI].idtype == IT::F) {
+					outString.push_back(stack.top());
+					stack.pop();
 				}
 			}
-			else
-			{
-				lextable.table[curpos + i] = bottom;
+			break;
+		}
+
+		// разделитель аргументов функции
+		case LEX_COMMA: {
+			while (!stack.empty()) {
+				if (stack.top().lexema[0] == LEX_LEFTTHESIS) {
+					break;
+				}
+				outString.push_back(stack.top());
+				stack.pop();
+			}
+			break;
+		}
+
+		// операторы
+		case LEX_PLUS:
+		case LEX_MINUS:
+		case LEX_STAR:
+		case LEX_COLON:
+		case LEX_OST:
+		case LEX_MORE:
+		case LEX_LESS:
+		case LEX_ISEQUAL:
+		case LEX_NOT_EQUAL:
+		case LEX_MORE_OR_EQUAL:
+		case LEX_LESS_OR_EQUAL:
+		case LEX_BIT_NOT:
+		case LEX_EQUAL:
+		{
+			while (!stack.empty()) {
+				int priorityStack = getPriority(stack.top().lexema[0]);
+				int priorityCurrent = getPriority(entry.lexema[0]);
+
+				// левоассоциативность
+				// исключение ( и функции
+				if (stack.top().lexema[0] == LEX_LEFTTHESIS ||
+				   (stack.top().idxTI != LT_TI_NULLIDX && idtable.table[stack.top().idxTI].idtype == IT::F)) {
+					break;
+				}
+
+				if (priorityStack >= priorityCurrent) {
+					outString.push_back(stack.top());
+					stack.pop();
+				}
+				else {
+					break;
+				}
+			}
+			stack.push(entry);
+			break;
+		}
+
+		default:
+			break;
+		}
+	}
+
+	// выталкиваем оставшееся из стека
+	while (!stack.empty()) {
+		outString.push_back(stack.top());
+		stack.pop();
+	}
+
+	// записываем RPN
+	for (int i = 0; i < outString.size(); i++) {
+		lextable.table[startPos + i] = outString[i];
+	}
+
+	// оставшиеся ячейки заполняем пустышками, чтобы сохранить структуру таблицы
+	for (int i = startPos + outString.size(); i < endPos; i++) {
+		lextable.table[i].lexema[0] = NULL;
+		lextable.table[i].idxTI = LT_TI_NULLIDX;
+		lextable.table[i].sn = -1;
+	}
+
+	return true;
+}
+
+void searchAndConvert(LT::LexTable& lextable, IT::IdTable& idtable) {
+	for (int i = 0; i < lextable.size; i++) {
+
+		// если это объявление функции, пропускаем заголовок
+		if (lextable.table[i].lexema[0] == LEX_FUNC) {
+			while (lextable.table[i].lexema[0] != LEX_LEFTBRACE && i < lextable.size) {
+				i++;
+			}
+			continue; // мы встали на {, следующий шаг цикла обработает внутренности
+		}
+
+		// x = выражение ;
+		if (lextable.table[i].lexema[0] == LEX_EQUAL) {
+			int start = i + 1; // Сразу после =
+			int end = start;
+			while (end < lextable.size && lextable.table[end].lexema[0] != LEX_SEMICOLON) {
+				end++;
+			}
+			Rpn(lextable, idtable, start, end);
+			i = end; // пропускаем обработанное
+		}
+
+		// send выражение ;
+		else if (lextable.table[i].lexema[0] == LEX_SEND) {
+			int start = i + 1;
+			int end = start;
+			while (end < lextable.size && lextable.table[end].lexema[0] != LEX_SEMICOLON) {
+				end++;
+			}
+			Rpn(lextable, idtable, start, end);
+			i = end;
+		}
+
+		// writech( выражение ) ;
+		else if (lextable.table[i].lexema[0] == LEX_WRITECH) {
+			if (i + 1 < lextable.size && lextable.table[i + 1].lexema[0] == LEX_LEFTTHESIS) {
+				int start = i + 2;
+				int end = start;
+				int brackets = 1; // баланс скобок
+				while (end < lextable.size) {
+					if (lextable.table[end].lexema[0] == LEX_LEFTTHESIS) brackets++;
+					if (lextable.table[end].lexema[0] == LEX_RIGHTTHESIS) brackets--;
+
+					if (brackets == 0) break; // нашли закрывающую скобку
+					end++;
+				}
+				Rpn(lextable, idtable, start, end);
+				i = end;
+			}
+		}
+
+		// if ( выражение )
+		else if (lextable.table[i].lexema[0] == LEX_IF) {
+			if (i + 1 < lextable.size && lextable.table[i + 1].lexema[0] == LEX_LEFTTHESIS) {
+				int start = i + 2;
+				int end = start;
+				int brackets = 1;
+				while (end < lextable.size) {
+					if (lextable.table[end].lexema[0] == LEX_LEFTTHESIS) brackets++;
+					if (lextable.table[end].lexema[0] == LEX_RIGHTTHESIS) brackets--;
+					if (brackets == 0) break;
+					end++;
+				}
+				Rpn(lextable, idtable, start, end);
+				i = end;
+			}
+		}
+
+		// because ( init ; condition ; step )
+		else if (lextable.table[i].lexema[0] == LEX_BECAUSE) {
+			// because ( ...
+			int current = i + 2;
+			int semicolonCount = 0;
+
+			// пропускаем первую секцию до первой точки с запятой
+			while (current < lextable.size) {
+				if (lextable.table[current].lexema[0] == LEX_SEMICOLON) {
+					semicolonCount++;
+					if (semicolonCount == 1) break;
+				}
+				current++;
+			}
+
+			if (semicolonCount == 1) {
+				int startCond = current + 1; // начало условия
+				int endCond = startCond;
+
+				// ищем конец условия
+				while (endCond < lextable.size) {
+					if (lextable.table[endCond].lexema[0] == LEX_SEMICOLON) break;
+					endCond++;
+				}
+
+				Rpn(lextable, idtable, startCond, endCond);
+
+				i = endCond;
 			}
 		}
 	}
-	void searchNextPosForCheck(LT::LexTable lextable, IT::IdTable idtable)
-	{
-		for (int i = 0; i < lextable.size; i++)
-		{
-			if (lextable.table[i].lexema[0] == LEX_EQUAL)
-			{
-				Rpn(lextable, idtable, ++i);
-			}
-			else if (lextable.table[i].lexema[0] == LEX_WHILE || lextable.table[i].lexema[0] == LEX_IF) {
-				if (lextable.table[i + 3].lexema[0] == LEX_OR || lextable.table[i + 3].lexema[0] == LEX_AND) {
-					swap(lextable.table[i + 3].lexema[0], lextable.table[i + 4].lexema[0]);
-				}
-			}
-		}
-	}
+}
 }

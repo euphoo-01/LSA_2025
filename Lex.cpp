@@ -12,8 +12,6 @@
 #include <vector>
 #include <map>
 
-// TODO: Баг. Если вызвать функцию внутри объявления функции, компилятор падает
-
 namespace Lex {
     LT::LexTable lexTable = LT::Create(LT_MAXSIZE - 1);
     IT::IdTable idTable = IT::Create(TI_MAXSIZE - 1);
@@ -35,7 +33,7 @@ namespace Lex {
 
     char *str = new char[TI_MAXSIZE];
     bool declareFlag = false;
-    bool declareFunc = false;
+    bool declareFunc = false; // Флаг объявления заголовка функции
     bool pushToIT = false;
 
     char FST() {
@@ -195,13 +193,12 @@ namespace Lex {
                     }
                 }
 
-                // IDENTIFIERS (Variables, Functions, Params)
+                // IDENTIFIERS
                 if (cur_lex.lexema[0] == LEX_ID) {
                     cur_iden = IT::Entry();
                     std::strncpy(cur_iden.id, str, 15);
                     cur_iden.idtype = IT::V;
                     cur_iden.scope_name = cur_scope;
-                    // cur_lex.idxTI = idTable.size; // УБРАНО! Присваиваем только при добавлении
                     cur_iden.iddatatype = IT::UNSIGNED;
                     cur_iden.idxfirstLE = currentLine;
 
@@ -210,7 +207,7 @@ namespace Lex {
                         if (callFunc) throw ERROR_THROW_IN(600, currentLine, 0);
                         callFunc = true;
                         cur_iden.idtype = IT::F;
-                        declareFunc = true;
+                        declareFunc = true; // Начало объявления функции
 
                         if (unsignedIntFlag) { cur_iden.iddatatype = IT::UNSIGNED; unsignedIntFlag = false; }
                         else if (logicFlag) { cur_iden.iddatatype = IT::LOGIC; logicFlag = false; }
@@ -219,13 +216,14 @@ namespace Lex {
                         if (IT::search(idTable, cur_iden) >= 0) throw ERROR_THROW_IN(107, currentLine, pos);
                         lexResult.functions[cur_iden.id] = {};
 
-                        cur_lex.idxTI = idTable.size; // <-- ВАЖНО: Привязываем лексему к таблице ID
+                        cur_lex.idxTI = idTable.size;
                         IT::Add(idTable, cur_iden);
                         pushToIT = true;
                     }
 
                     // 2. Объявление параметров (первый)
-                    if (lexTable.size >= 3 &&
+                    // ВАЖНО: Добавлена проверка declareFunc, чтобы не путать с вызовом функции
+                    if (declareFunc && lexTable.size >= 3 &&
                         lexTable.table[lexTable.size - 2].lexema[0] == LEX_LEFTTHESIS &&
                         lexTable.table[lexTable.size - 3].lexema[0] == LEX_ID &&
                         lexTable.table[lexTable.size - 3].idxTI == idTable.size - 1 &&
@@ -240,13 +238,13 @@ namespace Lex {
                         if (IT::search(idTable, cur_iden) >= 0) throw ERROR_THROW_IN(105, currentLine, pos);
                         lexResult.functions[cur_scope].push_back(cur_iden.iddatatype);
 
-                        cur_lex.idxTI = idTable.size; // <-- ВАЖНО
+                        cur_lex.idxTI = idTable.size;
                         IT::Add(idTable, cur_iden);
                         pushToIT = true;
                     }
 
                     // 3. Объявление параметров (следующие)
-                    if (lexTable.size >= 3 &&
+                    if (declareFunc && lexTable.size >= 3 &&
                         lexTable.table[lexTable.size - 2].lexema[0] == LEX_COMMA &&
                         idTable.table[lexTable.table[lexTable.size - 3].idxTI].idtype == IT::P) {
 
@@ -260,7 +258,7 @@ namespace Lex {
 
                         if (IT::search(idTable, cur_iden) >= 0) throw ERROR_THROW_IN(105, currentLine, pos);
 
-                        cur_lex.idxTI = idTable.size; // <-- ВАЖНО
+                        cur_lex.idxTI = idTable.size;
                         IT::Add(idTable, cur_iden);
                         lexResult.functions[cur_scope].push_back(cur_iden.iddatatype);
                         pushToIT = true;
@@ -270,29 +268,26 @@ namespace Lex {
                     if (unsignedIntFlag) {
                         cur_iden.iddatatype = IT::UNSIGNED; unsignedIntFlag = false;
                         if (IT::search(idTable, cur_iden) >= 0) throw ERROR_THROW_IN(105, currentLine, pos);
-
-                        cur_lex.idxTI = idTable.size; // <-- ВАЖНО: Иначе ссылка будет на 0 (sqrt)
+                        cur_lex.idxTI = idTable.size;
                         IT::Add(idTable, cur_iden);
                         pushToIT = true;
                     }
                     else if (logicFlag) {
                         cur_iden.iddatatype = IT::LOGIC; logicFlag = false;
                         if (IT::search(idTable, cur_iden) >= 0) throw ERROR_THROW_IN(105, currentLine, pos);
-
-                        cur_lex.idxTI = idTable.size; // <-- ВАЖНО
+                        cur_lex.idxTI = idTable.size;
                         IT::Add(idTable, cur_iden);
                         pushToIT = true;
                     }
                     else if (charFlag) {
                         cur_iden.iddatatype = IT::CHAR; charFlag = false;
                         if (IT::search(idTable, cur_iden) >= 0) throw ERROR_THROW_IN(105, currentLine, pos);
-
-                        cur_lex.idxTI = idTable.size; // <-- ВАЖНО
+                        cur_lex.idxTI = idTable.size;
                         IT::Add(idTable, cur_iden);
                         pushToIT = true;
                     }
 
-                    // 5. Использование существующей переменной/функции
+                    // 5. Использование
                     if (!pushToIT) {
                         IT::Entry searchEntry;
                         std::strncpy(searchEntry.id, str, 15);
@@ -326,9 +321,6 @@ namespace Lex {
                     cur_scope = DIFFER + to_string(count_differ++);
                     scope[cur_scope] = prev_scope;
                 }
-                if (lexTable.size > 0 && lexTable.table[lexTable.size - 1].lexema[0] == TYPE && cur_lex.lexema[0] != LEX_ID) {
-                    throw ERROR_THROW_IN(104, currentLine, pos);
-                }
 
                 if (in.text[i] != MARK) {
                     bufferIndex = 0;
@@ -349,7 +341,6 @@ namespace Lex {
                 continue;
             }
 
-            // Односимвольные токены
             switch (in.text[i]) {
                 case MARK:
                     litFlag = true;
@@ -357,6 +348,14 @@ namespace Lex {
                         cur_lex.idxTI = idTable.size;
                         str[bufferIndex] = MARK; bufferIndex++; str[bufferIndex] = '\0';
                         litFlag = false;
+
+                        if (str[1] == '\\' && str[2] == 'n') {
+                            cur_iden.value.vstr.str[0] = '\n';
+                            cur_iden.value.vstr.len = 1;
+                        }
+                        else {
+                            std::strcpy(cur_iden.value.vstr.str, str);
+                        }
 
                         cur_lex.lexema[0] = LEX_LITERAL;
                         cur_iden = IT::Entry();
@@ -387,7 +386,10 @@ namespace Lex {
                         if (cur_scope.find(BECAUSE) != string::npos) differFlag = false;
                         else if (cur_scope.find(IF) != string::npos) ifFlag = false;
                         else if (cur_scope.find(DIFFER) != string::npos) elseflag = false;
-                        else { declareFunc = false; callFunc = false; }
+                        else {
+                            // declareFunc = false; // Убрано отсюда, перенесено в '{'
+                            callFunc = false;
+                        }
 
                         cur_scope = prev_scope;
                         prev_scope = scope[cur_scope];
@@ -396,6 +398,8 @@ namespace Lex {
                 case LEX_COMMA: cur_lex.lexema[0] = LEX_COMMA; cur_lex.sn = currentLine; LT::Add(lexTable, cur_lex); cur_lex.lexema[0] = NULL; break;
                 case LEX_LEFTBRACE:
                     if (mainFlag) { scope["main"] = cur_scope; prev_scope = cur_scope; cur_scope = "main"; mainFlag = false; }
+                    // ВАЖНО: При входе в блок тела функции завершаем фазу объявления
+                    if (declareFunc) { declareFunc = false; }
                     cur_lex.lexema[0] = LEX_LEFTBRACE; cur_lex.sn = currentLine; LT::Add(lexTable, cur_lex); cur_lex.lexema[0] = NULL; break;
                 case LEX_BRACELET:
                     cur_lex.lexema[0] = LEX_BRACELET;
@@ -448,7 +452,6 @@ namespace Lex {
             }
         }
 
-        // Запись в файлы
         currentLine = 1;
         LT_file << currentLine << '\t';
         for (int i = 0; i < lexTable.size; i++) {

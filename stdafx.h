@@ -20,5 +20,5 @@
 #include "FST.h"		
 #include "GRB.h"
 #include "MFST.h"
-#include "SemA.h"
+#include "Sem.h"
 #include "RPN.h"

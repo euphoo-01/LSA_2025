@@ -1,10 +1,14 @@
 #pragma once
 #include "stdafx.h"
+#include "LT.h"
+#include "IT.h"
 #include <stack>
-#include <queue>
+#include <vector>
 
 namespace RPN {
-	int getPriority(LT::Entry cur_lex);
-	void Rpn(LT::LexTable lextable, IT::IdTable idtable, int curpos);
-	void searchNextPosForCheck(LT::LexTable lextable, IT::IdTable idtable);
+	// чем выше число, тем раньше выполняется операция.
+	int getPriority(char lexema);
+
+	bool Rpn(LT::LexTable& lextable, IT::IdTable& idtable, int startPos, int endPos);
+	void searchAndConvert(LT::LexTable& lextable, IT::IdTable& idtable);
 }

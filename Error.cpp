@@ -1,6 +1,8 @@
 #include"stdafx.h"
 #include"Error.h"
 
+// 100 - лекс, 600 - синт, 700 - семантика
+
 namespace Error {
     ERROR errors[ERROR_MAX_ENTRY] = {
         ERROR_ENTRY(0, "Недопустимый код ошибки"),
