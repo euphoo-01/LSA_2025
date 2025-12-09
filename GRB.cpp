@@ -5,7 +5,9 @@
 #include"Rules.h"
 #include "string.h"
 
+// грамматика
 namespace GRB {
+	// цепочка
 	Rule::Chain::Chain(short psize, GRBALPHABET s, ...) {
 		this->nt = new GRBALPHABET[this->size = psize];
 		va_list args;
@@ -17,6 +19,7 @@ namespace GRB {
 		va_end(args);
 	};
 
+	// правило
 	Rule::Rule(GRBALPHABET pnn, int piderror, short psize, Chain c, ...) {
 		this->nn = pnn;
 		this->iderror = piderror;
@@ -30,6 +33,7 @@ namespace GRB {
 		va_end(args);
 	};
 
+	// грамматика Грейбах
 	Greibach::Greibach(GRBALPHABET pstartN, GRBALPHABET pstbottom, short psize, Rule r, ...) {
 		this->startN = pstartN;
 		this->stbottomT = pstbottom;
@@ -43,6 +47,7 @@ namespace GRB {
 		va_end(args);
 	}
 
+	// получить правило
 	short Greibach::getRule(GRBALPHABET pnn, Rule& prule) {
 		short rc = -1;
 		short k = 0;
@@ -57,6 +62,7 @@ namespace GRB {
 		return rc;
 	};
 
+	// получить строку правила
 	char* Rule::getCRule(char* b, short nchain) {
 		char bchain[200];
 		b[0] = Chain::alphabet_to_char(this->nn);
@@ -68,6 +74,7 @@ namespace GRB {
 		return b;
 	}
 
+	// следующая цепочка
 	short Rule::getNextChain(GRBALPHABET t, Rule::Chain& pchain, short j) {
 		short rc = -1;
 		while (j < this->size && this->chains[j].nt[0] != t) ++j;
@@ -76,12 +83,14 @@ namespace GRB {
 		return rc;
 	};
 
+	// получить строку цепочки
 	char* Rule::Chain::getCChain(char* b) {
 		for (int i = 0; i < this->size; i++) b[i] = Chain::alphabet_to_char(this->nt[i]);
 		b[this->size] = '\0';
 		return b;
 	};
 
+	// получить грамматику
 	Greibach getGreibach() {
 		return greibach;
 	}

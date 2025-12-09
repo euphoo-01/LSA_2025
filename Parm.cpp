@@ -4,34 +4,34 @@
 #include <cwchar>
 
 namespace Parm {
-	Parm getParm(int argc, wchar_t* argv[]) { // получение параметров
+	Parm getParm(int argc, wchar_t* argv[]) { // разбор параметров запуска
 		Parm parm;
 		bool in = 0, out = 0, log = 0;
 		for (int i = 1; i < argc; i++) {
-			if (wcslen(argv[i]) > PARM_MAX_SIZE) { // если превышен допустимый размер параметра
-				throw ERROR_THROW(101); // вызываем исключение
+			if (wcslen(argv[i]) > PARM_MAX_SIZE) {
+				throw ERROR_THROW(101);
 			}
-			if (wcsstr(argv[i], PARM_IN)) { // если задан in
-				wcscpy(parm.in, argv[i] + wcslen(PARM_IN)); // то записываем его в нашу структуру
-				in = 1; // помечаем, что он есть
+			if (wcsstr(argv[i], PARM_IN)) {
+				wcscpy(parm.in, argv[i] + wcslen(PARM_IN));
+				in = 1;
 			}
-			if (wcsstr(argv[i], PARM_OUT)) { // если задан out 
-				wcscpy(parm.out, argv[i] + wcslen(PARM_OUT));// то записываем его в нашу структуру
-				out = 1; // помечаем, что он есть
+			if (wcsstr(argv[i], PARM_OUT)) {
+				wcscpy(parm.out, argv[i] + wcslen(PARM_OUT));
+				out = 1;
 			}
-			if (wcsstr(argv[i], PARM_LOG)) { // если задан log 
-				wcscpy(parm.log, argv[i] + wcslen(PARM_LOG));// то записываем его в нашу структуру
-				log = 1; // помечаем, что он есть
+			if (wcsstr(argv[i], PARM_LOG)) {
+				wcscpy(parm.log, argv[i] + wcslen(PARM_LOG));
+				log = 1;
 			}
 		}
-		if (!in) { // если параметр in не задан то вызываем исключение
+		if (!in) {
 			throw ERROR_THROW(100);
 		}
-		if (!out) { // если out не задан, то формируем его из названия in
+		if (!out) { // по умолчанию out = in.asm
 			wcscpy(parm.out, parm.in);
 			wcscat(parm.out, PARM_OUT_DEFAULT_EXT);
 		}
-		if (!log) {// если log не задан, то формируем его из названия in
+		if (!log) { // по умолчанию log = in.log
 			wcscpy(parm.log, parm.in);
 			wcscat(parm.log, PARM_LOG_DEFAULT_EXT);
 		}

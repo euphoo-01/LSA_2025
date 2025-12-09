@@ -8,18 +8,18 @@ using namespace std;
 
 namespace NasmGen {
 
-// структура для управления вложенными блоками (if, because, func)
+// управление блоками
 struct LabelBlock {
-	int type;      // тип блока: 0-if, 1-else, 2-because, 3-func
-	int label_1;   // метка для else/начала цикла
-	int label_2;   // метка для выхода из блока
-	int paramSize; // размер параметров функции для очистки стека
+	int type;
+	int label_1;
+	int label_2;
+	int paramSize;
 };
 
-// стандартный заголовок nasm
+// заголовок asm
 const string ASM_HEAD = "global _start\ndefault rel\nsection .text\n\n";
 
-// стандартная библиотека
+// вставка stdlib
 const string ASM_STDLIB =
 	"exit_prog:\n    mov rax, 60\n    syscall\n\n"
 	"writech:\n    push rbp\n    mov rbp, rsp\n    mov rax, 1\n    mov rdi, 1\n    lea rsi, [rbp+16]\n    mov rdx, 1\n    syscall\n    pop rbp\n    ret 8\n\n"
@@ -32,19 +32,19 @@ const string ASM_STDLIB =
 	"getMax:\n    push rbp\n    mov rbp, rsp\n    mov rax, [rbp+16]\n    mov rbx, [rbp+24]\n    cmp rax, rbx\n    jge .end\n    mov rax, rbx\n.end:\n    pop rbp\n    ret 16\n\n"
 	"toUpper:\n    push rbp\n    mov rbp, rsp\n    mov rax, [rbp+16]\n    cmp al, 'a'\n    jl .end\n    cmp al, 'z'\n    jg .end\n    sub al, 32\n.end:\n    pop rbp\n    ret 8\n\n";
 
-// генерация искаженного имени для избежания конфликтов
+// декорирование имен
 string getMangledName(IT::Entry& entry) {
 	return entry.scope_name + "_" + entry.id;
 }
 
-// обработка постфиксного выражения
+// генерация выражения
 void processExpression(int start, int end, Lex::LEX& lex, ofstream& file) {
 	for (int i = start; i < end; i++) {
 		LT::Entry& t = lex.lexTable.table[i];
-		if (t.lexema[0] == NULL) continue;
+		if (t.lexema[0] == '\0') continue;
 
 		switch (t.lexema[0]) {
-		// обработка литералов
+		// литералы
 		case LEX_LITERAL: {
 			if (t.idxTI == LT_TI_NULLIDX) break;
 			IT::Entry& lit = lex.idTable.table[t.idxTI];
@@ -63,7 +63,7 @@ void processExpression(int start, int end, Lex::LEX& lex, ofstream& file) {
 			}
 			break;
 		}
-		// обработка идентификаторов (переменные и функции)
+		// идентификаторы
 		case LEX_ID: {
 			if (t.idxTI == LT_TI_NULLIDX) break;
 			if (lex.idTable.table[t.idxTI].idtype == IT::F) {
@@ -75,7 +75,7 @@ void processExpression(int start, int end, Lex::LEX& lex, ofstream& file) {
 			}
 			break;
 		}
-		// арифметические и логические операции
+		// операции
 		case LEX_PLUS: file << "    pop rbx\n    pop rax\n    add rax, rbx\n    push rax\n"; break;
 		case LEX_MINUS: file << "    pop rbx\n    pop rax\n    sub rax, rbx\n    push rax\n"; break;
 		case LEX_STAR: file << "    pop rbx\n    pop rax\n    imul rax, rbx\n    push rax\n"; break;
@@ -99,11 +99,11 @@ void processExpression(int start, int end, Lex::LEX& lex, ofstream& file) {
 		case LEX_READCH:
 			file << "    call readch\n    push rax\n";
 			break;
-		// постфиксные инкремент/декремент
+		// инкремент/декремент
 		case LEX_INC:
 		case LEX_DEC: {
 			int k = i - 1;
-			while (k >= start && lex.lexTable.table[k].lexema[0] == NULL) k--;
+			while (k >= start && lex.lexTable.table[k].lexema[0] == '\0') k--;
 			if (k >= start && lex.lexTable.table[k].lexema[0] == LEX_ID && lex.lexTable.table[k].idxTI != LT_TI_NULLIDX) {
 				IT::Entry& varEntry = lex.idTable.table[lex.lexTable.table[k].idxTI];
 				file << "    pop rax\n";
@@ -116,7 +116,7 @@ void processExpression(int start, int end, Lex::LEX& lex, ofstream& file) {
 	}
 }
 
-// Определение типа выражения
+// тип выражения
 IT::IDDATATYPE getExprType(int start, int end, Lex::LEX& lex) {
 	IT::IDDATATYPE type = IT::CHAR;
 	for (int i = start; i < end; i++) {
@@ -139,16 +139,16 @@ IT::IDDATATYPE getExprType(int start, int end, Lex::LEX& lex) {
 	return type;
 }
 
-// основной генератор
+// генерация кода
 void asmGenerator(Lex::LEX& lex, wchar_t outfile[]) {
 	// подготовка файла
 	char narrow_outfile[300];
 	wcstombs(narrow_outfile, outfile, 300);
 	ofstream file(narrow_outfile);
-	if (!file.is_open()) throw ERROR_THROW(113);
+	if (!file.is_open()) throw ERROR_THROW(13);
 
 	file << ASM_HEAD << ASM_STDLIB;
-	// секция .bss для неинициализированных данных
+	// секция .bss
 	file << "section .bss\n";
 	for (int i = 0; i < lex.idTable.size; i++) {
 		IT::Entry& entry = lex.idTable.table[i];
@@ -161,10 +161,10 @@ void asmGenerator(Lex::LEX& lex, wchar_t outfile[]) {
 	stack<LabelBlock> blockStack;
 	int labelCounter = 0;
 
-	// главный цикл по таблице лексем
+	// цикл по лексемам
 	for (int i = 0; i < lex.lexTable.size; i++) {
 		LT::Entry& t = lex.lexTable.table[i];
-		if (t.lexema[0] == NULL) continue;
+		if (t.lexema[0] == '\0') continue;
 
 		switch (t.lexema[0]) {
 		// точка входа
@@ -174,12 +174,12 @@ void asmGenerator(Lex::LEX& lex, wchar_t outfile[]) {
 			blockStack.push({ 3, 0, 0, 0 });
 			break;
 		}
-		// объявление функции
+		// функция
 		case LEX_FUNC: {
 			int idIdx = lex.lexTable.table[i + 2].idxTI;
 			string funcName = lex.idTable.table[idIdx].id;
 			file << "\n" << funcName << ":\n    push rbp\n    mov rbp, rsp\n";
-			// копирование параметров из стека в переменные
+			// копирование параметров
 			int k = i + 4;
 			int paramOffset = 16;
 			int paramCount = 0;
@@ -197,7 +197,7 @@ void asmGenerator(Lex::LEX& lex, wchar_t outfile[]) {
 			i = k;
 			break;
 		}
-		// возврат из функции
+		// возврат
 		case LEX_SEND: {
 			int endExpr = i + 1;
 			while (endExpr < lex.lexTable.size && lex.lexTable.table[endExpr].lexema[0] != LEX_SEMICOLON) endExpr++;
@@ -216,10 +216,10 @@ void asmGenerator(Lex::LEX& lex, wchar_t outfile[]) {
 			i = endExpr;
 			break;
 		}
-		// вызов writech
+		// writech
 		case LEX_WRITECH: {
 			int j = i + 1;
-			while (j < lex.lexTable.size && lex.lexTable.table[j].lexema[0] == NULL) j++;
+			while (j < lex.lexTable.size && lex.lexTable.table[j].lexema[0] == '\0') j++;
 			if (j < lex.lexTable.size && lex.lexTable.table[j].lexema[0] == LEX_LEFTTHESIS) {
 				int startExpr = j + 1;
 				int endExpr = startExpr;
@@ -241,7 +241,7 @@ void asmGenerator(Lex::LEX& lex, wchar_t outfile[]) {
 			}
 			break;
 		}
-		// присваивание или вызов функции как инструкция
+		// присваивание/вызов
 		case LEX_ID: {
 			if (i + 1 < lex.lexTable.size && lex.lexTable.table[i+1].lexema[0] == LEX_EQUAL) {
 				IT::Entry& varEntry = lex.idTable.table[t.idxTI];
@@ -252,7 +252,7 @@ void asmGenerator(Lex::LEX& lex, wchar_t outfile[]) {
 				file << "    mov [" << getMangledName(varEntry) << "], rax\n";
 				i = endStmt;
 			} else {
-				// выражение, результат которого не используется
+				// не используется
 				int endStmt = i + 1;
 				while (endStmt < lex.lexTable.size && lex.lexTable.table[endStmt].lexema[0] != LEX_SEMICOLON) endStmt++;
 				processExpression(i, endStmt, lex, file);
@@ -261,7 +261,7 @@ void asmGenerator(Lex::LEX& lex, wchar_t outfile[]) {
 			}
 			break;
 		}
-		// выражение, результат которого не используется
+		// не используется
 		case LEX_LITERAL:
 		case LEX_READCH:
 		case LEX_BIT_NOT:
@@ -274,12 +274,12 @@ void asmGenerator(Lex::LEX& lex, wchar_t outfile[]) {
 			i = endStmt;
 			break;
 		}
-		// условный оператор
+		// условие
 		case LEX_IF: {
 			int l_else = labelCounter++;
 			int l_end = labelCounter++;
 			blockStack.push({ 0, l_else, l_end, 0 });
-			// генерация кода для условия
+			// условие
 			int j = i + 2;
 			int balance = 1;
 			int endCond = j;
@@ -293,7 +293,7 @@ void asmGenerator(Lex::LEX& lex, wchar_t outfile[]) {
 			i = endCond;
 			break;
 		}
-		// переход в блок else
+		// else
 		case LEX_DIFFER: {
 			if (!blockStack.empty()) blockStack.top().type = 1;
 			break;
@@ -303,7 +303,7 @@ void asmGenerator(Lex::LEX& lex, wchar_t outfile[]) {
 			int l_start = labelCounter++;
 			int l_end = labelCounter++;
 			blockStack.push({ 2, l_start, l_end, 0 });
-			// блок инициализации
+			// инициализация
 			int j = i + 2;
 			int endInit = j;
 			while (endInit < lex.lexTable.size && lex.lexTable.table[endInit].lexema[0] != LEX_SEMICOLON) endInit++;
@@ -315,9 +315,9 @@ void asmGenerator(Lex::LEX& lex, wchar_t outfile[]) {
 				processExpression(j, endInit, lex, file);
 				if (endInit > j) file << "    pop rax ; clear stack init\n";
 			}
-			// метка начала цикла
+			// начало
 			file << "L" << l_start << ":\n";
-			// блок условия
+			// условие
 			int startCond = endInit + 1;
 			int endCond = startCond;
 			while (endCond < lex.lexTable.size && lex.lexTable.table[endCond].lexema[0] != LEX_SEMICOLON) endCond++;
@@ -333,10 +333,8 @@ void asmGenerator(Lex::LEX& lex, wchar_t outfile[]) {
 		case LEX_LEFTBRACE: {
 			if (!blockStack.empty()) {
 				LabelBlock& b = blockStack.top();
-				// условный переход для if
 				if (b.type == 0) {
 					file << "    pop rax\n    cmp rax, 0\n    je L" << b.label_1 << "\n";
-				// условный переход для because
 				} else if (b.type == 2) {
 					file << "    pop rax\n    cmp rax, 0\n    je L" << b.label_2 << "\n";
 				}
@@ -348,27 +346,24 @@ void asmGenerator(Lex::LEX& lex, wchar_t outfile[]) {
 			if (!blockStack.empty()) {
 				LabelBlock b = blockStack.top();
 				blockStack.pop();
-				// конец блока if
+				// конец if
 				if (b.type == 0) {
 					int next = i + 1;
-					while (next < lex.lexTable.size && (lex.lexTable.table[next].lexema[0] == NULL || lex.lexTable.table[next].lexema[0] == LEX_SEMICOLON)) next++;
-					// если есть differ, переходим к его обработке
+					while (next < lex.lexTable.size && (lex.lexTable.table[next].lexema[0] == '\0' || lex.lexTable.table[next].lexema[0] == LEX_SEMICOLON)) next++;
 					if (next < lex.lexTable.size && lex.lexTable.table[next].lexema[0] == LEX_DIFFER) {
 						file << "    jmp L" << b.label_2 << "\nL" << b.label_1 << ":\n";
 						b.type = 1;
 						blockStack.push(b);
-					// если нет differ, ставим метку конца
 					} else {
 						file << "L" << b.label_1 << ":\n";
 					}
 				}
-				// конец блока else
+				// конец else
 				else if (b.type == 1) {
 					file << "L" << b.label_2 << ":\n";
 				}
-				// конец блока because
+				// конец because
 				else if (b.type == 2) {
-					// генерация кода для шага цикла
 					int back = i;
 					int braces = 1;
 					while (back > 0) {
@@ -392,10 +387,9 @@ void asmGenerator(Lex::LEX& lex, wchar_t outfile[]) {
 					} else {
 						processExpression(stepStart, stepEnd, lex, file);
 					}
-					// переход на новую итерацию
 					file << "    jmp L" << b.label_1 << "\nL" << b.label_2 << ":\n";
 				}
-				// конец блока функции
+				// конец func
 				else if (b.type == 3) {
 					file << "    pop rbp\n";
 					if (b.paramSize > 0) file << "    ret " << b.paramSize << "\n";

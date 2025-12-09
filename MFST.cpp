@@ -1,5 +1,6 @@
 #include "MFST.h"
 
+// синтаксический анализ
 namespace MFST {
 	MfstState::MfstState() {
 		lenta_position = 0;
@@ -48,6 +49,7 @@ namespace MFST {
 
 	Mfst::RC_STEP Mfst::step(ofstream& wr) {
 		RC_STEP rc = SURPRISE;
+		if (st.empty()) return NS_ERROR;
 		if (lenta_position < lenta_size) {
 			if (GRB::Rule::Chain::isN(st.top())) {
 				GRB::Rule rule;

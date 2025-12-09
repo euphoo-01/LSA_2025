@@ -4,9 +4,10 @@
 
 namespace LT {
 
+	// создание
 	LexTable Create(int size) {
 		if (size > LT_MAXSIZE) {
-			throw ERROR_THROW(114);
+			throw ERROR_THROW(14);
 		}
 		LexTable lextable;
 		lextable.maxsize = size;
@@ -15,27 +16,31 @@ namespace LT {
 		return lextable;
 	}
 
+	// добавление
 	void Add(LexTable& lextable, Entry entry) {
 		if (lextable.size + 1 > lextable.maxsize) {
-			throw ERROR_THROW(115);
+			throw ERROR_THROW(15);
 		}
 		lextable.table[lextable.size] = entry;
 		lextable.size++;
 	}
 
+	// получить элемент
 	Entry GetEntry(LexTable& lextable, int n) {
 		if (n < 0 || n > lextable.size - 1) {
-			throw ERROR_THROW(116);
+			throw ERROR_THROW(16);
 		}
 		return lextable.table[n];
 	}
 
+	// удаление
 	void Delete(LexTable& lextable) {
 		delete lextable.table;
 		lextable.maxsize = 0;
 		lextable.size = 0;
 	}
 
+	// запись в файл
 	void WriteInFile(LexTable& lextable) {
 		ofstream LT_file;
 		LT_file.open("NewLT.txt");

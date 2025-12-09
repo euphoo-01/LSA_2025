@@ -7,80 +7,80 @@
 #pragma warning(disable:4996)
 
 namespace Log {
-	LOG getlog(wchar_t logfile[]) { // создание и открытие потокового вывода протокола
+	LOG getlog(wchar_t logfile[]) { // создание протокола
 		LOG log;
-		log.stream = new ofstream; // создаем новый поток для записи
+		log.stream = new ofstream;
 		char narrow_logfile[300];
 		wcstombs(narrow_logfile, logfile, 300);
-		log.stream->open(narrow_logfile); // открываем поток по переданному названию файла
-		if (!log.stream->is_open()) { // если не открылся
-			throw ERROR_THROW(112); // вызываем исключение
+		log.stream->open(narrow_logfile);
+		if (!log.stream->is_open()) {
+			throw ERROR_THROW(12);
 		}
-		std::wcscpy(log.logfile, logfile); // копируем название файла
+		std::wcscpy(log.logfile, logfile);
 		return log;
 	}
-	void WriteLine(LOG log, char* c, ...) { // используется для вывода строки в протокол
-		char** p = &c; // создаем указатель для считвание неизвестного числа строк
-		int j = 0; // счетчик
-		while (p[j] != "") { // пока не встретилась пустая строка
-			*log.stream << p[j++]; // записываем текушую в log и переходим на следующую
+	void WriteLine(LOG log, char* c, ...) { // вывод строки
+		char** p = &c;
+		int j = 0;
+		while (p[j] != "") {
+			*log.stream << p[j++];
 		}
 	}
-	void WriteLine(LOG log, wchar_t* c, ...) { // тоже, что и предыдущая функция, но, если параметры wchar_t*
+	void WriteLine(LOG log, wchar_t* c, ...) { // вывод строки (wchar_t)
 		wchar_t** p = &c;
 		char buf[50];
 		int j = 0;
 		while (p[j] != L"") {
-			wcstombs(buf, p[j++], 50); // преобразование wchar_t* в char*
+			wcstombs(buf, p[j++], 50);
 			*log.stream << buf;
 		}
 	}
-	void WriteLog(LOG log) { // функция для вывода заголовка в log
-		char buf[50]; // буферная переменная
-		time_t curtime; // переменная для времени
-		curtime = time(NULL); // текущее время
-		tm local_tm_struct; // структура для времени
-		tm* ltime_ptr = std::localtime(&curtime); // Use standard localtime
-		if (ltime_ptr) { // Check if localtime returned a valid pointer
-		    local_tm_struct = *ltime_ptr; // Copy the content
+	void WriteLog(LOG log) { // заголовок протокола
+		char buf[50];
+		time_t curtime;
+		curtime = time(NULL);
+		tm local_tm_struct;
+		tm* ltime_ptr = std::localtime(&curtime);
+		if (ltime_ptr) {
+		    local_tm_struct = *ltime_ptr;
 		} else {
-			std::memset(&local_tm_struct, 0, sizeof(tm)); // Initialize with zeros
+			std::memset(&local_tm_struct, 0, sizeof(tm));
 		}
-		strftime(buf, 50, "%Y.%m.%d %H:%M:%S", &local_tm_struct); // преобразуем дату и время в строку по заданному формату
+		strftime(buf, 50, "%Y.%m.%d %H:%M:%S", &local_tm_struct);
 		*log.stream << "---- Протокол ---- " << buf << " ----------" << '\n';
 	}
-	void WriteParm(LOG log, Parm::Parm parm) { // функция для вывода информации о выходных параметрах
+	void WriteParm(LOG log, Parm::Parm parm) { // вывод параметров
 		*log.stream << "---- Параметры ----" << '\n';
-		char buf[PARM_MAX_SIZE]; // буферная переменная
-		wcstombs(buf, parm.log, PARM_MAX_SIZE);  // преобразование wchar_t* в char*
-		*log.stream << "-log: " << buf << '\n'; // записываем про log
-		wcstombs(buf, parm.out, PARM_MAX_SIZE); // преобразование wchar_t* в char*
-		*log.stream << "-out: " << buf << '\n'; // записываем про out
-		wcstombs(buf, parm.in, PARM_MAX_SIZE); // преобразование wchar_t* в char*
-		*log.stream << "-in: " << buf << '\n'; // записываем про in
+		char buf[PARM_MAX_SIZE];
+		wcstombs(buf, parm.log, PARM_MAX_SIZE);
+		*log.stream << "-log: " << buf << '\n';
+		wcstombs(buf, parm.out, PARM_MAX_SIZE);
+		*log.stream << "-out: " << buf << '\n';
+		wcstombs(buf, parm.in, PARM_MAX_SIZE);
+		*log.stream << "-in: " << buf << '\n';
 	}
-	void WriteIn(LOG log, In::IN in) { // вывод информации о тексте в файле
+	void WriteIn(LOG log, In::IN in) { // статистика входных данных
 		*log.stream << "---- Исходные данные ----" << '\n';
 		*log.stream << "Количество символов: " << in.size << '\n';
 		*log.stream << "Проигнорировано    :" << in.ignore << '\n';
 		*log.stream << "Количество строк   :" << in.lines << '\n';
 	}
-	void WriteError(LOG log, Error::ERROR er) { // вывод информации об ошибке
-		if (log.stream) { // если открыт поток для записи
-			*log.stream << "Ошибка " << er.id << ": " << er.message; // выводим сообщение об ошибке
-			if (er.inext.line != -1) { // если имеется информации о месте ошибке, то выводим и эту информацию
+	void WriteError(LOG log, Error::ERROR er) { // вывод ошибки
+		if (log.stream) {
+			*log.stream << "Ошибка " << er.id << ": " << er.message;
+			if (er.inext.line != -1) {
 				*log.stream << ", строка " << er.inext.line << ", позиция " << er.inext.col << '\n';
 			}
 			else {
 				*log.stream << '\n';
 			}
 		}
-		else { // если поток не открыт, то выводим информацию в консоль
+		else {
 			cout << "Ошибка " << er.id << ": " << er.message << '\n';
 			cout << "Строка " << er.inext.line << ", позиция " << er.inext.col << '\n';
 		}
 	}
-	void Close(LOG log) { // закрываем поток
+	void Close(LOG log) { // закрытие
 		log.stream->close();
 		delete log.stream;
 	}

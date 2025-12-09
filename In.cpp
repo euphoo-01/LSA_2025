@@ -11,7 +11,7 @@
 #define TAB '\t'
 
 namespace In {
-    IN getin(wchar_t infile[]) {
+    IN getin(wchar_t infile[]) { // ввод
         IN in_result;
         in_result.size = 0;
         in_result.lines = 0;
@@ -20,22 +20,20 @@ namespace In {
         wcstombs(narrow_infile, infile, 300);
         file.open(narrow_infile);
         if (!file.is_open()) {
-            throw ERROR_THROW(110);
+            throw ERROR_THROW(10);
         }
         in_result.text = new unsigned char[IN_MAX_LEN_TEXT];
         char *tmp = new char[IN_MAX_LEN_TEXT];
 
         while (file.getline(tmp, 1000)) {
-            int len = strlen(tmp); // Вычисляем длину строки
+            int len = strlen(tmp);
             for (int position = 0; position < len; position++) {
 
-                // --- НАЧАЛО ДОБАВЛЕНИЯ: Обработка комментариев ---
-                // Если встречаем "//", прекращаем обработку текущей строки
+                // обработка комментариев
                 if (tmp[position] == '/' && position + 1 < len && tmp[position + 1] == '/') {
                     break;
                 }
-                // --- КОНЕЦ ДОБАВЛЕНИЯ ---
-
+                
                 switch (in_result.code[int((unsigned char) tmp[position])]) {
                     case IN::T: {
                         in_result.text[in_result.size] = (unsigned) tmp[position];
@@ -48,7 +46,7 @@ namespace In {
                         break;
                     }
                     case IN::S: {
-                        // Ваша логика обработки пробелов
+                        // обработка пробелов
                         if (position == 0) {
                             while (tmp[position] == SPACE || tmp[position] == TAB) {
                                 position++;
@@ -56,7 +54,6 @@ namespace In {
                             position--;
                             break;
                         }
-                        // Проверка границ массива перед доступом к position+1
                         if (position + 1 < len && (in_result.code[int((unsigned char) tmp[position - 1])] == IN::Z || in_result.code[int(
                                 (unsigned char) tmp[position + 1])] == IN::Z)) {
                             in_result.ignore++;
@@ -77,7 +74,7 @@ namespace In {
                 }
             }
             in_result.lines++;
-            in_result.text[in_result.size] = '`'; // Ваш символ новой строки
+            in_result.text[in_result.size] = '`';
             in_result.size++;
         }
         in_result.text[in_result.size] = '\0';

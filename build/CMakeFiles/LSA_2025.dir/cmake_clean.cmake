@@ -1,0 +1,40 @@
+file(REMOVE_RECURSE
+  "CMakeFiles/LSA_2025.dir/link.d"
+  "CMakeFiles/LSA_2025.dir/Error.cpp.o"
+  "CMakeFiles/LSA_2025.dir/Error.cpp.o.d"
+  "CMakeFiles/LSA_2025.dir/FST.cpp.o"
+  "CMakeFiles/LSA_2025.dir/FST.cpp.o.d"
+  "CMakeFiles/LSA_2025.dir/GRB.cpp.o"
+  "CMakeFiles/LSA_2025.dir/GRB.cpp.o.d"
+  "CMakeFiles/LSA_2025.dir/IT.cpp.o"
+  "CMakeFiles/LSA_2025.dir/IT.cpp.o.d"
+  "CMakeFiles/LSA_2025.dir/In.cpp.o"
+  "CMakeFiles/LSA_2025.dir/In.cpp.o.d"
+  "CMakeFiles/LSA_2025.dir/LT.cpp.o"
+  "CMakeFiles/LSA_2025.dir/LT.cpp.o.d"
+  "CMakeFiles/LSA_2025.dir/Lex.cpp.o"
+  "CMakeFiles/LSA_2025.dir/Lex.cpp.o.d"
+  "CMakeFiles/LSA_2025.dir/Log.cpp.o"
+  "CMakeFiles/LSA_2025.dir/Log.cpp.o.d"
+  "CMakeFiles/LSA_2025.dir/MFST.cpp.o"
+  "CMakeFiles/LSA_2025.dir/MFST.cpp.o.d"
+  "CMakeFiles/LSA_2025.dir/NasmGen.cpp.o"
+  "CMakeFiles/LSA_2025.dir/NasmGen.cpp.o.d"
+  "CMakeFiles/LSA_2025.dir/Out.cpp.o"
+  "CMakeFiles/LSA_2025.dir/Out.cpp.o.d"
+  "CMakeFiles/LSA_2025.dir/Parm.cpp.o"
+  "CMakeFiles/LSA_2025.dir/Parm.cpp.o.d"
+  "CMakeFiles/LSA_2025.dir/RPN.cpp.o"
+  "CMakeFiles/LSA_2025.dir/RPN.cpp.o.d"
+  "CMakeFiles/LSA_2025.dir/Sem.cpp.o"
+  "CMakeFiles/LSA_2025.dir/Sem.cpp.o.d"
+  "CMakeFiles/LSA_2025.dir/main.cpp.o"
+  "CMakeFiles/LSA_2025.dir/main.cpp.o.d"
+  "LSA_2025"
+  "LSA_2025.pdb"
+)
+
+# Per-language clean rules from dependency scanning.
+foreach(lang CXX)
+  include(CMakeFiles/LSA_2025.dir/cmake_clean_${lang}.cmake OPTIONAL)
+endforeach()

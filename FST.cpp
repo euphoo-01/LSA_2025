@@ -4,63 +4,55 @@
 #include "FST.h"
 using namespace std;
 
-namespace FST { // пространство имен для конечного автомата
-	RELATION::RELATION(char c, short nn) { // конструктор отношений вершин
-		symbol = c; // символ перехода
-		nnode = nn; // номер смежной вершины
+namespace FST { // конечный автомат
+	RELATION::RELATION(char c, short nn) { // отношение
+		symbol = c;
+		nnode = nn;
 	}
 
-	NODE::NODE() { // конструктор для узла по умолчанию
-		n_relation = 0; // количество связей
-		RELATION* relations = nullptr; // массив связей
+	NODE::NODE() { // узел по умолчанию
+		n_relation = 0;
+		RELATION* relations = nullptr;
 	}
-	NODE::NODE(short n, RELATION re1, ...) { // конструктор для узла с параметрами
-		n_relation = n; // задаем число связей
+	NODE::NODE(short n, RELATION re1, ...) { // узел с параметрами
+		n_relation = n;
 
-		relations = new RELATION[n]; // выделяем память под массив связей
-		// Инициализация списка аргументов
+		relations = new RELATION[n];
 		va_list args;
-		va_start(args, re1); // Начинаем список аргументов с re1
-		// Сохраняем первый элемент
+		va_start(args, re1);
 		relations[0] = re1;
-		// Заполняем массив оставшимися элементами
 		for (int i = 1; i < n; i++) {
-			relations[i] = va_arg(args, RELATION); // Получаем следующий RELATION из списка аргументов
+			relations[i] = va_arg(args, RELATION);
 		}
-		// Завершаем работу с аргументами
 		va_end(args);
 	}
 
-	FST::FST(const char* s, short ns, NODE n, ...) { // конструктор конечного автомата
-		strin = s; // сохраняем переданную строку
-		nstates = ns; // количество состояний
-		nodes = new NODE[ns]; // выделяем память для массива узлов
-		// Инициализация списка аргументов
+	FST::FST(const char* s, short ns, NODE n, ...) { // конструктор автомата
+		strin = s;
+		nstates = ns;
+		nodes = new NODE[ns];
 		va_list args;
-		va_start(args, n); // Начинаем список аргументов с n
-		// Сохраняем первый элемент
+		va_start(args, n);
 		nodes[0] = n;
-		// Заполняем массив оставшимися элементами
 		for (int k = 1; k < ns; k++) {
-			nodes[k] = va_arg(args, NODE); // Получаем следующий NODE из списка аргументов
+			nodes[k] = va_arg(args, NODE);
 		}
-		// Завершаем работу с аргументами
 		va_end(args);
-		rstates = new short[nstates]; // выделяем память для массива состояний
-		memset(rstates, 0xff, sizeof(short) * nstates); // заполняем его значениями 0xff
-		rstates[0] = 0; // устанавливаем начальное значение
-		position = -1; // задаем текущую позицию
+		rstates = new short[nstates];
+		memset(rstates, 0xff, sizeof(short) * nstates);
+		rstates[0] = 0;
+		position = -1;
 	}
 
-	bool step(FST& fst, short*& rstates) { // один шаг автомата
-		bool rc = false; // флажок для отслеживания корректного выполнения
-		swap(rstates, fst.rstates); // меняем местами массивы
-		for (short i = 0; i < fst.nstates; i++) { // проходим все состояния
-			if (rstates[i] == fst.position) { // если текущее состояние совпало
-				for (short j = 0; j < fst.nodes[i].n_relation; j++) { // проходим по всем отношениям узла
-					if (fst.nodes[i].relations[j].symbol == fst.strin[fst.position]) { // проверяем соответствует ли символ текущей позиции в строке
-						fst.rstates[fst.nodes[i].relations[j].nnode] = fst.position + 1; // если да, то обновляем состояние
-						rc = true; // отмечаем, что успешно
+	bool step(FST& fst, short*& rstates) { // шаг автомата
+		bool rc = false;
+		swap(rstates, fst.rstates);
+		for (short i = 0; i < fst.nstates; i++) {
+			if (rstates[i] == fst.position) {
+				for (short j = 0; j < fst.nodes[i].n_relation; j++) {
+					if (fst.nodes[i].relations[j].symbol == fst.strin[fst.position]) {
+						fst.rstates[fst.nodes[i].relations[j].nnode] = fst.position + 1;
+						rc = true;
 					}
 				}
 			}
@@ -68,19 +60,19 @@ namespace FST { // пространство имен для конечного �
 		return rc;
 	}
 
-	bool execute(FST& fst) { // функция для распознавания цепочки
-		short* rstates = new short[fst.nstates]; // выделяем память для буферного массива состояний
-		memset(rstates, 0xff, sizeof(short) * fst.nstates); // заполняем его 0xff
-		short lstring = strlen(fst.strin);// берем длину входной строки
-		bool rc = true; // флажок для корректности выполнения
-		for (short i = 0; i < lstring && rc; i++) { // проходим по каждому символу
-			fst.position++; // увеличиваем позицию
-			rc = step(fst, rstates); // вызываем step для текущего состояния
+	bool execute(FST& fst) { // выполнение
+		short* rstates = new short[fst.nstates];
+		memset(rstates, 0xff, sizeof(short) * fst.nstates);
+		short lstring = strlen(fst.strin);
+		bool rc = true;
+		for (short i = 0; i < lstring && rc; i++) {
+			fst.position++;
+			rc = step(fst, rstates);
 		}
-		delete[] rstates; // очищаем память
+		delete[] rstates;
 		/*for (int i = 0; i < fst.nstates; i++) {
 			cout << fst.rstates[i] << ' ';
 		}*/
-		return (rc ? (fst.rstates[fst.nstates - 1] == lstring) : rc); // вернет true, только если rc true и длина входной цепочки = значению в последнем состоянии
+		return (rc ? (fst.rstates[fst.nstates - 1] == lstring) : rc);
 	}
 }

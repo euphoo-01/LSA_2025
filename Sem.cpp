@@ -1,64 +1,66 @@
 #include "Sem.h"
 
+// семантический анализ
 namespace Sem {
 
-// получить тип данных по индексу в таблице лексем
+// получить тип
 IT::IDDATATYPE getType(int idx, LT::LexTable& lextable, IT::IdTable& idtable) {
+	if (idx < 0 || idx >= lextable.size) return IT::IDDATATYPE::UNSIGNED;
 	if (lextable.table[idx].idxTI != LT_TI_NULLIDX) {
 		return idtable.table[lextable.table[idx].idxTI].iddatatype;
 	}
 	return IT::IDDATATYPE::UNSIGNED;
 }
 
-// главная функция семантического анализа
+// проверка семантики
 void checkSemantic(LT::LexTable& lextable, IT::IdTable& idtable, std::map<std::string, std::vector<IT::IDDATATYPE>>& funcs) {
 	bool flagMain = false;
-	IT::IDDATATYPE currentFuncType = IT::IDDATATYPE::UNSIGNED; // тип возврата текущей функции
+	IT::IDDATATYPE currentFuncType = IT::IDDATATYPE::UNSIGNED;
 	bool insideFunction = false;
+	std::map<int, int> knownValues; // отслеживание значений переменных
 
 	for (int i = 0; i < lextable.size; i++) {
-		// проверка наличия main и порядка объявления функций
+		// проверка main
 		if (lextable.table[i].lexema[0] == LEX_MAIN) {
 			flagMain = true;
-			currentFuncType = IT::IDDATATYPE::UNSIGNED; // main всегда unsigned
+			currentFuncType = IT::IDDATATYPE::UNSIGNED;
 			insideFunction = true;
 		}
 
 		if (lextable.table[i].lexema[0] == LEX_FUNC) {
-			// функция не может быть объявлена после main
+			// порядок функций
 			if (flagMain) {
-				throw ERROR_THROW_IN(102, lextable.table[i].sn, 0);
+				throw ERROR_THROW_IN(302, lextable.table[i].sn, 0);
 			}
-			// запоминаем тип возврата текущей функции
+			// тип возврата
 			if (i + 2 < lextable.size) {
 				currentFuncType = getType(i + 2, lextable, idtable);
 				insideFunction = true;
 			}
 		}
 
-		// проверка типа возвращаемого значения
+		// возврат значения
 		if (lextable.table[i].lexema[0] == LEX_SEND) {
 			if (i + 1 < lextable.size) {
 				IT::IDDATATYPE returnType = IT::IDDATATYPE::UNSIGNED;
 				if (lextable.table[i + 1].lexema[0] == LEX_ID || lextable.table[i + 1].lexema[0] == LEX_LITERAL) {
 					returnType = getType(i + 1, lextable, idtable);
 
-					// разрешаем неявное приведение char к unsigned
+					// char -> unsigned
 					if (currentFuncType == IT::UNSIGNED && returnType == IT::CHAR) {}
-					// в остальных случаях типы должны совпадать (упрощенная проверка)
+					// проверка совпадения
 					else if (currentFuncType != returnType) {
 						if (lextable.table[i + 2].lexema[0] == LEX_SEMICOLON) {
-							throw ERROR_THROW_IN(121, lextable.table[i].sn, 0);
+							throw ERROR_THROW_IN(311, lextable.table[i].sn, 0);
 						}
 					}
 				}
 			}
 		}
 
-		// проверка параметров при вызове функции
+		// параметры вызова
 		if (lextable.table[i].lexema[0] == LEX_ID && idtable.table[lextable.table[i].idxTI].idtype == IT::F) {
 
-			// пропускаем объявление функции
 			if (i > 0 && lextable.table[i - 1].lexema[0] == TYPE) continue;
 			if (i > 1 && lextable.table[i - 2].lexema[0] == LEX_FUNC) continue;
 
@@ -71,19 +73,17 @@ void checkSemantic(LT::LexTable& lextable, IT::IdTable& idtable, std::map<std::s
 			while (k < lextable.size && lextable.table[k].lexema[0] != LEX_RIGHTTHESIS) {
 				if (lextable.table[k].lexema[0] == LEX_ID || lextable.table[k].lexema[0] == LEX_LITERAL) {
 
-					// превышено количество параметров
 					if (pIndex >= expectedParams.size()) {
-						throw ERROR_THROW_IN(603, lextable.table[i].sn, 0);
+						throw ERROR_THROW_IN(317, lextable.table[i].sn, 0);
 					}
 
-					// проверка типов параметров
 					IT::IDDATATYPE actualType = getType(k, lextable, idtable);
 					IT::IDDATATYPE expectedType = expectedParams[pIndex];
 
 					if (actualType != expectedType) {
-						// разрешаем неявное приведение char к unsigned
+						// char -> unsigned
 						if (!(expectedType == IT::UNSIGNED && actualType == IT::CHAR)) {
-							throw ERROR_THROW_IN(122, lextable.table[k].sn, 0);
+							throw ERROR_THROW_IN(312, lextable.table[k].sn, 0);
 						}
 					}
 					pIndex++;
@@ -91,18 +91,37 @@ void checkSemantic(LT::LexTable& lextable, IT::IdTable& idtable, std::map<std::s
 				k++;
 			}
 
-			// недостаточно параметров
 			if (pIndex < expectedParams.size()) {
-				throw ERROR_THROW_IN(604, lextable.table[i].sn, 0);
+				throw ERROR_THROW_IN(318, lextable.table[i].sn, 0);
 			}
 		}
 
-		// проверка типов при присваивании и инициализации
+		// присваивание
 		if (lextable.table[i].lexema[0] == LEX_EQUAL) {
 			if (i > 0 && (lextable.table[i - 1].lexema[0] == LEX_ID)) {
 				IT::IDDATATYPE leftType = getType(i - 1, lextable, idtable);
+				int lhsIdx = lextable.table[i - 1].idxTI;
+				bool isSimple = false;
+				int newVal = 0;
 
-				// анализ выражения справа от знака равенства
+				// проверка на простое присваивание
+				if (i + 2 < lextable.size && lextable.table[i + 2].lexema[0] == LEX_SEMICOLON) {
+					if (lextable.table[i + 1].lexema[0] == LEX_LITERAL) {
+						int litIdx = lextable.table[i + 1].idxTI;
+						if (idtable.table[litIdx].iddatatype == IT::UNSIGNED) {
+							isSimple = true;
+							newVal = idtable.table[litIdx].value.vint;
+						}
+					} else if (lextable.table[i + 1].lexema[0] == LEX_ID) {
+						int rhsIdx = lextable.table[i + 1].idxTI;
+						if (knownValues.count(rhsIdx)) {
+							isSimple = true;
+							newVal = knownValues[rhsIdx];
+						}
+					}
+				}
+
+				// анализ правой части
 				int j = i + 1;
 				bool hasLogicOp = false;
 				bool hasArithOp = false;
@@ -110,25 +129,31 @@ void checkSemantic(LT::LexTable& lextable, IT::IdTable& idtable, std::map<std::s
 				while (j < lextable.size && lextable.table[j].lexema[0] != LEX_SEMICOLON) {
 					char lex = lextable.table[j].lexema[0];
 
-					// статическая проверка деления на ноль
+					// деление на ноль
 					if (lex == LEX_COLON || lex == LEX_OST) {
-						if (j + 1 < lextable.size && lextable.table[j + 1].lexema[0] == LEX_LITERAL) {
-							if (idtable.table[lextable.table[j + 1].idxTI].value.vint == 0) {
-								throw ERROR_THROW_IN(124, lextable.table[j].sn, 0);
+						if (j + 1 < lextable.size) {
+							if (lextable.table[j + 1].lexema[0] == LEX_LITERAL) {
+								if (idtable.table[lextable.table[j + 1].idxTI].value.vint == 0) {
+									throw ERROR_THROW_IN(314, lextable.table[j].sn, 0);
+								}
+							} else if (lextable.table[j + 1].lexema[0] == LEX_ID) {
+								int opIdx = lextable.table[j + 1].idxTI;
+								if (knownValues.count(opIdx) && knownValues[opIdx] == 0) {
+									throw ERROR_THROW_IN(314, lextable.table[j].sn, 0);
+								}
 							}
 						}
 					}
 
-					// проверка совместимости типов
+					// совместимость
 					if (lex == LEX_ID || lex == LEX_LITERAL) {
 						IT::IDDATATYPE rightType = getType(j, lextable, idtable);
 						if (leftType == IT::UNSIGNED && rightType == IT::LOGIC) {
-							throw ERROR_THROW_IN(120, lextable.table[j].sn, 0);
+							throw ERROR_THROW_IN(310, lextable.table[j].sn, 0);
 						}
 						if (leftType == IT::LOGIC && (rightType == IT::UNSIGNED || rightType == IT::CHAR)) {}
 					}
 
-					// смешивание арифметических и логических операций
 					if (lex == LEX_MORE || lex == LEX_LESS || lex == LEX_ISEQUAL ||
 						lex == LEX_NOT_EQUAL || lex == LEX_MORE_OR_EQUAL || lex == LEX_LESS_OR_EQUAL) {
 						hasLogicOp = true;
@@ -140,20 +165,22 @@ void checkSemantic(LT::LexTable& lextable, IT::IdTable& idtable, std::map<std::s
 					j++;
 				}
 
-				// проверка типа выражения
+				// обновление известных значений
+				if (isSimple) knownValues[lhsIdx] = newVal;
+				else knownValues.erase(lhsIdx);
+
 				if (leftType == IT::LOGIC) {
 					if (hasArithOp && !hasLogicOp) {}
 				}
 			}
 		}
 
-		// проверка условий в if и because
+		// условия
 		if (lextable.table[i].lexema[0] == LEX_IF || lextable.table[i].lexema[0] == LEX_BECAUSE) {
 			int startCond = 0;
 			int endCond = 0;
 
-			// определение границ условного выражения
-			// для if
+			// границы условия
 			if (lextable.table[i].lexema[0] == LEX_IF) {
 				startCond = i + 2;
 				int brackets = 1;
@@ -165,7 +192,6 @@ void checkSemantic(LT::LexTable& lextable, IT::IdTable& idtable, std::map<std::s
 				}
 				endCond = k;
 			}
-			// для because
 			else if (lextable.table[i].lexema[0] == LEX_BECAUSE) {
 				int k = i + 2;
 				int semicolons = 0;
@@ -180,7 +206,7 @@ void checkSemantic(LT::LexTable& lextable, IT::IdTable& idtable, std::map<std::s
 				endCond = k;
 			}
 
-			// анализ условного выражения
+			// анализ
 			bool hasComparison = false;
 			bool isSingleLogic = false;
 
@@ -197,16 +223,15 @@ void checkSemantic(LT::LexTable& lextable, IT::IdTable& idtable, std::map<std::s
 				}
 			}
 
-			// условие не является логическим
 			if (!hasComparison && !isSingleLogic) {
-				throw ERROR_THROW_IN(606, lextable.table[i].sn, 0);
+				throw ERROR_THROW_IN(319, lextable.table[i].sn, 0);
 			}
 		}
 	}
 
-	// проверка наличия main в коде
+	// проверка main
 	if (!flagMain) {
-		throw ERROR_THROW(103);
+		throw ERROR_THROW(303);
 	}
 }
 

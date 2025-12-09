@@ -12,6 +12,7 @@
 #include <vector>
 #include <map>
 
+// лексический анализ
 namespace Lex {
     LT::LexTable lexTable = LT::Create(LT_MAXSIZE - 1);
     IT::IdTable idTable = IT::Create(TI_MAXSIZE - 1);
@@ -33,7 +34,7 @@ namespace Lex {
 
     char *str = new char[TI_MAXSIZE];
     bool declareFlag = false;
-    bool declareFunc = false; // Флаг объявления заголовка функции
+    bool declareFunc = false; // объявление заголовка
     bool pushToIT = false;
 
     char FST() {
@@ -53,7 +54,7 @@ namespace Lex {
         if (FST::execute(_differ)) { differFlag = true; return LEX_DIFFER; }
         if (FST::execute(_literal)) return LEX_LITERAL;
         if (FST::execute(_iden)) return LEX_ID;
-        return NULL;
+        return '\0';
     }
 
     LEX Lex(Parm::Parm parm, In::IN in) {
@@ -83,7 +84,7 @@ namespace Lex {
         int bufferIndex = 0;
         cur_lex.sn = 0;
         cur_lex.idxTI = 0;
-        cur_lex.lexema[0] = NULL;
+        cur_lex.lexema[0] = '\0';
         int number_literal = 0;
         int count_because = 0;
         int count_if = 0;
@@ -100,7 +101,7 @@ namespace Lex {
         ofstream LT_file("LT.txt");
         ofstream IT_file("IT.txt");
 
-        std::memset(str, NULL, TI_MAXSIZE);
+        std::memset(str, 0, TI_MAXSIZE);
 
         for (int i = 0; i < in.size; i++) {
             pos++;
@@ -125,7 +126,7 @@ namespace Lex {
                 str[bufferIndex] = '\0';
 
                 if (bufferIndex > 0) cur_lex.lexema[0] = FST();
-                else cur_lex.lexema[0] = NULL;
+                else cur_lex.lexema[0] = '\0';
 
                 // MAIN
                 if (cur_lex.lexema[0] == LEX_MAIN) {
@@ -141,7 +142,7 @@ namespace Lex {
                     cur_iden.idxfirstLE = currentLine;
                     cur_iden.scope_name = cur_scope;
 
-                    if (IT::search(idTable, cur_iden) >= 0) throw ERROR_THROW_IN(109, currentLine, pos);
+                    if (IT::search(idTable, cur_iden) >= 0) throw ERROR_THROW_IN(309, currentLine, pos);
                     IT::Add(idTable, cur_iden);
                 }
 
@@ -173,13 +174,17 @@ namespace Lex {
                             }
                         }
 
-                        if (isNegative) {
-                            cur_iden.value.vint = (unsigned int)(-stoi(str));
-                            if (str[0] == '0') cur_iden.value.vint = (unsigned int)-stoi(str, nullptr, 8);
-                            lexTable.size--;
-                        } else {
-                            cur_iden.value.vint = (unsigned int)stoi(str);
-                            if (str[0] == '0') cur_iden.value.vint = (unsigned int)stoi(str, nullptr, 8);
+                        try {
+                            if (isNegative) {
+                                cur_iden.value.vint = (unsigned int)(-stoi(str));
+                                if (str[0] == '0') cur_iden.value.vint = (unsigned int)-stoi(str, nullptr, 8);
+                                lexTable.size--;
+                            } else {
+                                cur_iden.value.vint = (unsigned int)stoi(str);
+                                if (str[0] == '0') cur_iden.value.vint = (unsigned int)stoi(str, nullptr, 8);
+                            }
+                        } catch (...) {
+                            throw ERROR_THROW_IN(126, currentLine, pos);
                         }
                     }
 
@@ -202,18 +207,18 @@ namespace Lex {
                     cur_iden.iddatatype = IT::UNSIGNED;
                     cur_iden.idxfirstLE = currentLine;
 
-                    // 1. Объявление функции
+                    // 1. объявление функции
                     if (lexTable.size >= 2 && lexTable.table[lexTable.size - 2].lexema[0] == LEX_FUNC) {
                         if (callFunc) throw ERROR_THROW_IN(600, currentLine, 0);
                         callFunc = true;
                         cur_iden.idtype = IT::F;
-                        declareFunc = true; // Начало объявления функции
+                        declareFunc = true; // начало объявления
 
                         if (unsignedIntFlag) { cur_iden.iddatatype = IT::UNSIGNED; unsignedIntFlag = false; }
                         else if (logicFlag) { cur_iden.iddatatype = IT::LOGIC; logicFlag = false; }
                         else if (charFlag) { cur_iden.iddatatype = IT::CHAR; charFlag = false; }
 
-                        if (IT::search(idTable, cur_iden) >= 0) throw ERROR_THROW_IN(107, currentLine, pos);
+                        if (IT::search(idTable, cur_iden) >= 0) throw ERROR_THROW_IN(307, currentLine, pos);
                         lexResult.functions[cur_iden.id] = {};
 
                         cur_lex.idxTI = idTable.size;
@@ -221,8 +226,8 @@ namespace Lex {
                         pushToIT = true;
                     }
 
-                    // 2. Объявление параметров (первый)
-                    // ВАЖНО: Добавлена проверка declareFunc, чтобы не путать с вызовом функции
+                    // 2. объявление параметров (первый)
+                    // проверка declareFunc
                     if (declareFunc && lexTable.size >= 3 &&
                         lexTable.table[lexTable.size - 2].lexema[0] == LEX_LEFTTHESIS &&
                         lexTable.table[lexTable.size - 3].lexema[0] == LEX_ID &&
@@ -235,7 +240,7 @@ namespace Lex {
                         else if (unsignedIntFlag) { cur_iden.iddatatype = IT::UNSIGNED; unsignedIntFlag = false; }
                         else if (logicFlag) { cur_iden.iddatatype = IT::LOGIC; logicFlag = false; }
 
-                        if (IT::search(idTable, cur_iden) >= 0) throw ERROR_THROW_IN(105, currentLine, pos);
+                        if (IT::search(idTable, cur_iden) >= 0) throw ERROR_THROW_IN(305, currentLine, pos);
                         lexResult.functions[cur_scope].push_back(cur_iden.iddatatype);
 
                         cur_lex.idxTI = idTable.size;
@@ -243,20 +248,20 @@ namespace Lex {
                         pushToIT = true;
                     }
 
-                    // 3. Объявление параметров (следующие)
+                    // 3. объявление параметров (следующие)
                     if (declareFunc && lexTable.size >= 3 &&
                         lexTable.table[lexTable.size - 2].lexema[0] == LEX_COMMA &&
                         idTable.table[lexTable.table[lexTable.size - 3].idxTI].idtype == IT::P) {
 
                         cur_iden.idtype = IT::P;
                         countParms++;
-                        if (countParms > 8) throw ERROR_THROW_IN(108, currentLine, pos);
+                        if (countParms > 8) throw ERROR_THROW_IN(308, currentLine, pos);
 
                         if (charFlag) { cur_iden.iddatatype = IT::CHAR; charFlag = false; }
                         else if (unsignedIntFlag) { cur_iden.iddatatype = IT::UNSIGNED; unsignedIntFlag = false; }
                         else if (logicFlag) { cur_iden.iddatatype = IT::LOGIC; logicFlag = false; }
 
-                        if (IT::search(idTable, cur_iden) >= 0) throw ERROR_THROW_IN(105, currentLine, pos);
+                        if (IT::search(idTable, cur_iden) >= 0) throw ERROR_THROW_IN(305, currentLine, pos);
 
                         cur_lex.idxTI = idTable.size;
                         IT::Add(idTable, cur_iden);
@@ -264,30 +269,30 @@ namespace Lex {
                         pushToIT = true;
                     }
 
-                    // 4. Объявление переменных
+                    // 4. объявление переменных
                     if (unsignedIntFlag) {
                         cur_iden.iddatatype = IT::UNSIGNED; unsignedIntFlag = false;
-                        if (IT::search(idTable, cur_iden) >= 0) throw ERROR_THROW_IN(105, currentLine, pos);
+                        if (IT::search(idTable, cur_iden) >= 0) throw ERROR_THROW_IN(305, currentLine, pos);
                         cur_lex.idxTI = idTable.size;
                         IT::Add(idTable, cur_iden);
                         pushToIT = true;
                     }
                     else if (logicFlag) {
                         cur_iden.iddatatype = IT::LOGIC; logicFlag = false;
-                        if (IT::search(idTable, cur_iden) >= 0) throw ERROR_THROW_IN(105, currentLine, pos);
+                        if (IT::search(idTable, cur_iden) >= 0) throw ERROR_THROW_IN(305, currentLine, pos);
                         cur_lex.idxTI = idTable.size;
                         IT::Add(idTable, cur_iden);
                         pushToIT = true;
                     }
                     else if (charFlag) {
                         cur_iden.iddatatype = IT::CHAR; charFlag = false;
-                        if (IT::search(idTable, cur_iden) >= 0) throw ERROR_THROW_IN(105, currentLine, pos);
+                        if (IT::search(idTable, cur_iden) >= 0) throw ERROR_THROW_IN(305, currentLine, pos);
                         cur_lex.idxTI = idTable.size;
                         IT::Add(idTable, cur_iden);
                         pushToIT = true;
                     }
 
-                    // 5. Использование
+                    // 5. использование
                     if (!pushToIT) {
                         IT::Entry searchEntry;
                         std::strncpy(searchEntry.id, str, 15);
@@ -295,7 +300,7 @@ namespace Lex {
                         searchEntry.scope_name = cur_scope;
 
                         indexIT = IT::search(idTable, searchEntry, scope);
-                        if (indexIT < 0) throw ERROR_THROW_IN(106, currentLine, pos);
+                        if (indexIT < 0) throw ERROR_THROW_IN(306, currentLine, pos);
                         cur_lex.idxTI = indexIT;
                     }
 
@@ -304,19 +309,19 @@ namespace Lex {
 
                 // Blocks
                 if (cur_lex.lexema[0] == LEX_BECAUSE) {
-                    if (lexTable.size > 0 && lexTable.table[lexTable.size - 1].lexema[0] == TYPE) throw ERROR_THROW_IN(104, currentLine, pos);
+                    if (lexTable.size > 0 && lexTable.table[lexTable.size - 1].lexema[0] == TYPE) throw ERROR_THROW_IN(304, currentLine, pos);
                     prev_scope = cur_scope;
                     cur_scope = BECAUSE + to_string(count_because++);
                     scope[cur_scope] = prev_scope;
                 }
                 if (cur_lex.lexema[0] == LEX_IF) {
-                    if (lexTable.size > 0 && lexTable.table[lexTable.size - 1].lexema[0] == TYPE) throw ERROR_THROW_IN(104, currentLine, pos);
+                    if (lexTable.size > 0 && lexTable.table[lexTable.size - 1].lexema[0] == TYPE) throw ERROR_THROW_IN(304, currentLine, pos);
                     prev_scope = cur_scope;
                     cur_scope = IF + to_string(count_if++);
                     scope[cur_scope] = prev_scope;
                 }
                 if (cur_lex.lexema[0] == LEX_DIFFER) {
-                    if (lexTable.size > 0 && lexTable.table[lexTable.size - 1].lexema[0] == TYPE) throw ERROR_THROW_IN(104, currentLine, pos);
+                    if (lexTable.size > 0 && lexTable.table[lexTable.size - 1].lexema[0] == TYPE) throw ERROR_THROW_IN(304, currentLine, pos);
                     prev_scope = cur_scope;
                     cur_scope = DIFFER + to_string(count_differ++);
                     scope[cur_scope] = prev_scope;
@@ -324,15 +329,15 @@ namespace Lex {
 
                 if (in.text[i] != MARK) {
                     bufferIndex = 0;
-                    std::memset(str, NULL, bufferIndex + 1);
+                    std::memset(str, 0, bufferIndex + 1);
                 }
             }
 
-            // Добавление в таблицу
-            if (cur_lex.lexema[0] != NULL) {
+            // добавление в таблицу
+            if (cur_lex.lexema[0] != '\0') {
                 cur_lex.sn = currentLine;
                 LT::Add(lexTable, cur_lex);
-                cur_lex.lexema[0] = NULL;
+                cur_lex.lexema[0] = '\0';
             }
 
             if (litFlag && in.text[i] == MARK && bufferIndex == 1) continue;
@@ -371,16 +376,16 @@ namespace Lex {
                         LT::Add(lexTable, cur_lex);
                         IT::Add(idTable, cur_iden);
 
-                        bufferIndex = 0; std::memset(str, NULL, bufferIndex + 1); cur_lex.lexema[0] = NULL;
+                        bufferIndex = 0; std::memset(str, 0, bufferIndex + 1); cur_lex.lexema[0] = '\0';
                     }
                     break;
-                case NEW_LINE: currentLine++; cur_lex.lexema[0] = NULL; pos = 0; break;
+                case NEW_LINE: currentLine++; cur_lex.lexema[0] = '\0'; pos = 0; break;
                 case LEX_SEMICOLON:
                     cur_lex.lexema[0] = LEX_SEMICOLON;
                     if (i > 0 && in.text[i - 1] == NEW_LINE) throw ERROR_THROW_IN(602, currentLine, 0);
                     cur_lex.sn = currentLine;
                     LT::Add(lexTable, cur_lex);
-                    cur_lex.lexema[0] = NULL;
+                    cur_lex.lexema[0] = '\0';
 
                     if (lexTable.size >= 2 && lexTable.table[lexTable.size - 2].lexema[0] == LEX_BRACELET) {
                         if (cur_scope.find(BECAUSE) != string::npos) differFlag = false;
@@ -395,18 +400,18 @@ namespace Lex {
                         prev_scope = scope[cur_scope];
                     }
                     break;
-                case LEX_COMMA: cur_lex.lexema[0] = LEX_COMMA; cur_lex.sn = currentLine; LT::Add(lexTable, cur_lex); cur_lex.lexema[0] = NULL; break;
+                case LEX_COMMA: cur_lex.lexema[0] = LEX_COMMA; cur_lex.sn = currentLine; LT::Add(lexTable, cur_lex); cur_lex.lexema[0] = '\0'; break;
                 case LEX_LEFTBRACE:
                     if (mainFlag) { scope["main"] = cur_scope; prev_scope = cur_scope; cur_scope = "main"; mainFlag = false; }
-                    // ВАЖНО: При входе в блок тела функции завершаем фазу объявления
+                    // завершаем фазу объявления
                     if (declareFunc) { declareFunc = false; }
-                    cur_lex.lexema[0] = LEX_LEFTBRACE; cur_lex.sn = currentLine; LT::Add(lexTable, cur_lex); cur_lex.lexema[0] = NULL; break;
+                    cur_lex.lexema[0] = LEX_LEFTBRACE; cur_lex.sn = currentLine; LT::Add(lexTable, cur_lex); cur_lex.lexema[0] = '\0'; break;
                 case LEX_BRACELET:
                     cur_lex.lexema[0] = LEX_BRACELET;
                     if (in.text[i + 1] != ';') throw ERROR_THROW_IN(601, currentLine, 0);
-                    cur_lex.sn = currentLine; LT::Add(lexTable, cur_lex); cur_lex.lexema[0] = NULL; break;
+                    cur_lex.sn = currentLine; LT::Add(lexTable, cur_lex); cur_lex.lexema[0] = '\0'; break;
                 case LEX_LEFTTHESIS:
-                    cur_lex.lexema[0] = LEX_LEFTTHESIS; cur_lex.sn = currentLine; LT::Add(lexTable, cur_lex); cur_lex.lexema[0] = NULL;
+                    cur_lex.lexema[0] = LEX_LEFTTHESIS; cur_lex.sn = currentLine; LT::Add(lexTable, cur_lex); cur_lex.lexema[0] = '\0';
                     if (differFlag || ifFlag) continue;
                     else if (declareFunc) {
                         parmFlag = true;
@@ -421,34 +426,34 @@ namespace Lex {
                         }
                     }
                     break;
-                case LEX_RIGHTTHESIS: cur_lex.lexema[0] = LEX_RIGHTTHESIS; cur_lex.sn = currentLine; LT::Add(lexTable, cur_lex); cur_lex.lexema[0] = NULL; parmFlag = false; break;
+                case LEX_RIGHTTHESIS: cur_lex.lexema[0] = LEX_RIGHTTHESIS; cur_lex.sn = currentLine; LT::Add(lexTable, cur_lex); cur_lex.lexema[0] = '\0'; parmFlag = false; break;
                 case LEX_PLUS:
                     if (in.text[i + 1] == LEX_PLUS) { cur_lex.lexema[0] = LEX_INC; i++; }
                     else cur_lex.lexema[0] = LEX_PLUS;
-                    cur_lex.sn = currentLine; LT::Add(lexTable, cur_lex); cur_lex.lexema[0] = NULL; break;
+                    cur_lex.sn = currentLine; LT::Add(lexTable, cur_lex); cur_lex.lexema[0] = '\0'; break;
                 case LEX_MINUS:
                     if (in.text[i + 1] == LEX_MINUS) { cur_lex.lexema[0] = LEX_DEC; i++; }
                     else cur_lex.lexema[0] = LEX_MINUS;
-                    cur_lex.sn = currentLine; LT::Add(lexTable, cur_lex); cur_lex.lexema[0] = NULL; break;
-                case LEX_STAR: cur_lex.lexema[0] = LEX_STAR; cur_lex.sn = currentLine; LT::Add(lexTable, cur_lex); cur_lex.lexema[0] = NULL; break;
-                case LEX_COLON: cur_lex.lexema[0] = LEX_COLON; cur_lex.sn = currentLine; LT::Add(lexTable, cur_lex); cur_lex.lexema[0] = NULL; break;
+                    cur_lex.sn = currentLine; LT::Add(lexTable, cur_lex); cur_lex.lexema[0] = '\0'; break;
+                case LEX_STAR: cur_lex.lexema[0] = LEX_STAR; cur_lex.sn = currentLine; LT::Add(lexTable, cur_lex); cur_lex.lexema[0] = '\0'; break;
+                case LEX_COLON: cur_lex.lexema[0] = LEX_COLON; cur_lex.sn = currentLine; LT::Add(lexTable, cur_lex); cur_lex.lexema[0] = '\0'; break;
                 case LEX_EQUAL:
-                    if (in.text[i + 1] == LEX_EQUAL && in.text[i - 1] != LEX_EQUAL) { cur_lex.lexema[0] = LEX_ISEQUAL; i++; cur_lex.sn = currentLine; LT::Add(lexTable, cur_lex); cur_lex.lexema[0] = NULL; break; }
+                    if (in.text[i + 1] == LEX_EQUAL && in.text[i - 1] != LEX_EQUAL) { cur_lex.lexema[0] = LEX_ISEQUAL; i++; cur_lex.sn = currentLine; LT::Add(lexTable, cur_lex); cur_lex.lexema[0] = '\0'; break; }
                     if (in.text[i - 1] != LEX_EQUAL && in.text[i + 1] != LEX_EQUAL) {
                         cur_lex.lexema[0] = LEX_EQUAL;
                         if (lexTable.size > 0 && lexTable.table[lexTable.size - 1].lexema[0] != LEX_ID) throw ERROR_THROW_IN(602, currentLine, pos);
-                        cur_lex.sn = currentLine; LT::Add(lexTable, cur_lex); cur_lex.lexema[0] = NULL; break;
+                        cur_lex.sn = currentLine; LT::Add(lexTable, cur_lex); cur_lex.lexema[0] = '\0'; break;
                     } else throw ERROR_THROW_IN(601, currentLine, pos);
                 case LEX_NOT:
                     if (in.text[i + 1] == LEX_EQUAL) { cur_lex.lexema[0] = LEX_NOT_EQUAL; i++; } else throw ERROR_THROW_IN(601, currentLine, pos);
-                    cur_lex.sn = currentLine; LT::Add(lexTable, cur_lex); cur_lex.lexema[0] = NULL; break;
+                    cur_lex.sn = currentLine; LT::Add(lexTable, cur_lex); cur_lex.lexema[0] = '\0'; break;
                 case LEX_MORE:
                     cur_lex.lexema[0] = LEX_MORE; if (in.text[i + 1] == EQUAL) { cur_lex.lexema[0] = LEX_MORE_OR_EQUAL; i++; }
-                    cur_lex.sn = currentLine; LT::Add(lexTable, cur_lex); cur_lex.lexema[0] = NULL; break;
+                    cur_lex.sn = currentLine; LT::Add(lexTable, cur_lex); cur_lex.lexema[0] = '\0'; break;
                 case LEX_LESS:
                     cur_lex.lexema[0] = LEX_LESS; if (in.text[i + 1] == EQUAL) { cur_lex.lexema[0] = LEX_LESS_OR_EQUAL; i++; }
-                    cur_lex.sn = currentLine; LT::Add(lexTable, cur_lex); cur_lex.lexema[0] = NULL; break;
-                case LEX_OST: cur_lex.lexema[0] = LEX_OST; cur_lex.sn = currentLine; LT::Add(lexTable, cur_lex); cur_lex.lexema[0] = NULL; break;
+                    cur_lex.sn = currentLine; LT::Add(lexTable, cur_lex); cur_lex.lexema[0] = '\0'; break;
+                case LEX_OST: cur_lex.lexema[0] = LEX_OST; cur_lex.sn = currentLine; LT::Add(lexTable, cur_lex); cur_lex.lexema[0] = '\0'; break;
             }
         }
 

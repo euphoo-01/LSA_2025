@@ -36,14 +36,14 @@ int getPriority(char lexema) {
 }
 
 bool Rpn(LT::LexTable& lextable, IT::IdTable& idtable, int startPos, int endPos) {
-	stack<LT::Entry> stack;      // Стек операторов
-	vector<LT::Entry> outString; // Выходная строка (RPN)
+	stack<LT::Entry> stack;      // стек операторов
+	vector<LT::Entry> outString; // выходная строка
 
 	for (int i = startPos; i < endPos; i++) {
 		LT::Entry entry = lextable.table[i];
 
 		// игнорируем пустые лексемы
-		if (entry.lexema[0] == NULL) continue;
+		if (entry.lexema[0] == '\0') continue;
 
 		switch (entry.lexema[0]) {
 		// операнды
@@ -52,8 +52,6 @@ bool Rpn(LT::LexTable& lextable, IT::IdTable& idtable, int startPos, int endPos)
 			break;
 
 		case LEX_ID: {
-			// если это функция — считаем её оператором
-			// если переменная — операндом
 			if (entry.idxTI != LT_TI_NULLIDX && idtable.table[entry.idxTI].idtype == IT::F) {
 				stack.push(entry);
 			}
@@ -125,7 +123,6 @@ bool Rpn(LT::LexTable& lextable, IT::IdTable& idtable, int startPos, int endPos)
 				int priorityCurrent = getPriority(entry.lexema[0]);
 
 				// левоассоциативность
-				// исключение ( и функции
 				if (stack.top().lexema[0] == LEX_LEFTTHESIS ||
 				   (stack.top().idxTI != LT_TI_NULLIDX && idtable.table[stack.top().idxTI].idtype == IT::F)) {
 					break;
@@ -159,9 +156,9 @@ bool Rpn(LT::LexTable& lextable, IT::IdTable& idtable, int startPos, int endPos)
 		lextable.table[startPos + i] = outString[i];
 	}
 
-	// оставшиеся ячейки заполняем пустышками, чтобы сохранить структуру таблицы
+	// оставшиеся ячейки заполняем пустышками
 	for (int i = startPos + outString.size(); i < endPos; i++) {
-		lextable.table[i].lexema[0] = NULL;
+		lextable.table[i].lexema[0] = '\0';
 		lextable.table[i].idxTI = LT_TI_NULLIDX;
 		lextable.table[i].sn = -1;
 	}
@@ -177,7 +174,7 @@ void searchAndConvert(LT::LexTable& lextable, IT::IdTable& idtable) {
 			while (lextable.table[i].lexema[0] != LEX_LEFTBRACE && i < lextable.size) {
 				i++;
 			}
-			continue; // мы встали на {, следующий шаг цикла обработает внутренности
+			continue;
 		}
 
 		// x = выражение ;

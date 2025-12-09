@@ -4,41 +4,41 @@
 #pragma warning(disable:4996)
 
 namespace Out {
-	OUT getout(wchar_t outfile[]) { // создание и открытие потокового вывода выходного файла
+	OUT getout(wchar_t outfile[]) { // создание потока вывода
 		OUT out;
-		out.stream = new ofstream; // создаем новый поток для записи
+		out.stream = new ofstream;
 		char narrow_outfile[300];
 		wcstombs(narrow_outfile, outfile, 300);
-		out.stream->open(narrow_outfile); // открываем поток по переданному названию файла
-		if (!out.stream->is_open()) { // если не открылся
-			throw ERROR_THROW(113); // вызываем исключение
+		out.stream->open(narrow_outfile);
+		if (!out.stream->is_open()) {
+			throw ERROR_THROW(13);
 		}
-		std::wcscpy(out.outfile, outfile); // копируем название файла
+		std::wcscpy(out.outfile, outfile);
 		return out;
 	}
-	void WriteOut(In::IN in, wchar_t outfile[]) { // функция для вывода преобразованного текста в файл
+	void WriteOut(In::IN in, wchar_t outfile[]) { // запись выходного файла
 		char narrow_outfile[300];
 		wcstombs(narrow_outfile, outfile, 300);
 		ofstream fout(narrow_outfile);
 		fout << in.text;
 		fout.close();
 	}
-	void WriteError(OUT out, Error::ERROR er) { // вывод информации об ошибке
-		if (out.stream) { // если открыт поток для записи
-			*out.stream << "Ошибка " << er.id << ": " << er.message; // выводим сообщение об ошибке
-			if (er.inext.line != -1) { // если имеется информации о месте ошибке, то выводим и эту информацию
+	void WriteError(OUT out, Error::ERROR er) { // вывод ошибки
+		if (out.stream) {
+			*out.stream << "Ошибка " << er.id << ": " << er.message;
+			if (er.inext.line != -1) {
 				*out.stream << ", строка " << er.inext.line << ", позиция " << er.inext.col << '\n';
 			}
 			else {
 				*out.stream << '\n';
 			}
 		}
-		else { // если поток не открыт, то выводим информацию в консоль
+		else {
 			cout << "Ошибка " << er.id << ": " << er.message << '\n';
 			cout << "Строка " << er.inext.line << ", позиция " << er.inext.col << '\n';
 		}
 	}
-	void Close(OUT out) { // закрываем поток
+	void Close(OUT out) { // закрытие
 		out.stream->close();
 		delete out.stream;
 	}

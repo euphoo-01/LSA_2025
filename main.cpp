@@ -5,6 +5,7 @@
 #include <fstream>
 #include <vector>
 #include <cstdlib>
+#include <exception>
 
 #include "Error.h"
 #include "Parm.h"
@@ -79,6 +80,18 @@ int main(int argc, char* argv[]) {
 			Log::Close(log);
 			Out::Close(out);
 		}
+	}
+	catch (const std::exception& e) {
+		cout << "Системная ошибка: " << e.what() << endl;
+		Log::WriteError(log, ERROR_THROW(1));
+		Log::Close(log);
+		Out::Close(out);
+	}
+	catch (...) {
+		cout << "Неизвестная системная ошибка" << endl;
+		Log::WriteError(log, ERROR_THROW(1));
+		Log::Close(log);
+		Out::Close(out);
 	}
 
 	return 0;
