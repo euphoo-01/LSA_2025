@@ -6,6 +6,7 @@
 namespace Parm {
 	Parm getParm(int argc, wchar_t* argv[]) { // разбор параметров запуска
 		Parm parm;
+		parm.build = false;
 		bool in = 0, out = 0, log = 0;
 		for (int i = 1; i < argc; i++) {
 			if (wcslen(argv[i]) > PARM_MAX_SIZE) {
@@ -22,6 +23,9 @@ namespace Parm {
 			if (wcsstr(argv[i], PARM_LOG)) {
 				wcscpy(parm.log, argv[i] + wcslen(PARM_LOG));
 				log = 1;
+			}
+			if (wcsstr(argv[i], PARM_BUILD)) {
+				parm.build = true;
 			}
 		}
 		if (!in) {
