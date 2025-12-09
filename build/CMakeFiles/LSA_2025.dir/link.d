@@ -17,6 +17,7 @@ LSA_2025: \
   CMakeFiles/LSA_2025.dir/Parm.cpp.o \
   CMakeFiles/LSA_2025.dir/RPN.cpp.o \
   CMakeFiles/LSA_2025.dir/Sem.cpp.o \
+  CMakeFiles/LSA_2025.dir/Build.cpp.o \
   /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/libstdc++.so \
   /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/libm.so \
   /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/libm.so \
@@ -80,6 +81,8 @@ CMakeFiles/LSA_2025.dir/Parm.cpp.o:
 CMakeFiles/LSA_2025.dir/RPN.cpp.o:
 
 CMakeFiles/LSA_2025.dir/Sem.cpp.o:
+
+CMakeFiles/LSA_2025.dir/Build.cpp.o:
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/libstdc++.so:
 

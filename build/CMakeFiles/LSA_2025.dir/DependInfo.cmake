@@ -8,6 +8,7 @@ set(CMAKE_DEPENDS_LANGUAGES
 
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
+  "/home/euphoo/02. University/КП/LSA_2025 (ручная работа)/Build.cpp" "CMakeFiles/LSA_2025.dir/Build.cpp.o" "gcc" "CMakeFiles/LSA_2025.dir/Build.cpp.o.d"
   "/home/euphoo/02. University/КП/LSA_2025 (ручная работа)/Error.cpp" "CMakeFiles/LSA_2025.dir/Error.cpp.o" "gcc" "CMakeFiles/LSA_2025.dir/Error.cpp.o.d"
   "/home/euphoo/02. University/КП/LSA_2025 (ручная работа)/FST.cpp" "CMakeFiles/LSA_2025.dir/FST.cpp.o" "gcc" "CMakeFiles/LSA_2025.dir/FST.cpp.o.d"
   "/home/euphoo/02. University/КП/LSA_2025 (ручная работа)/GRB.cpp" "CMakeFiles/LSA_2025.dir/GRB.cpp.o" "gcc" "CMakeFiles/LSA_2025.dir/GRB.cpp.o.d"

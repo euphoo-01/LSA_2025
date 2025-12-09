@@ -3283,6 +3283,7 @@ CMakeFiles/LSA_2025.dir/Sem.cpp.o: /home/euphoo/02.\ University/КП/LSA_2025\ (
   /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/stddef.h
 
 CMakeFiles/LSA_2025.dir/main.cpp.o: /home/euphoo/02.\ University/КП/LSA_2025\ (ручная\ работа)/main.cpp \
+  /home/euphoo/02.\ University/КП/LSA_2025\ (ручная\ работа)/Build.h \
   /home/euphoo/02.\ University/КП/LSA_2025\ (ручная\ работа)/Error.h \
   /home/euphoo/02.\ University/КП/LSA_2025\ (ручная\ работа)/FST.h \
   /home/euphoo/02.\ University/КП/LSA_2025\ (ручная\ работа)/GRB.h \
@@ -3834,6 +3835,8 @@ CMakeFiles/LSA_2025.dir/IT.cpp.o:
 /usr/include/asm-generic/posix_types.h:
 
 /usr/include/c++/15.2.1/bits/stl_map.h:
+
+/home/euphoo/02.\ University/КП/LSA_2025\ (ручная\ работа)/Build.h:
 
 /usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/time_members.h:
 

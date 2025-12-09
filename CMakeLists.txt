@@ -33,6 +33,8 @@ set(SOURCES
         Sem.cpp
         Sem.h
         stdafx.h
+        Build.cpp
+        Build.h
 )
 
 add_executable(LSA_2025 ${SOURCES})

@@ -1,6 +1,10 @@
-CMakeFiles/LSA_2025.dir/main.cpp.o: \
- /home/euphoo/02.\ University/КП/LSA_2025\ (ручная\ работа)/main.cpp \
- /usr/include/stdc-predef.h /usr/include/c++/15.2.1/iostream \
+CMakeFiles/LSA_2025.dir/Build.cpp.o: \
+ /home/euphoo/02.\ University/КП/LSA_2025\ (ручная\ работа)/Build.cpp \
+ /usr/include/stdc-predef.h \
+ /home/euphoo/02.\ University/КП/LSA_2025\ (ручная\ работа)/Build.h \
+ /home/euphoo/02.\ University/КП/LSA_2025\ (ручная\ работа)/Parm.h \
+ /home/euphoo/02.\ University/КП/LSA_2025\ (ручная\ работа)/Log.h \
+ /usr/include/c++/15.2.1/fstream \
  /usr/include/c++/15.2.1/bits/requires_hosted.h \
  /usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/c++config.h \
  /usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/os_defines.h \
@@ -10,9 +14,8 @@ CMakeFiles/LSA_2025.dir/main.cpp.o: \
  /usr/include/gnu/stubs.h /usr/include/gnu/stubs-64.h \
  /usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/cpu_defines.h \
  /usr/include/c++/15.2.1/pstl/pstl_config.h \
- /usr/include/c++/15.2.1/ostream /usr/include/c++/15.2.1/bits/ostream.h \
- /usr/include/c++/15.2.1/ios /usr/include/c++/15.2.1/iosfwd \
- /usr/include/c++/15.2.1/bits/stringfwd.h \
+ /usr/include/c++/15.2.1/istream /usr/include/c++/15.2.1/ios \
+ /usr/include/c++/15.2.1/iosfwd /usr/include/c++/15.2.1/bits/stringfwd.h \
  /usr/include/c++/15.2.1/bits/memoryfwd.h \
  /usr/include/c++/15.2.1/bits/postypes.h /usr/include/c++/15.2.1/cwchar \
  /usr/include/wchar.h /usr/include/bits/libc-header-start.h \
@@ -143,51 +146,13 @@ CMakeFiles/LSA_2025.dir/main.cpp.o: \
  /usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/ctype_inline.h \
  /usr/include/c++/15.2.1/bits/locale_facets.tcc \
  /usr/include/c++/15.2.1/bits/basic_ios.tcc \
- /usr/include/c++/15.2.1/bits/ostream.tcc /usr/include/c++/15.2.1/istream \
+ /usr/include/c++/15.2.1/ostream /usr/include/c++/15.2.1/bits/ostream.h \
+ /usr/include/c++/15.2.1/bits/ostream.tcc \
  /usr/include/c++/15.2.1/bits/istream.tcc \
- /home/euphoo/02.\ University/КП/LSA_2025\ (ручная\ работа)/stdafx.h \
- /usr/include/c++/15.2.1/fstream /usr/include/c++/15.2.1/bits/codecvt.h \
+ /usr/include/c++/15.2.1/bits/codecvt.h \
  /usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/basic_file.h \
  /usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/c++io.h \
- /usr/include/c++/15.2.1/bits/fstream.tcc /usr/include/c++/15.2.1/vector \
- /usr/include/c++/15.2.1/bits/stl_uninitialized.h \
- /usr/include/c++/15.2.1/bits/stl_vector.h \
- /usr/include/c++/15.2.1/bits/stl_bvector.h \
- /usr/include/c++/15.2.1/bits/vector.tcc /usr/include/c++/15.2.1/map \
- /usr/include/c++/15.2.1/bits/stl_tree.h \
- /usr/include/c++/15.2.1/ext/aligned_buffer.h \
- /usr/include/c++/15.2.1/bits/node_handle.h \
- /usr/include/c++/15.2.1/bits/stl_map.h \
- /usr/include/c++/15.2.1/bits/stl_multimap.h \
- /usr/include/c++/15.2.1/bits/erase_if.h \
- /home/euphoo/02.\ University/КП/LSA_2025\ (ручная\ работа)/Error.h \
- /home/euphoo/02.\ University/КП/LSA_2025\ (ручная\ работа)/Parm.h \
- /home/euphoo/02.\ University/КП/LSA_2025\ (ручная\ работа)/Log.h \
+ /usr/include/c++/15.2.1/bits/fstream.tcc \
  /home/euphoo/02.\ University/КП/LSA_2025\ (ручная\ работа)/In.h \
- /home/euphoo/02.\ University/КП/LSA_2025\ (ручная\ работа)/Out.h \
- /home/euphoo/02.\ University/КП/LSA_2025\ (ручная\ работа)/IT.h \
- /usr/include/c++/15.2.1/cstring /usr/include/string.h \
- /usr/include/strings.h \
- /home/euphoo/02.\ University/КП/LSA_2025\ (ручная\ работа)/LT.h \
- /home/euphoo/02.\ University/КП/LSA_2025\ (ручная\ работа)/Lex.h \
- /usr/include/c++/15.2.1/stack /usr/include/c++/15.2.1/deque \
- /usr/include/c++/15.2.1/bits/stl_deque.h \
- /usr/include/c++/15.2.1/bits/deque.tcc \
- /usr/include/c++/15.2.1/bits/stl_stack.h \
- /home/euphoo/02.\ University/КП/LSA_2025\ (ручная\ работа)/FST.h \
- /home/euphoo/02.\ University/КП/LSA_2025\ (ручная\ работа)/GRB.h \
- /home/euphoo/02.\ University/КП/LSA_2025\ (ручная\ работа)/MFST.h \
- /usr/include/c++/15.2.1/iomanip /usr/include/c++/15.2.1/locale \
- /usr/include/c++/15.2.1/bits/locale_facets_nonio.h \
- /usr/include/c++/15.2.1/ctime \
- /usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/time_members.h \
- /usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/messages_members.h \
- /usr/include/libintl.h \
- /usr/include/c++/15.2.1/bits/locale_facets_nonio.tcc \
- /usr/include/c++/15.2.1/bits/locale_conv.h \
- /usr/include/c++/15.2.1/bits/quoted_string.h \
- /usr/include/c++/15.2.1/sstream /usr/include/c++/15.2.1/bits/sstream.tcc \
- /home/euphoo/02.\ University/КП/LSA_2025\ (ручная\ работа)/Sem.h \
- /home/euphoo/02.\ University/КП/LSA_2025\ (ручная\ работа)/RPN.h \
- /home/euphoo/02.\ University/КП/LSA_2025\ (ручная\ работа)/NasmGen.h \
- /home/euphoo/02.\ University/КП/LSA_2025\ (ручная\ работа)/Build.h
+ /home/euphoo/02.\ University/КП/LSA_2025\ (ручная\ работа)/Error.h \
+ /usr/include/c++/15.2.1/iostream

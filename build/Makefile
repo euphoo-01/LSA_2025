@@ -129,6 +129,30 @@ LSA_2025/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/LSA_2025.dir/build.make CMakeFiles/LSA_2025.dir/build
 .PHONY : LSA_2025/fast
 
+Build.o: Build.cpp.o
+.PHONY : Build.o
+
+# target to build an object file
+Build.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LSA_2025.dir/build.make CMakeFiles/LSA_2025.dir/Build.cpp.o
+.PHONY : Build.cpp.o
+
+Build.i: Build.cpp.i
+.PHONY : Build.i
+
+# target to preprocess a source file
+Build.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LSA_2025.dir/build.make CMakeFiles/LSA_2025.dir/Build.cpp.i
+.PHONY : Build.cpp.i
+
+Build.s: Build.cpp.s
+.PHONY : Build.s
+
+# target to generate assembly for a file
+Build.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/LSA_2025.dir/build.make CMakeFiles/LSA_2025.dir/Build.cpp.s
+.PHONY : Build.cpp.s
+
 Error.o: Error.cpp.o
 .PHONY : Error.o
 
@@ -498,6 +522,9 @@ help:
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
 	@echo "... LSA_2025"
+	@echo "... Build.o"
+	@echo "... Build.i"
+	@echo "... Build.s"
 	@echo "... Error.o"
 	@echo "... Error.i"
 	@echo "... Error.s"
