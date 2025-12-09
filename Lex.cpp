@@ -117,7 +117,81 @@ namespace Lex {
             bool isLiteralBody = (in.text[i] != MARK && litFlag);
             bool isLiteralStart = (in.text[i] == MARK && !litFlag);
 
-L%d"L%d", number_literal++);
+            if ((isValidChar && in.text[i] != SPACE) || isUnsignedSpace || isLiteralStart || isLiteralBody) {
+                if (in.text[i] == MARK) litFlag = true;
+                str[bufferIndex] = in.text[i];
+                bufferIndex++;
+                if (bufferIndex >= TI_MAXSIZE) throw ERROR_THROW(119);
+            } else {
+                str[bufferIndex] = '\0';
+
+                if (bufferIndex > 0) cur_lex.lexema[0] = FST();
+                else cur_lex.lexema[0] = '\0';
+
+                // MAIN
+                if (cur_lex.lexema[0] == LEX_MAIN) {
+                    if (callFunc) throw ERROR_THROW_IN(600, currentLine, 0);
+                    mainFlag = true;
+                    cur_lex.idxTI = idTable.size;
+
+                    cur_iden = IT::Entry();
+                    std::strncpy(cur_iden.id, str, 15);
+                    cur_iden.iddatatype = IT::UNSIGNED;
+                    cur_iden.idtype = IT::F;
+                    cur_iden.value.vint = 0;
+                    cur_iden.idxfirstLE = currentLine;
+                    cur_iden.scope_name = cur_scope;
+
+                    if (IT::search(idTable, cur_iden) >= 0) throw ERROR_THROW_IN(309, currentLine, pos);
+                    IT::Add(idTable, cur_iden);
+                }
+
+                // LITERAL
+                if (cur_lex.lexema[0] == LEX_LITERAL) {
+                    cur_iden = IT::Entry();
+                    cur_iden.iddatatype = IT::UNSIGNED;
+                    cur_iden.idtype = IT::L;
+                    cur_iden.idxfirstLE = currentLine;
+                    cur_iden.scope_name = cur_scope;
+
+                    bool dot = false;
+                    for (int j = 0; j < strlen(str); j++) if (str[j] == '.') dot = true;
+
+                    if (trueFlag) {
+                        cur_iden.iddatatype = IT::LOGIC; cur_iden.value.vint = 1; trueFlag = false;
+                    } else if (falseFlag) {
+                        cur_iden.iddatatype = IT::LOGIC; cur_iden.value.vint = 0; falseFlag = false;
+                    } else {
+                        bool isNegative = false;
+                        if (lexTable.size >= 2) {
+                            int len = (int)strlen(str);
+                            if (i - len - 1 >= 0 &&
+                                lexTable.table[lexTable.size - 2].lexema[0] != LEX_RIGHTTHESIS &&
+                                lexTable.table[lexTable.size - 2].lexema[0] != LEX_ID &&
+                                lexTable.table[lexTable.size - 2].lexema[0] != LEX_LITERAL &&
+                                in.text[i - len] != ' ' && in.text[i - len - 1] == LEX_MINUS) {
+                                isNegative = true;
+                            }
+                        }
+
+                        try {
+                            if (isNegative) {
+                                // Ошибка: присвоение отрицательного числа беззнаковому типу
+                                throw ERROR_THROW_IN(126, currentLine, pos);
+                            } else {
+                                cur_iden.value.vint = (unsigned int)stoi(str);
+                                if (str[0] == '0') cur_iden.value.vint = (unsigned int)stoi(str, nullptr, 8);
+                            }
+                        } catch (...) {
+                            throw ERROR_THROW_IN(126, currentLine, pos);
+                        }
+                    }
+
+                    indexIT = IT::search(idTable, cur_iden);
+                    if (indexIT >= 0) {
+                        cur_lex.idxTI = indexIT;
+                    } else {
+                        std::sprintf(cur_iden.id, "L%d", number_literal++);
                         cur_lex.idxTI = idTable.size;
                         IT::Add(idTable, cur_iden);
                     }
@@ -132,12 +206,12 @@ L%d"L%d", number_literal++);
                     cur_iden.iddatatype = IT::UNSIGNED;
                     cur_iden.idxfirstLE = currentLine;
 
-                    // 1. объявление функции
+                    // 1. Объявление функции
                     if (lexTable.size >= 2 && lexTable.table[lexTable.size - 2].lexema[0] == LEX_FUNC) {
                         if (callFunc) throw ERROR_THROW_IN(600, currentLine, 0);
                         callFunc = true;
                         cur_iden.idtype = IT::F;
-                        declareFunc = true; // начало объявления
+                        declareFunc = true; // Начало объявления функции
 
                         if (unsignedIntFlag) { cur_iden.iddatatype = IT::UNSIGNED; unsignedIntFlag = false; }
                         else if (logicFlag) { cur_iden.iddatatype = IT::LOGIC; logicFlag = false; }
@@ -151,8 +225,8 @@ L%d"L%d", number_literal++);
                         pushToIT = true;
                     }
 
-                    // 2. объявление параметров (первый)
-                    // проверка declareFunc
+                    // 2. Объявление параметров (первый)
+                    // ВАЖНО: Добавлена проверка declareFunc, чтобы не путать с вызовом функции
                     if (declareFunc && lexTable.size >= 3 &&
                         lexTable.table[lexTable.size - 2].lexema[0] == LEX_LEFTTHESIS &&
                         lexTable.table[lexTable.size - 3].lexema[0] == LEX_ID &&
@@ -173,7 +247,7 @@ L%d"L%d", number_literal++);
                         pushToIT = true;
                     }
 
-                    // 3. объявление параметров (следующие)
+                    // 3. Объявление параметров (следующие)
                     if (declareFunc && lexTable.size >= 3 &&
                         lexTable.table[lexTable.size - 2].lexema[0] == LEX_COMMA &&
                         idTable.table[lexTable.table[lexTable.size - 3].idxTI].idtype == IT::P) {
@@ -194,7 +268,7 @@ L%d"L%d", number_literal++);
                         pushToIT = true;
                     }
 
-                    // 4. объявление переменных
+                    // 4. Объявление переменных
                     if (unsignedIntFlag) {
                         cur_iden.iddatatype = IT::UNSIGNED; unsignedIntFlag = false;
                         if (IT::search(idTable, cur_iden) >= 0) throw ERROR_THROW_IN(305, currentLine, pos);
@@ -217,7 +291,7 @@ L%d"L%d", number_literal++);
                         pushToIT = true;
                     }
 
-                    // 5. использование
+                    // 5. Использование
                     if (!pushToIT) {
                         IT::Entry searchEntry;
                         std::strncpy(searchEntry.id, str, 15);
@@ -258,7 +332,7 @@ L%d"L%d", number_literal++);
                 }
             }
 
-            // добавление в таблицу
+            // Добавление в таблицу
             if (cur_lex.lexema[0] != '\0') {
                 cur_lex.sn = currentLine;
                 LT::Add(lexTable, cur_lex);
@@ -271,115 +345,62 @@ L%d"L%d", number_literal++);
                 continue;
             }
 
-                        switch (in.text[i]) {
+            switch (in.text[i]) {
+                case MARK:
+                    litFlag = true;
+                    if (str[0] == MARK) {
+                        cur_lex.idxTI = idTable.size;
+                        str[bufferIndex] = MARK; bufferIndex++; str[bufferIndex] = '\0';
+                        litFlag = false;
 
-                            case MARK:
+                        cur_lex.lexema[0] = LEX_LITERAL;
+                        cur_iden = IT::Entry();
+                        std::sprintf(cur_iden.id, "L%d", number_literal++);
+                        cur_iden.iddatatype = IT::CHAR;
+                        cur_iden.idtype = IT::L;
+                        cur_iden.idxfirstLE = currentLine;
+                        cur_iden.scope_name = cur_scope;
 
-                                litFlag = true;
+                        // обработка символьных литералов
+                        if (str[1] == '\\' && str[2] == 'n') {
+                            cur_iden.value.vstr.str[0] = '\n';
+                            cur_iden.value.vstr.len = 1;
+                        } else if (str[1] == '\\' && str[2] == 't') { // обработка \t
+                            cur_iden.value.vstr.str[0] = '\t';
+                            cur_iden.value.vstr.len = 1;
+                        } else if (str[1] == '\\' && strlen(str) == 4) {
+                            // недопустимая escape-последовательность
+                            throw ERROR_THROW_IN(127, currentLine, pos);
+                        }
+                        else {
+                            // если это обычный символ
+                            if (strlen(str) == 3) { 
+                                cur_iden.value.vstr.str[0] = str[1];
+                                cur_iden.value.vstr.len = 1;
+                            } else if (strlen(str) == 2) { 
+                                // пустой символьный литерал, трактуем как пробел
+                                cur_iden.value.vstr.str[0] = ' '; 
+                                cur_iden.value.vstr.len = 1;
+                            }
+                            else {
+                                // некорректный символьный литерал
+                                throw ERROR_THROW_IN(125, currentLine, pos); 
+                            }
+                        }
+                        // завершающий нуль для безопасности
+                        cur_iden.value.vstr.str[1] = '\0';
 
-                                if (str[0] == MARK) {
+                        cur_lex.sn = currentLine;
+                        LT::Add(lexTable, cur_lex);
+                        IT::Add(idTable, cur_iden);
 
-                                    cur_lex.idxTI = idTable.size;
-
-                                    str[bufferIndex] = MARK; bufferIndex++; str[bufferIndex] = '\0';
-
-                                    litFlag = false;
-
-            
-
-                                    cur_lex.lexema[0] = LEX_LITERAL;
-
-                                    cur_iden = IT::Entry();
-
-                                    std::sprintf(cur_iden.id, "L%d", number_literal++);
-
-                                    cur_iden.iddatatype = IT::CHAR;
-
-                                    cur_iden.idtype = IT::L;
-
-                                    cur_iden.idxfirstLE = currentLine;
-
-                                    cur_iden.scope_name = cur_scope;
-
-            
-
-                                    // обработка символьных литералов
-
-                                    if (str[1] == '\\' && str[2] == 'n') {
-
-                                        cur_iden.value.vstr.str[0] = '\n';
-
-                                        cur_iden.value.vstr.len = 1;
-
-                                    } else if (str[1] == '\\' && str[2] == 't') { // обработка \t
-
-                                        cur_iden.value.vstr.str[0] = '\t';
-
-                                        cur_iden.value.vstr.len = 1;
-
-                                    } else if (str[1] == '\\' && strlen(str) == 4) {
-
-                                        // недопустимая escape-последовательность
-
-                                        throw ERROR_THROW_IN(127, currentLine, pos);
-
-                                    }
-
-                                    else {
-
-                                        // если это обычный символ
-
-                                        if (strlen(str) == 3) { 
-
-                                            cur_iden.value.vstr.str[0] = str[1];
-
-                                            cur_iden.value.vstr.len = 1;
-
-                                        } else if (strlen(str) == 2) { 
-
-                                            // пустой символьный литерал, трактуем как пробел
-
-                                            cur_iden.value.vstr.str[0] = ' '; 
-
-                                            cur_iden.value.vstr.len = 1;
-
-                                        }
-
-                                        else {
-
-                                            // некорректный символьный литерал
-
-                                            throw ERROR_THROW_IN(125, currentLine, pos); 
-
-                                        }
-
-                                    }
-
-                                    // завершающий нуль для безопасности
-
-                                    cur_iden.value.vstr.str[1] = '\0';
-
-            
-
-                                    cur_lex.sn = currentLine;
-
-                                    LT::Add(lexTable, cur_lex);
-
-                                    IT::Add(idTable, cur_iden);
-
-            
-
-                                    bufferIndex = 0; std::memset(str, 0, bufferIndex + 1); cur_lex.lexema[0] = '\0';
-
-                                }
-
-                                break;
-
-                                                            case NEW_LINE: currentLine++; cur_lex.lexema[0] = '\0'; pos = 0; break;
-
-                                                            case '\r': break; // игнорировать возврат каретки (CR)
-
-                                                            case LEX_SEMICOLON:
+                        bufferIndex = 0; std::memset(str, 0, bufferIndex + 1); cur_lex.lexema[0] = '\0';
+                    }
+                    break;
+                case '\n':
+                case NEW_LINE: currentLine++; cur_lex.lexema[0] = '\0'; pos = 0; break;
+                case ' ': case '\t': case '\r': break;
+                case LEX_SEMICOLON:
                     cur_lex.lexema[0] = LEX_SEMICOLON;
                     if (i > 0 && in.text[i - 1] == NEW_LINE) throw ERROR_THROW_IN(602, currentLine, 0);
                     cur_lex.sn = currentLine;
@@ -427,20 +448,20 @@ L%d"L%d", number_literal++);
                     break;
                 case LEX_RIGHTTHESIS: cur_lex.lexema[0] = LEX_RIGHTTHESIS; cur_lex.sn = currentLine; LT::Add(lexTable, cur_lex); cur_lex.lexema[0] = '\0'; parmFlag = false; break;
                 case LEX_PLUS:
-                    if (in.text[i + 1] == LEX_PLUS) { cur_lex.lexema[0] = LEX_INC; i++; }
+                    if (in.text[i + 1] ==LEX_PLUS) { cur_lex.lexema[0] = LEX_INC; i++; }
                     else cur_lex.lexema[0] = LEX_PLUS;
                     cur_lex.sn = currentLine; LT::Add(lexTable, cur_lex); cur_lex.lexema[0] = '\0'; break;
                 case LEX_MINUS:
-                    if (in.text[i + 1] == LEX_MINUS) { cur_lex.lexema[0] = LEX_DEC; i++; }
+                    if (in.text[i + 1] ==LEX_MINUS) { cur_lex.lexema[0] = LEX_DEC; i++; }
                     else cur_lex.lexema[0] = LEX_MINUS;
                     cur_lex.sn = currentLine; LT::Add(lexTable, cur_lex); cur_lex.lexema[0] = '\0'; break;
                 case LEX_STAR: cur_lex.lexema[0] = LEX_STAR; cur_lex.sn = currentLine; LT::Add(lexTable, cur_lex); cur_lex.lexema[0] = '\0'; break;
                 case LEX_COLON: cur_lex.lexema[0] = LEX_COLON; cur_lex.sn = currentLine; LT::Add(lexTable, cur_lex); cur_lex.lexema[0] = '\0'; break;
                 case LEX_EQUAL:
-                    if (in.text[i + 1] == LEX_EQUAL && in.text[i - 1] != LEX_EQUAL) { cur_lex.lexema[0] = LEX_ISEQUAL; i++; cur_lex.sn = currentLine; LT::Add(lexTable, cur_lex); cur_lex.lexema[0] = '\0'; break; }
-                    if (in.text[i - 1] != LEX_EQUAL && in.text[i + 1] != LEX_EQUAL) {
+                    if (in.text[i + 1] ==LEX_EQUAL && in.text[i - 1] !=LEX_EQUAL) { cur_lex.lexema[0] = LEX_ISEQUAL; i++; cur_lex.sn = currentLine; LT::Add(lexTable, cur_lex); cur_lex.lexema[0] = '\0'; break; }
+                    if (in.text[i - 1] !=LEX_EQUAL && in.text[i + 1] !=LEX_EQUAL) {
                         cur_lex.lexema[0] = LEX_EQUAL;
-                        if (lexTable.size > 0 && lexTable.table[lexTable.size - 1].lexema[0] != LEX_ID) throw ERROR_THROW_IN(602, currentLine, pos);
+                        if (lexTable.size > 0 && lexTable.table[lexTable.size - 1].lexema[0] !=LEX_ID) throw ERROR_THROW_IN(602, currentLine, pos);
                         cur_lex.sn = currentLine; LT::Add(lexTable, cur_lex); cur_lex.lexema[0] = '\0'; break;
                     } else throw ERROR_THROW_IN(601, currentLine, pos);
                 case LEX_NOT:

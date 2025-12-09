@@ -28,7 +28,7 @@ namespace Build {
         if (lastdot == std::string::npos) obj_file += ".o";
         else obj_file = obj_file.substr(0, lastdot) + ".o";
         
-        // .asm -> .bin (исполняемый файл)
+        // .asm -> .bin
         std::string exe_file = out_asm;
         lastdot = exe_file.find_last_of(".");
         if (lastdot != std::string::npos) exe_file = exe_file.substr(0, lastdot);
