@@ -1,0 +1,7 @@
+// EXPECT: 310
+main {
+    unsigned integer a = 1;
+    logic b = true;
+    a = b;
+    send 0;
+}

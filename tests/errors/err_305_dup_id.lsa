@@ -1,0 +1,6 @@
+// EXPECT: 305
+main {
+    unsigned integer a = 1;
+    unsigned integer a = 2;
+    send 0;
+}

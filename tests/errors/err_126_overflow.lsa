@@ -1,0 +1,5 @@
+// EXPECT: 126
+main {
+    unsigned integer a = 999999999999999999999999999999;
+    send 0;
+}
