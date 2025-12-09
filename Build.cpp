@@ -12,7 +12,7 @@ using namespace std;
 
 namespace Build {
     // путь к стандартной библиотеке
-    const std::string STD_LIB_PATH = "/home/euphoo/02. University/КП/LSA_2025 (ручная работа)/LSA_StdLib/libLSA_StdLib.a";
+    const std::string STD_LIB_PATH = "/home/euphoo/02. University/КП/LSA_2025/LSA_StdLib/libLSA_StdLib.a";
 
     // выполнение сборки
     void Build(Parm::Parm parm) {

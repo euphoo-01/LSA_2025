@@ -1,3 +1,0 @@
-/home/euphoo/02. University/КП/LSA_2025 (ручная работа)/build/CMakeFiles/LSA_2025.dir
-/home/euphoo/02. University/КП/LSA_2025 (ручная работа)/build/CMakeFiles/edit_cache.dir
-/home/euphoo/02. University/КП/LSA_2025 (ручная работа)/build/CMakeFiles/rebuild_cache.dir

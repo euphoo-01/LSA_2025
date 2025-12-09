@@ -12,7 +12,7 @@ using namespace std;
 namespace NasmGen {
 
 // путь к статической библиотеке
-const string LIB_PATH = "/home/euphoo/02. University/КП/LSA_2025 (ручная работа)/LSA_StdLib/libLSA_StdLib.a";
+const string LIB_PATH = "/home/euphoo/02. University/КП/LSA_2025/LSA_StdLib/libLSA_StdLib.a";
 
 // управление блоками
 struct LabelBlock {
