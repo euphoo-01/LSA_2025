@@ -1,0 +1,3 @@
+/home/euphoo/02. University/КП/LSA_2025/LSA_StdLib/build/CMakeFiles/LSA_StdLib.dir
+/home/euphoo/02. University/КП/LSA_2025/LSA_StdLib/build/CMakeFiles/edit_cache.dir
+/home/euphoo/02. University/КП/LSA_2025/LSA_StdLib/build/CMakeFiles/rebuild_cache.dir

@@ -1,5 +1,5 @@
 CMakeFiles/LSA_StdLib.dir/library.cpp.o: \
- /home/euphoo/02.\ University/КП/LSA_2025\ (ручная\ работа)/LSA_StdLib/library.cpp \
+ /home/euphoo/02.\ University/КП/LSA_2025/LSA_StdLib/library.cpp \
  /usr/include/stdc-predef.h /usr/include/c++/15.2.1/iostream \
  /usr/include/c++/15.2.1/bits/requires_hosted.h \
  /usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/c++config.h \

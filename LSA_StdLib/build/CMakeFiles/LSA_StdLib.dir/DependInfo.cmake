@@ -8,7 +8,7 @@ set(CMAKE_DEPENDS_LANGUAGES
 
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
-  "/home/euphoo/02. University/КП/LSA_2025 (ручная работа)/LSA_StdLib/library.cpp" "CMakeFiles/LSA_StdLib.dir/library.cpp.o" "gcc" "CMakeFiles/LSA_StdLib.dir/library.cpp.o.d"
+  "/home/euphoo/02. University/КП/LSA_2025/LSA_StdLib/library.cpp" "CMakeFiles/LSA_StdLib.dir/library.cpp.o" "gcc" "CMakeFiles/LSA_StdLib.dir/library.cpp.o.d"
   )
 
 # Targets to which this target links which contain Fortran sources.

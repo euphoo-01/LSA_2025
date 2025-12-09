@@ -26,7 +26,7 @@ struct LabelBlock {
 const string ASM_HEAD = 
 	"global main\n"
 	"default rel\n"
-	"extern writech, writeuint, readch, pow, sqrt, isPrime, getMin, getMax, toUpper\n"
+	"extern lsa_writech, lsa_writeuint, lsa_readch, lsa_pow, lsa_sqrt, lsa_isPrime, lsa_getMin, lsa_getMax, lsa_toUpper\n"
 	"section .text\n\n";
 
 // stdlib теперь внешняя
@@ -85,7 +85,7 @@ void processExpression(int start, int end, Lex::LEX& lex, ofstream& file) {
 					
 					// Выравнивание стека перед вызовом
 					if (stackDepth % 2 != 0) file << "    sub rsp, 8\n";
-					file << "    call " << name << "\n";
+					file << "    call lsa_" << name << "\n";
 					if (stackDepth % 2 != 0) file << "    add rsp, 8\n";
 
 					// Очистка верхних байтов для char функций
@@ -128,7 +128,7 @@ void processExpression(int start, int end, Lex::LEX& lex, ofstream& file) {
 		}
 		case LEX_READCH:
 			if (stackDepth % 2 != 0) file << "    sub rsp, 8\n";
-			file << "    call readch\n";
+			file << "    call lsa_readch\n";
 			if (stackDepth % 2 != 0) file << "    add rsp, 8\n";
 			file << "    movzx rax, al\n";
 			file << "    push rax\n";
@@ -274,9 +274,9 @@ void asmGenerator(Lex::LEX& lex, wchar_t outfile[]) {
 				
 				file << "    pop rdi\n"; // Аргумент в RDI
 				if (getExprType(startExpr, endExpr, lex) == IT::UNSIGNED) {
-					file << "    call writeuint\n";
+					file << "    call lsa_writeuint\n";
 				} else {
-					file << "    call writech\n";
+					file << "    call lsa_writech\n";
 				}
 				i = endExpr;
 			}
