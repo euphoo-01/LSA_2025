@@ -366,14 +366,27 @@ namespace Lex {
                         if (str[1] == '\\' && str[2] == 'n') {
                             cur_iden.value.vstr.str[0] = '\n';
                             cur_iden.value.vstr.len = 1;
+                        } else if (str[1] == '\\' && str[2] == 't') { // обработка \t
+                            cur_iden.value.vstr.str[0] = '\t';
+                            cur_iden.value.vstr.len = 1;
+                        }
+                        else if (str[1] == '\\' && strlen(str) == 4) {
+                            // недопустимая escape-последовательность
+                            throw ERROR_THROW_IN(127, currentLine, pos);
                         }
                         else {
-                            // если не спецсимвол, берем символ из кавычек
-                            if (strlen(str) > 2) {
+                            // если это обычный символ
+                            if (strlen(str) == 3) { 
                                 cur_iden.value.vstr.str[0] = str[1];
                                 cur_iden.value.vstr.len = 1;
-                            } else {
-                                cur_iden.value.vstr.len = 0;
+                            } else if (strlen(str) == 2) { 
+                                // пустой символьный литерал, трактуем как пробел
+                                cur_iden.value.vstr.str[0] = ' '; 
+                                cur_iden.value.vstr.len = 1;
+                            }
+                            else {
+                                // некорректный символьный литерал
+                                throw ERROR_THROW_IN(125, currentLine, pos); 
                             }
                         }
                         // завершающий нуль для безопасности
