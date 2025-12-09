@@ -2095,8 +2095,10 @@ CMakeFiles/LSA_2025.dir/NasmGen.cpp.o: /home/euphoo/02.\ University/КП/LSA_202
   /usr/include/bits/wchar.h \
   /usr/include/bits/wctype-wchar.h \
   /usr/include/bits/wordsize.h \
+  /usr/include/c++/15.2.1/algorithm \
   /usr/include/c++/15.2.1/backward/binders.h \
   /usr/include/c++/15.2.1/bit \
+  /usr/include/c++/15.2.1/bits/algorithmfwd.h \
   /usr/include/c++/15.2.1/bits/alloc_traits.h \
   /usr/include/c++/15.2.1/bits/allocator.h \
   /usr/include/c++/15.2.1/bits/basic_ios.h \
@@ -2148,11 +2150,13 @@ CMakeFiles/LSA_2025.dir/NasmGen.cpp.o: /home/euphoo/02.\ University/КП/LSA_202
   /usr/include/c++/15.2.1/bits/requires_hosted.h \
   /usr/include/c++/15.2.1/bits/sstream.tcc \
   /usr/include/c++/15.2.1/bits/std_abs.h \
+  /usr/include/c++/15.2.1/bits/stl_algo.h \
   /usr/include/c++/15.2.1/bits/stl_algobase.h \
   /usr/include/c++/15.2.1/bits/stl_bvector.h \
   /usr/include/c++/15.2.1/bits/stl_construct.h \
   /usr/include/c++/15.2.1/bits/stl_deque.h \
   /usr/include/c++/15.2.1/bits/stl_function.h \
+  /usr/include/c++/15.2.1/bits/stl_heap.h \
   /usr/include/c++/15.2.1/bits/stl_iterator.h \
   /usr/include/c++/15.2.1/bits/stl_iterator_base_funcs.h \
   /usr/include/c++/15.2.1/bits/stl_iterator_base_types.h \
@@ -2160,6 +2164,7 @@ CMakeFiles/LSA_2025.dir/NasmGen.cpp.o: /home/euphoo/02.\ University/КП/LSA_202
   /usr/include/c++/15.2.1/bits/stl_multimap.h \
   /usr/include/c++/15.2.1/bits/stl_pair.h \
   /usr/include/c++/15.2.1/bits/stl_stack.h \
+  /usr/include/c++/15.2.1/bits/stl_tempbuf.h \
   /usr/include/c++/15.2.1/bits/stl_tree.h \
   /usr/include/c++/15.2.1/bits/stl_uninitialized.h \
   /usr/include/c++/15.2.1/bits/stl_vector.h \
@@ -2167,6 +2172,7 @@ CMakeFiles/LSA_2025.dir/NasmGen.cpp.o: /home/euphoo/02.\ University/КП/LSA_202
   /usr/include/c++/15.2.1/bits/streambuf_iterator.h \
   /usr/include/c++/15.2.1/bits/string_view.tcc \
   /usr/include/c++/15.2.1/bits/stringfwd.h \
+  /usr/include/c++/15.2.1/bits/uniform_int_dist.h \
   /usr/include/c++/15.2.1/bits/uses_allocator.h \
   /usr/include/c++/15.2.1/bits/uses_allocator_args.h \
   /usr/include/c++/15.2.1/bits/utility.h \
@@ -2204,6 +2210,8 @@ CMakeFiles/LSA_2025.dir/NasmGen.cpp.o: /home/euphoo/02.\ University/КП/LSA_202
   /usr/include/c++/15.2.1/map \
   /usr/include/c++/15.2.1/new \
   /usr/include/c++/15.2.1/ostream \
+  /usr/include/c++/15.2.1/pstl/execution_defs.h \
+  /usr/include/c++/15.2.1/pstl/glue_algorithm_defs.h \
   /usr/include/c++/15.2.1/pstl/pstl_config.h \
   /usr/include/c++/15.2.1/sstream \
   /usr/include/c++/15.2.1/stack \
@@ -3607,6 +3615,12 @@ CMakeFiles/LSA_2025.dir/Log.cpp.o:
 
 /home/euphoo/02.\ University/КП/LSA_2025\ (ручная\ работа)/Parm.cpp:
 
+/usr/include/c++/15.2.1/pstl/execution_defs.h:
+
+/usr/include/c++/15.2.1/bits/algorithmfwd.h:
+
+/usr/include/c++/15.2.1/algorithm:
+
 /home/euphoo/02.\ University/КП/LSA_2025\ (ручная\ работа)/NasmGen.h:
 
 CMakeFiles/LSA_2025.dir/GRB.cpp.o:
@@ -3634,6 +3648,8 @@ CMakeFiles/LSA_2025.dir/Error.cpp.o:
 /usr/include/c++/15.2.1/bits/memoryfwd.h:
 
 /usr/include/bits/types/wint_t.h:
+
+/usr/include/c++/15.2.1/bits/uniform_int_dist.h:
 
 /usr/include/c++/15.2.1/cwchar:
 
@@ -3752,6 +3768,8 @@ CMakeFiles/LSA_2025.dir/Out.cpp.o:
 /usr/include/c++/15.2.1/bits/sstream.tcc:
 
 /usr/include/c++/15.2.1/bits/locale_classes.tcc:
+
+/usr/include/c++/15.2.1/bits/stl_tempbuf.h:
 
 /usr/include/stdc-predef.h:
 
@@ -3983,11 +4001,15 @@ CMakeFiles/LSA_2025.dir/IT.cpp.o:
 
 /usr/include/c++/15.2.1/deque:
 
+/usr/include/c++/15.2.1/pstl/glue_algorithm_defs.h:
+
 /usr/include/c++/15.2.1/bits/stl_tree.h:
 
 /usr/include/asm-generic/errno.h:
 
 /usr/include/c++/15.2.1/bits/stl_vector.h:
+
+/usr/include/c++/15.2.1/bits/stl_heap.h:
 
 /usr/include/asm-generic/bitsperlong.h:
 
@@ -4140,6 +4162,8 @@ CMakeFiles/LSA_2025.dir/RPN.cpp.o:
 /usr/include/linux/sched/types.h:
 
 /usr/include/linux/stddef.h:
+
+/usr/include/c++/15.2.1/bits/stl_algo.h:
 
 /usr/include/c++/15.2.1/bits/stl_uninitialized.h:
 

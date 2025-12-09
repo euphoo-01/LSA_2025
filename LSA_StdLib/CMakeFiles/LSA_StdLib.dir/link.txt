@@ -1,0 +1,2 @@
+/usr/bin/ar qc libLSA_StdLib.a CMakeFiles/LSA_StdLib.dir/library.cpp.o
+/usr/bin/ranlib libLSA_StdLib.a

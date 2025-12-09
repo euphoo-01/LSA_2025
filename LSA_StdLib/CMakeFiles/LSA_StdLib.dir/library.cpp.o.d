@@ -1,9 +1,6 @@
-CMakeFiles/LSA_2025.dir/NasmGen.cpp.o: \
- /home/euphoo/02.\ University/КП/LSA_2025\ (ручная\ работа)/NasmGen.cpp \
- /usr/include/stdc-predef.h \
- /home/euphoo/02.\ University/КП/LSA_2025\ (ручная\ работа)/NasmGen.h \
- /home/euphoo/02.\ University/КП/LSA_2025\ (ручная\ работа)/Lex.h \
- /usr/include/c++/15.2.1/iostream \
+CMakeFiles/LSA_StdLib.dir/library.cpp.o: \
+ /home/euphoo/02.\ University/КП/LSA_2025\ (ручная\ работа)/LSA_StdLib/library.cpp \
+ /usr/include/stdc-predef.h /usr/include/c++/15.2.1/iostream \
  /usr/include/c++/15.2.1/bits/requires_hosted.h \
  /usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/c++config.h \
  /usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/os_defines.h \
@@ -147,50 +144,26 @@ CMakeFiles/LSA_2025.dir/NasmGen.cpp.o: \
  /usr/include/c++/15.2.1/bits/locale_facets.tcc \
  /usr/include/c++/15.2.1/bits/basic_ios.tcc \
  /usr/include/c++/15.2.1/bits/ostream.tcc /usr/include/c++/15.2.1/istream \
- /usr/include/c++/15.2.1/bits/istream.tcc /usr/include/c++/15.2.1/stack \
- /usr/include/c++/15.2.1/deque \
- /usr/include/c++/15.2.1/bits/stl_uninitialized.h \
- /usr/include/c++/15.2.1/bits/stl_deque.h \
- /usr/include/c++/15.2.1/bits/deque.tcc \
- /usr/include/c++/15.2.1/bits/stl_stack.h \
- /home/euphoo/02.\ University/КП/LSA_2025\ (ручная\ работа)/stdafx.h \
- /usr/include/c++/15.2.1/fstream /usr/include/c++/15.2.1/bits/codecvt.h \
- /usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/basic_file.h \
- /usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/c++io.h \
- /usr/include/c++/15.2.1/bits/fstream.tcc /usr/include/c++/15.2.1/vector \
- /usr/include/c++/15.2.1/bits/stl_vector.h \
- /usr/include/c++/15.2.1/bits/stl_bvector.h \
- /usr/include/c++/15.2.1/bits/vector.tcc /usr/include/c++/15.2.1/map \
- /usr/include/c++/15.2.1/bits/stl_tree.h \
- /usr/include/c++/15.2.1/ext/aligned_buffer.h \
- /usr/include/c++/15.2.1/bits/node_handle.h \
- /usr/include/c++/15.2.1/bits/stl_map.h \
- /usr/include/c++/15.2.1/bits/stl_multimap.h \
- /usr/include/c++/15.2.1/bits/erase_if.h \
- /home/euphoo/02.\ University/КП/LSA_2025\ (ручная\ работа)/Error.h \
- /home/euphoo/02.\ University/КП/LSA_2025\ (ручная\ работа)/Parm.h \
- /home/euphoo/02.\ University/КП/LSA_2025\ (ручная\ работа)/Log.h \
- /home/euphoo/02.\ University/КП/LSA_2025\ (ручная\ работа)/In.h \
- /home/euphoo/02.\ University/КП/LSA_2025\ (ручная\ работа)/Out.h \
- /home/euphoo/02.\ University/КП/LSA_2025\ (ручная\ работа)/IT.h \
- /usr/include/c++/15.2.1/cstring /usr/include/string.h \
- /usr/include/strings.h \
- /home/euphoo/02.\ University/КП/LSA_2025\ (ручная\ работа)/LT.h \
- /home/euphoo/02.\ University/КП/LSA_2025\ (ручная\ работа)/FST.h \
- /home/euphoo/02.\ University/КП/LSA_2025\ (ручная\ работа)/GRB.h \
- /home/euphoo/02.\ University/КП/LSA_2025\ (ручная\ работа)/MFST.h \
- /usr/include/c++/15.2.1/iomanip /usr/include/c++/15.2.1/locale \
- /usr/include/c++/15.2.1/bits/locale_facets_nonio.h \
- /usr/include/c++/15.2.1/ctime \
- /usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/time_members.h \
- /usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/messages_members.h \
- /usr/include/libintl.h \
- /usr/include/c++/15.2.1/bits/locale_facets_nonio.tcc \
- /usr/include/c++/15.2.1/bits/locale_conv.h \
- /usr/include/c++/15.2.1/bits/quoted_string.h \
- /usr/include/c++/15.2.1/sstream /usr/include/c++/15.2.1/bits/sstream.tcc \
- /home/euphoo/02.\ University/КП/LSA_2025\ (ручная\ работа)/Sem.h \
- /home/euphoo/02.\ University/КП/LSA_2025\ (ручная\ работа)/RPN.h \
+ /usr/include/c++/15.2.1/bits/istream.tcc /usr/include/c++/15.2.1/cmath \
+ /usr/include/math.h /usr/include/bits/math-vector.h \
+ /usr/include/bits/libm-simd-decl-stubs.h \
+ /usr/include/bits/flt-eval-method.h /usr/include/bits/fp-logb.h \
+ /usr/include/bits/fp-fast.h /usr/include/bits/mathcalls-macros.h \
+ /usr/include/bits/mathcalls-helper-functions.h \
+ /usr/include/bits/mathcalls.h /usr/include/bits/mathcalls-narrow.h \
+ /usr/include/bits/iscanonical.h /usr/include/c++/15.2.1/bits/specfun.h \
+ /usr/include/c++/15.2.1/limits /usr/include/c++/15.2.1/tr1/gamma.tcc \
+ /usr/include/c++/15.2.1/tr1/special_function_util.h \
+ /usr/include/c++/15.2.1/tr1/bessel_function.tcc \
+ /usr/include/c++/15.2.1/tr1/beta_function.tcc \
+ /usr/include/c++/15.2.1/tr1/ell_integral.tcc \
+ /usr/include/c++/15.2.1/tr1/exp_integral.tcc \
+ /usr/include/c++/15.2.1/tr1/hypergeometric.tcc \
+ /usr/include/c++/15.2.1/tr1/legendre_function.tcc \
+ /usr/include/c++/15.2.1/tr1/modified_bessel_func.tcc \
+ /usr/include/c++/15.2.1/tr1/poly_hermite.tcc \
+ /usr/include/c++/15.2.1/tr1/poly_laguerre.tcc \
+ /usr/include/c++/15.2.1/tr1/riemann_zeta.tcc \
  /usr/include/c++/15.2.1/algorithm \
  /usr/include/c++/15.2.1/bits/stl_algo.h \
  /usr/include/c++/15.2.1/bits/algorithmfwd.h \
