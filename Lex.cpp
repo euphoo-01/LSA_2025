@@ -354,23 +354,30 @@ namespace Lex {
                         str[bufferIndex] = MARK; bufferIndex++; str[bufferIndex] = '\0';
                         litFlag = false;
 
-                        if (str[1] == '\\' && str[2] == 'n') {
-                            cur_iden.value.vstr.str[0] = '\n';
-                            cur_iden.value.vstr.len = 1;
-                        }
-                        else {
-                            std::strcpy(cur_iden.value.vstr.str, str);
-                        }
-
                         cur_lex.lexema[0] = LEX_LITERAL;
                         cur_iden = IT::Entry();
                         std::sprintf(cur_iden.id, "L%d", number_literal++);
                         cur_iden.iddatatype = IT::CHAR;
                         cur_iden.idtype = IT::L;
                         cur_iden.idxfirstLE = currentLine;
-                        std::strcpy(cur_iden.value.vstr.str, str);
-                        cur_iden.value.vstr.len = strlen(str);
                         cur_iden.scope_name = cur_scope;
+
+                        // обработка символьных литералов
+                        if (str[1] == '\\' && str[2] == 'n') {
+                            cur_iden.value.vstr.str[0] = '\n';
+                            cur_iden.value.vstr.len = 1;
+                        }
+                        else {
+                            // если не спецсимвол, берем символ из кавычек
+                            if (strlen(str) > 2) {
+                                cur_iden.value.vstr.str[0] = str[1];
+                                cur_iden.value.vstr.len = 1;
+                            } else {
+                                cur_iden.value.vstr.len = 0;
+                            }
+                        }
+                        // завершающий нуль для безопасности
+                        cur_iden.value.vstr.str[1] = '\0';
 
                         cur_lex.sn = currentLine;
                         LT::Add(lexTable, cur_lex);

@@ -61,11 +61,7 @@ void processExpression(int start, int end, Lex::LEX& lex, ofstream& file) {
 			if (lit.iddatatype == IT::CHAR) {
 				char val = ' ';
 				if (lit.value.vstr.len > 0) {
-					if (lit.value.vstr.str[0] == '\'') {
-						if (lit.value.vstr.len > 1) val = lit.value.vstr.str[1];
-					} else {
-						val = lit.value.vstr.str[0];
-					}
+                    val = lit.value.vstr.str[0];
 				}
 				file << "    push " << (int)(unsigned char)val << "\n";
 			} else {
