@@ -34,44 +34,9 @@ namespace In {
                     break;
                 }
                 
-                switch (in_result.code[int((unsigned char) tmp[position])]) {
-                    case IN::T: {
-                        in_result.text[in_result.size] = (unsigned) tmp[position];
-                        in_result.size++;
-                        break;
-                    }
-                    case IN::Z: {
-                        in_result.text[in_result.size] = (unsigned) tmp[position];
-                        in_result.size++;
-                        break;
-                    }
-                    case IN::S: {
-                        // обработка пробелов
-                        if (position == 0) {
-                            while (tmp[position] == SPACE || tmp[position] == TAB) {
-                                position++;
-                            }
-                            position--;
-                            break;
-                        }
-                        if (position + 1 < len && (in_result.code[int((unsigned char) tmp[position - 1])] == IN::Z || in_result.code[int(
-                                (unsigned char) tmp[position + 1])] == IN::Z)) {
-                            in_result.ignore++;
-                            break;
-                        }
-                        if (position + 1 < len && (in_result.code[int((unsigned char) tmp[position + 1])] == IN::S || in_result.code[int(
-                                (unsigned char) tmp[position - 1])] == IN::S)) {
-                            in_result.ignore++;
-                            break;
-                        }
-                        in_result.text[in_result.size] = (unsigned) tmp[position];
-                        in_result.size++;
-                        break;
-                    }
-                    default:
-                        in_result.text[in_result.size] = in_result.code[tmp[position]];
-                        in_result.size++;
-                }
+                // просто копируем символ
+                in_result.text[in_result.size] = (unsigned char)tmp[position];
+                in_result.size++;
             }
             in_result.lines++;
             in_result.text[in_result.size] = '`';

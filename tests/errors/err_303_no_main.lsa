@@ -1,8 +1,4 @@
-// EXPECT: 601
-main {
-    send 0;
-}
-
+// EXPECT: 303
 func unsigned integer foo() {
     send 0;
 }

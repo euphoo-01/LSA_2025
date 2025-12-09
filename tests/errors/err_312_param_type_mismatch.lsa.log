@@ -1,0 +1,10 @@
+---- Протокол ---- 2025.12.09 04:49:11 ----------
+---- Параметры ----
+-log: tests/errors/err_312_param_type_mismatch.lsa.log
+-out: tests/errors/err_312_param_type_mismatch.lsa.asm
+-in: tests/errors/err_312_param_type_mismatch.lsa
+---- Исходные данные ----
+Количество символов: 122
+Проигнорировано    :0
+Количество строк   :9
+Ошибка 306: Идентификатор не определён, строка 3, позиция 8
