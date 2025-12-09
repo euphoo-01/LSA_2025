@@ -42,7 +42,7 @@ namespace Error {
         ERROR_ENTRY(125, "Ошибка в строковом литерале"),
 
         ERROR_ENTRY(126, "Переполнение целочисленного литерала"),
-        ERROR_ENTRY(127, "Недопустимая escape-последовательность"), ERROR_ENTRY_NODEF10(136), ERROR_ENTRY_NODEF10(146), ERROR_ENTRY_NODEF10(156),
+        ERROR_ENTRY(127, "Недопустимый спец. символ"), ERROR_ENTRY_NODEF10(136), ERROR_ENTRY_NODEF10(146), ERROR_ENTRY_NODEF10(156),
         ERROR_ENTRY_NODEF10(166), ERROR_ENTRY_NODEF10(176), ERROR_ENTRY_NODEF10(186), ERROR_ENTRY_NODEF10(196),
         ERROR_ENTRY_NODEF100(200),
 

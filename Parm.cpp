@@ -35,6 +35,9 @@ namespace Parm {
 			wcscpy(parm.out, parm.in);
 			wcscat(parm.out, PARM_OUT_DEFAULT_EXT);
 		}
+		if (wcscmp(parm.in, parm.out) == 0) {
+			throw ERROR_THROW(100);
+		}
 		if (!log) { // по умолчанию log = in.log
 			wcscpy(parm.log, parm.in);
 			wcscat(parm.log, PARM_LOG_DEFAULT_EXT);

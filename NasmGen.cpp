@@ -166,8 +166,8 @@ void asmGenerator(Lex::LEX& lex, wchar_t outfile[]) {
 	file << ASM_HEAD;
 	
 	// Комментарий для сборки
-	file << "; Link with: " << LIB_PATH << "\n";
-	file << "; Example: g++ -o program program.o " << LIB_PATH << " -no-pie\n\n";
+	file << "; Ссылка на библиотеку: " << LIB_PATH << "\n";
+	file << "; Пример сборки: g++ -o program program.o " << LIB_PATH << " -no-pie\n\n";
 
 	// секция .bss для неинициализированных данных
 	file << "section .bss\n";

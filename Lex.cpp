@@ -346,61 +346,115 @@ namespace Lex {
                 continue;
             }
 
-            switch (in.text[i]) {
-                case MARK:
-                    litFlag = true;
-                    if (str[0] == MARK) {
-                        cur_lex.idxTI = idTable.size;
-                        str[bufferIndex] = MARK; bufferIndex++; str[bufferIndex] = '\0';
-                        litFlag = false;
+                        switch (in.text[i]) {
 
-                        cur_lex.lexema[0] = LEX_LITERAL;
-                        cur_iden = IT::Entry();
-                        std::sprintf(cur_iden.id, "L%d", number_literal++);
-                        cur_iden.iddatatype = IT::CHAR;
-                        cur_iden.idtype = IT::L;
-                        cur_iden.idxfirstLE = currentLine;
-                        cur_iden.scope_name = cur_scope;
+                            case MARK:
 
-                        // обработка символьных литералов
-                        if (str[1] == '\\' && str[2] == 'n') {
-                            cur_iden.value.vstr.str[0] = '\n';
-                            cur_iden.value.vstr.len = 1;
-                        } else if (str[1] == '\\' && str[2] == 't') { // обработка \t
-                            cur_iden.value.vstr.str[0] = '\t';
-                            cur_iden.value.vstr.len = 1;
-                        }
-                        else if (str[1] == '\\' && strlen(str) == 4) {
-                            // недопустимая escape-последовательность
-                            throw ERROR_THROW_IN(127, currentLine, pos);
-                        }
-                        else {
-                            // если это обычный символ
-                            if (strlen(str) == 3) { 
-                                cur_iden.value.vstr.str[0] = str[1];
-                                cur_iden.value.vstr.len = 1;
-                            } else if (strlen(str) == 2) { 
-                                // пустой символьный литерал, трактуем как пробел
-                                cur_iden.value.vstr.str[0] = ' '; 
-                                cur_iden.value.vstr.len = 1;
-                            }
-                            else {
-                                // некорректный символьный литерал
-                                throw ERROR_THROW_IN(125, currentLine, pos); 
-                            }
-                        }
-                        // завершающий нуль для безопасности
-                        cur_iden.value.vstr.str[1] = '\0';
+                                litFlag = true;
 
-                        cur_lex.sn = currentLine;
-                        LT::Add(lexTable, cur_lex);
-                        IT::Add(idTable, cur_iden);
+                                if (str[0] == MARK) {
 
-                        bufferIndex = 0; std::memset(str, 0, bufferIndex + 1); cur_lex.lexema[0] = '\0';
-                    }
-                    break;
-                case NEW_LINE: currentLine++; cur_lex.lexema[0] = '\0'; pos = 0; break;
-                case LEX_SEMICOLON:
+                                    cur_lex.idxTI = idTable.size;
+
+                                    str[bufferIndex] = MARK; bufferIndex++; str[bufferIndex] = '\0';
+
+                                    litFlag = false;
+
+            
+
+                                    cur_lex.lexema[0] = LEX_LITERAL;
+
+                                    cur_iden = IT::Entry();
+
+                                    std::sprintf(cur_iden.id, "L%d", number_literal++);
+
+                                    cur_iden.iddatatype = IT::CHAR;
+
+                                    cur_iden.idtype = IT::L;
+
+                                    cur_iden.idxfirstLE = currentLine;
+
+                                    cur_iden.scope_name = cur_scope;
+
+            
+
+                                    // обработка символьных литералов
+
+                                    if (str[1] == '\\' && str[2] == 'n') {
+
+                                        cur_iden.value.vstr.str[0] = '\n';
+
+                                        cur_iden.value.vstr.len = 1;
+
+                                    } else if (str[1] == '\\' && str[2] == 't') { // обработка \t
+
+                                        cur_iden.value.vstr.str[0] = '\t';
+
+                                        cur_iden.value.vstr.len = 1;
+
+                                    } else if (str[1] == '\\' && strlen(str) == 4) {
+
+                                        // недопустимая escape-последовательность
+
+                                        throw ERROR_THROW_IN(127, currentLine, pos);
+
+                                    }
+
+                                    else {
+
+                                        // если это обычный символ
+
+                                        if (strlen(str) == 3) { 
+
+                                            cur_iden.value.vstr.str[0] = str[1];
+
+                                            cur_iden.value.vstr.len = 1;
+
+                                        } else if (strlen(str) == 2) { 
+
+                                            // пустой символьный литерал, трактуем как пробел
+
+                                            cur_iden.value.vstr.str[0] = ' '; 
+
+                                            cur_iden.value.vstr.len = 1;
+
+                                        }
+
+                                        else {
+
+                                            // некорректный символьный литерал
+
+                                            throw ERROR_THROW_IN(125, currentLine, pos); 
+
+                                        }
+
+                                    }
+
+                                    // завершающий нуль для безопасности
+
+                                    cur_iden.value.vstr.str[1] = '\0';
+
+            
+
+                                    cur_lex.sn = currentLine;
+
+                                    LT::Add(lexTable, cur_lex);
+
+                                    IT::Add(idTable, cur_iden);
+
+            
+
+                                    bufferIndex = 0; std::memset(str, 0, bufferIndex + 1); cur_lex.lexema[0] = '\0';
+
+                                }
+
+                                break;
+
+                                                            case NEW_LINE: currentLine++; cur_lex.lexema[0] = '\0'; pos = 0; break;
+
+                                                            case '\r': break; // игнорировать возврат каретки (CR)
+
+                                                            case LEX_SEMICOLON:
                     cur_lex.lexema[0] = LEX_SEMICOLON;
                     if (i > 0 && in.text[i - 1] == NEW_LINE) throw ERROR_THROW_IN(602, currentLine, 0);
                     cur_lex.sn = currentLine;

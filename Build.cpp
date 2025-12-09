@@ -28,14 +28,15 @@ namespace Build {
         if (lastdot == std::string::npos) obj_file += ".o";
         else obj_file = obj_file.substr(0, lastdot) + ".o";
         
-        // .o -> exe
-        std::string exe_file = obj_file;
+        // .asm -> .bin (исполняемый файл)
+        std::string exe_file = out_asm;
         lastdot = exe_file.find_last_of(".");
         if (lastdot != std::string::npos) exe_file = exe_file.substr(0, lastdot);
+        exe_file += ".bin";
 
         // команды сборки
         sprintf(nasm_cmd, "nasm -f elf64 \"%s\" -o \"%s\"", out_asm, obj_file.c_str());
-        sprintf(link_cmd, "g++ -o \"%s.out\" \"%s\" \"%s\" -no-pie", exe_file.c_str(), obj_file.c_str(), STD_LIB_PATH.c_str());
+        sprintf(link_cmd, "g++ -o \"%s\" \"%s\" \"%s\" -no-pie", exe_file.c_str(), obj_file.c_str(), STD_LIB_PATH.c_str());
 
         cout << "Сборка..." << endl;
         cout << nasm_cmd << endl;
@@ -43,7 +44,7 @@ namespace Build {
         if (std::system(nasm_cmd) == 0) {
             cout << link_cmd << endl;
             if (std::system(link_cmd) == 0) {
-                cout << "Сборка выполнена успешно: " << exe_file << endl;
+                cout << "Сборка выполнена успешно. Исполняемый файл: " << exe_file << endl;
             } else {
                 cout << "Ошибка линковки" << endl;
             }
