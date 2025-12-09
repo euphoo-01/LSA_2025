@@ -6,6 +6,10 @@
 #include <algorithm>
 #include <vector>
 
+// TODO: because. Не работает 3 подвыражение
+// TODO: readch sigfault
+// TODO: инкремент/декремент не работают
+
 using namespace std;
 
 // генератор кода
@@ -348,11 +352,24 @@ void asmGenerator(Lex::LEX& lex, wchar_t outfile[]) {
 			int j = i + 2;
 			int endInit = j;
 			while (endInit < lex.lexTable.size && lex.lexTable.table[endInit].lexema[0] != LEX_SEMICOLON) endInit++;
+			
+			// Проверка на присваивание: i = 0
 			if (lex.lexTable.table[j].lexema[0] == LEX_ID && lex.lexTable.table[j+1].lexema[0] == LEX_EQUAL) {
 				IT::Entry& varEntry = lex.idTable.table[lex.lexTable.table[j].idxTI];
 				processExpression(j + 2, endInit, lex, file);
 				file << "    pop rax\n    mov [" << getMangledName(varEntry) << "], rax\n";
-			} else {
+			} 
+			// Проверка на объявление: unsigned integer i = 0
+			else if ((lex.lexTable.table[j].lexema[0] == LEX_UNSIGNED_INTEGER || 
+					  lex.lexTable.table[j].lexema[0] == LEX_CHAR || 
+					  lex.lexTable.table[j].lexema[0] == LEX_LOGIC) &&
+					  lex.lexTable.table[j+1].lexema[0] == LEX_ID && 
+					  lex.lexTable.table[j+2].lexema[0] == LEX_EQUAL) {
+				IT::Entry& varEntry = lex.idTable.table[lex.lexTable.table[j+1].idxTI];
+				processExpression(j + 3, endInit, lex, file);
+				file << "    pop rax\n    mov [" << getMangledName(varEntry) << "], rax\n";
+			}
+			else {
 				processExpression(j, endInit, lex, file);
 				if (endInit > j) file << "    pop rax ; clear stack init\n";
 			}
@@ -411,7 +428,7 @@ void asmGenerator(Lex::LEX& lex, wchar_t outfile[]) {
 				else if (b.type == 2) {
 					// генерация кода для шага цикла
 					int back = i;
-					int braces = 1;
+					int braces = 0;
 					while (back > 0) {
 						if (lex.lexTable.table[back].lexema[0] == LEX_BRACELET) braces++;
 						if (lex.lexTable.table[back].lexema[0] == LEX_LEFTBRACE) braces--;
