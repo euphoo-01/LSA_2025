@@ -1,0 +1,4 @@
+// EXPECT: 601
+main {
+    char ch = readch();;
+};

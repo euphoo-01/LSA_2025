@@ -1,0 +1,9 @@
+       id            datatype              idtype                Line               value               Scope                idTi
+      sqrt            UNSIGNED                   F                  -1                                  global                  -1
+    getMin            UNSIGNED                   F                  -1                                  global                  -1
+    getMax            UNSIGNED                   F                  -1                                  global                  -1
+   isPrime               LOGIC                   F                  -1                                  global                  -1
+   toUpper                CHAR                   F                  -1                                  global                  -1
+       pow            UNSIGNED                   F                  -1                                  global                  -1
+      main            UNSIGNED                   F                   2                                  global                   2
+        ch                CHAR                   V                   3                                    main                   3

@@ -105,8 +105,11 @@ CMakeFiles/LSA_2025.dir/Build.cpp.o: /home/euphoo/02.\ University/КП/LSA_2025\
   /usr/include/c++/15.2.1/bits/istream.tcc \
   /usr/include/c++/15.2.1/bits/locale_classes.h \
   /usr/include/c++/15.2.1/bits/locale_classes.tcc \
+  /usr/include/c++/15.2.1/bits/locale_conv.h \
   /usr/include/c++/15.2.1/bits/locale_facets.h \
   /usr/include/c++/15.2.1/bits/locale_facets.tcc \
+  /usr/include/c++/15.2.1/bits/locale_facets_nonio.h \
+  /usr/include/c++/15.2.1/bits/locale_facets_nonio.tcc \
   /usr/include/c++/15.2.1/bits/localefwd.h \
   /usr/include/c++/15.2.1/bits/memory_resource.h \
   /usr/include/c++/15.2.1/bits/memoryfwd.h \
@@ -119,9 +122,11 @@ CMakeFiles/LSA_2025.dir/Build.cpp.o: /home/euphoo/02.\ University/КП/LSA_2025\
   /usr/include/c++/15.2.1/bits/postypes.h \
   /usr/include/c++/15.2.1/bits/predefined_ops.h \
   /usr/include/c++/15.2.1/bits/ptr_traits.h \
+  /usr/include/c++/15.2.1/bits/quoted_string.h \
   /usr/include/c++/15.2.1/bits/range_access.h \
   /usr/include/c++/15.2.1/bits/refwrap.h \
   /usr/include/c++/15.2.1/bits/requires_hosted.h \
+  /usr/include/c++/15.2.1/bits/sstream.tcc \
   /usr/include/c++/15.2.1/bits/std_abs.h \
   /usr/include/c++/15.2.1/bits/stl_algobase.h \
   /usr/include/c++/15.2.1/bits/stl_construct.h \
@@ -145,6 +150,8 @@ CMakeFiles/LSA_2025.dir/Build.cpp.o: /home/euphoo/02.\ University/КП/LSA_2025\
   /usr/include/c++/15.2.1/cstddef \
   /usr/include/c++/15.2.1/cstdio \
   /usr/include/c++/15.2.1/cstdlib \
+  /usr/include/c++/15.2.1/cstring \
+  /usr/include/c++/15.2.1/ctime \
   /usr/include/c++/15.2.1/cwchar \
   /usr/include/c++/15.2.1/cwctype \
   /usr/include/c++/15.2.1/debug/assertions.h \
@@ -157,13 +164,16 @@ CMakeFiles/LSA_2025.dir/Build.cpp.o: /home/euphoo/02.\ University/КП/LSA_2025\
   /usr/include/c++/15.2.1/ext/type_traits.h \
   /usr/include/c++/15.2.1/fstream \
   /usr/include/c++/15.2.1/initializer_list \
+  /usr/include/c++/15.2.1/iomanip \
   /usr/include/c++/15.2.1/ios \
   /usr/include/c++/15.2.1/iosfwd \
   /usr/include/c++/15.2.1/iostream \
   /usr/include/c++/15.2.1/istream \
+  /usr/include/c++/15.2.1/locale \
   /usr/include/c++/15.2.1/new \
   /usr/include/c++/15.2.1/ostream \
   /usr/include/c++/15.2.1/pstl/pstl_config.h \
+  /usr/include/c++/15.2.1/sstream \
   /usr/include/c++/15.2.1/stdexcept \
   /usr/include/c++/15.2.1/streambuf \
   /usr/include/c++/15.2.1/string \
@@ -184,7 +194,9 @@ CMakeFiles/LSA_2025.dir/Build.cpp.o: /home/euphoo/02.\ University/КП/LSA_2025\
   /usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/error_constants.h \
   /usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/gthr-default.h \
   /usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/gthr.h \
+  /usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/messages_members.h \
   /usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/os_defines.h \
+  /usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/time_members.h \
   /usr/include/ctype.h \
   /usr/include/endian.h \
   /usr/include/errno.h \
@@ -192,6 +204,7 @@ CMakeFiles/LSA_2025.dir/Build.cpp.o: /home/euphoo/02.\ University/КП/LSA_2025\
   /usr/include/features.h \
   /usr/include/gnu/stubs-64.h \
   /usr/include/gnu/stubs.h \
+  /usr/include/libintl.h \
   /usr/include/linux/errno.h \
   /usr/include/linux/posix_types.h \
   /usr/include/linux/sched/types.h \
@@ -203,6 +216,8 @@ CMakeFiles/LSA_2025.dir/Build.cpp.o: /home/euphoo/02.\ University/КП/LSA_2025\
   /usr/include/stdc-predef.h \
   /usr/include/stdio.h \
   /usr/include/stdlib.h \
+  /usr/include/string.h \
+  /usr/include/strings.h \
   /usr/include/sys/cdefs.h \
   /usr/include/sys/select.h \
   /usr/include/sys/single_threaded.h \
@@ -3857,14 +3872,6 @@ CMakeFiles/LSA_2025.dir/Error.cpp.o:
 
 /home/euphoo/02.\ University/КП/LSA_2025\ (ручная\ работа)/Rules.h:
 
-/usr/include/c++/15.2.1/bits/stl_function.h:
-
-/usr/include/c++/15.2.1/bits/invoke.h:
-
-/usr/include/bits/endian.h:
-
-/usr/include/c++/15.2.1/bits/stl_algobase.h:
-
 /usr/include/gnu/stubs-64.h:
 
 /usr/include/c++/15.2.1/bits/requires_hosted.h:
@@ -3895,11 +3902,19 @@ CMakeFiles/LSA_2025.dir/Error.cpp.o:
 
 /usr/include/c++/15.2.1/cwchar:
 
+/usr/include/c++/15.2.1/bits/locale_conv.h:
+
 /usr/include/c++/15.2.1/bits/locale_facets.h:
 
 /usr/include/c++/15.2.1/ext/string_conversions.h:
 
 /usr/include/c++/15.2.1/cstdio:
+
+/usr/include/c++/15.2.1/bits/invoke.h:
+
+/usr/include/bits/endian.h:
+
+/usr/include/c++/15.2.1/bits/stl_function.h:
 
 /usr/include/c++/15.2.1/bits/cpp_type_traits.h:
 
@@ -3962,6 +3977,10 @@ CMakeFiles/LSA_2025.dir/main.cpp.o:
 /usr/include/c++/15.2.1/cctype:
 
 /usr/include/c++/15.2.1/backward/binders.h:
+
+/usr/include/c++/15.2.1/bits/sstream.tcc:
+
+/usr/include/bits/types/__locale_t.h:
 
 /usr/include/bits/types/timer_t.h:
 
@@ -4123,7 +4142,13 @@ CMakeFiles/LSA_2025.dir/IT.cpp.o:
 
 /usr/include/bits/types/cookie_io_functions_t.h:
 
+/usr/include/c++/15.2.1/bits/stl_algobase.h:
+
 /usr/include/c++/15.2.1/bits/codecvt.h:
+
+/usr/include/c++/15.2.1/bits/locale_facets_nonio.tcc:
+
+/usr/include/bits/select.h:
 
 /usr/include/bits/types/__fpos64_t.h:
 
@@ -4161,9 +4186,9 @@ CMakeFiles/LSA_2025.dir/IT.cpp.o:
 
 /usr/include/bits/types.h:
 
-/usr/include/bits/sched.h:
-
 /usr/include/features.h:
+
+/usr/include/bits/sched.h:
 
 /usr/include/bits/types/__FILE.h:
 
@@ -4173,12 +4198,6 @@ CMakeFiles/LSA_2025.dir/IT.cpp.o:
 
 /usr/include/c++/15.2.1/map:
 
-/usr/include/bits/types/__locale_t.h:
-
-/usr/include/c++/15.2.1/bits/sstream.tcc:
-
-/usr/include/c++/15.2.1/bits/stl_iterator.h:
-
 /usr/include/bits/atomic_wide_counter.h:
 
 /home/euphoo/02.\ University/КП/LSA_2025\ (ручная\ работа)/Parm.h:
@@ -4186,6 +4205,8 @@ CMakeFiles/LSA_2025.dir/IT.cpp.o:
 /usr/include/bits/stdint-intn.h:
 
 /usr/include/bits/types/clockid_t.h:
+
+/usr/include/c++/15.2.1/bits/stl_iterator.h:
 
 /usr/include/c++/15.2.1/bits/stl_iterator_base_types.h:
 
@@ -4224,6 +4245,14 @@ CMakeFiles/LSA_2025.dir/IT.cpp.o:
 /usr/include/c++/15.2.1/cstdlib:
 
 /home/euphoo/02.\ University/КП/LSA_2025\ (ручная\ работа)/IT.h:
+
+/home/euphoo/02.\ University/КП/LSA_2025\ (ручная\ работа)/NasmGen.cpp:
+
+/usr/include/c++/15.2.1/cstring:
+
+/usr/include/bits/timex.h:
+
+/usr/include/c++/15.2.1/ctime:
 
 /usr/include/c++/15.2.1/cwctype:
 
@@ -4271,6 +4300,12 @@ CMakeFiles/LSA_2025.dir/IT.cpp.o:
 
 /usr/include/c++/15.2.1/iostream:
 
+/usr/include/c++/15.2.1/ext/aligned_buffer.h:
+
+/usr/include/c++/15.2.1/locale:
+
+/usr/include/c++/15.2.1/sstream:
+
 /usr/include/c++/15.2.1/stdexcept:
 
 /usr/include/c++/15.2.1/bits/exception_defines.h:
@@ -4315,6 +4350,10 @@ CMakeFiles/LSA_2025.dir/RPN.cpp.o:
 
 /usr/include/features-time64.h:
 
+/usr/include/bits/endianness.h:
+
+/usr/include/libintl.h:
+
 /usr/include/linux/errno.h:
 
 /usr/include/c++/15.2.1/bits/stl_deque.h:
@@ -4339,6 +4378,8 @@ CMakeFiles/LSA_2025.dir/RPN.cpp.o:
 
 /usr/include/stdio.h:
 
+/usr/include/string.h:
+
 /usr/include/sys/select.h:
 
 /usr/include/sys/single_threaded.h:
@@ -4351,17 +4392,17 @@ CMakeFiles/LSA_2025.dir/RPN.cpp.o:
 
 /home/euphoo/02.\ University/КП/LSA_2025\ (ручная\ работа)/FST.h:
 
+/usr/include/bits/types/sigset_t.h:
+
+/usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/messages_members.h:
+
+/home/euphoo/02.\ University/КП/LSA_2025\ (ручная\ работа)/Out.h:
+
 /home/euphoo/02.\ University/КП/LSA_2025\ (ручная\ работа)/Sem.h:
 
 /usr/include/c++/15.2.1/bits/deque.tcc:
 
 /usr/include/c++/15.2.1/bits/erase_if.h:
-
-/usr/include/c++/15.2.1/bits/locale_conv.h:
-
-/usr/include/bits/select.h:
-
-/usr/include/c++/15.2.1/bits/locale_facets_nonio.tcc:
 
 /usr/include/c++/15.2.1/bits/exception_ptr.h:
 
@@ -4378,29 +4419,3 @@ CMakeFiles/LSA_2025.dir/RPN.cpp.o:
 /usr/include/pthread.h:
 
 /usr/include/c++/15.2.1/bits/stl_uninitialized.h:
-
-/home/euphoo/02.\ University/КП/LSA_2025\ (ручная\ работа)/NasmGen.cpp:
-
-/usr/include/c++/15.2.1/cstring:
-
-/usr/include/bits/timex.h:
-
-/usr/include/c++/15.2.1/ctime:
-
-/usr/include/c++/15.2.1/ext/aligned_buffer.h:
-
-/usr/include/c++/15.2.1/locale:
-
-/usr/include/c++/15.2.1/sstream:
-
-/usr/include/bits/types/sigset_t.h:
-
-/home/euphoo/02.\ University/КП/LSA_2025\ (ручная\ работа)/Out.h:
-
-/usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/messages_members.h:
-
-/usr/include/bits/endianness.h:
-
-/usr/include/libintl.h:
-
-/usr/include/string.h:

@@ -1,0 +1,84 @@
+Шаг: Правило      Входная лента     Стек           
+0   : S->m{N};$           m{ti=r();;};                  S$                  
+0   : SAVESTATE:          1
+0   :                     m{ti=r();;};                  m{N};$$             
+1   :                     {ti=r();;};                   {N};$$              
+2   :                     ti=r();;};                    N};$$               
+3   : N->ti=E;N           ti=r();;};                    N};$$               
+3   : SAVESTATE:          2
+3   :                     ti=r();;};                    ti=E;N};$$          
+4   :                     i=r();;};                     i=E;N};$$           
+5   :                     =r();;};                      =E;N};$$            
+6   :                     r();;};                       E;N};$$             
+7   : E->r()M             r();;};                       E;N};$$             
+7   : SAVESTATE:          3
+7   :                     r();;};                       r()M;N};$$          
+8   :                     ();;};                        ()M;N};$$           
+9   :                     );;};                         )M;N};$$            
+10  :                     ;;};                          M;N};$$             
+11  : TNS_NORULECHAIN/NS_NORULE
+11  : RESSTATE            
+11  :                     r();;};                       E;N};$$             
+12  : E->r()              r();;};                       E;N};$$             
+12  : SAVESTATE:          3
+12  :                     r();;};                       r();N};$$           
+13  :                     ();;};                        ();N};$$            
+14  :                     );;};                         );N};$$             
+15  :                     ;;};                          ;N};$$              
+16  :                     ;};                           N};$$               
+17  : TNS_NORULECHAIN/NS_NORULE
+17  : RESSTATE            
+17  :                     r();;};                       E;N};$$             
+18  : TNS_NORULECHAIN/NS_NORULE
+18  : RESSTATE            
+18  :                     ti=r();;};                    N};$$               
+19  : N->ti=E;            ti=r();;};                    N};$$               
+19  : SAVESTATE:          2
+19  :                     ti=r();;};                    ti=E;};$$           
+20  :                     i=r();;};                     i=E;};$$            
+21  :                     =r();;};                      =E;};$$             
+22  :                     r();;};                       E;};$$              
+23  : E->r()M             r();;};                       E;};$$              
+23  : SAVESTATE:          3
+23  :                     r();;};                       r()M;};$$           
+24  :                     ();;};                        ()M;};$$            
+25  :                     );;};                         )M;};$$             
+26  :                     ;;};                          M;};$$              
+27  : TNS_NORULECHAIN/NS_NORULE
+27  : RESSTATE            
+27  :                     r();;};                       E;};$$              
+28  : E->r()              r();;};                       E;};$$              
+28  : SAVESTATE:          3
+28  :                     r();;};                       r();};$$            
+29  :                     ();;};                        ();};$$             
+30  :                     );;};                         );};$$              
+31  :                     ;;};                          ;};$$               
+32  :                     ;};                           };$$                
+33  : TS_NOK/NS_NORULECHAIN
+33  : RESSTATE            
+33  :                     r();;};                       E;};$$              
+34  : TNS_NORULECHAIN/NS_NORULE
+34  : RESSTATE            
+34  :                     ti=r();;};                    N};$$               
+35  : N->ti;N             ti=r();;};                    N};$$               
+35  : SAVESTATE:          2
+35  :                     ti=r();;};                    ti;N};$$            
+36  :                     i=r();;};                     i;N};$$             
+37  :                     =r();;};                      ;N};$$              
+38  : TS_NOK/NS_NORULECHAIN
+38  : RESSTATE            
+38  :                     ti=r();;};                    N};$$               
+39  : N->ti;              ti=r();;};                    N};$$               
+39  : SAVESTATE:          2
+39  :                     ti=r();;};                    ti;};$$             
+40  :                     i=r();;};                     i;};$$              
+41  :                     =r();;};                      ;};$$               
+42  : TS_NOK/NS_NORULECHAIN
+42  : RESSTATE            
+42  :                     ti=r();;};                    N};$$               
+43  : TNS_NORULECHAIN/NS_NORULE
+43  : RESSTATE            
+43  :                     m{ti=r();;};                  S$                  
+44  : TNS_NORULECHAIN/NS_NORULE
+45  : ------>NS_NORULE    
+------------------------------------------------------------------------------------------   ------

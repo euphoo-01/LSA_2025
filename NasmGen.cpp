@@ -49,6 +49,7 @@ int getStdFuncParamCount(const string& name) {
 
 // генерация выражения
 void processExpression(int start, int end, Lex::LEX& lex, ofstream& file) {
+	int stackDepth = 0;
 	for (int i = start; i < end; i++) {
 		LT::Entry& t = lex.lexTable.table[i];
 		if (t.lexema[0] == '\0') continue;
@@ -67,6 +68,7 @@ void processExpression(int start, int end, Lex::LEX& lex, ofstream& file) {
 			} else {
 				file << "    push " << lit.value.vint << "\n";
 			}
+			stackDepth++;
 			break;
 		}
 		// идентификаторы
@@ -78,25 +80,36 @@ void processExpression(int start, int end, Lex::LEX& lex, ofstream& file) {
 				if (isStandardFunc(name)) {
 					// ABI: параметры через регистры
 					int pCount = getStdFuncParamCount(name);
-					if (pCount >= 2) file << "    pop rsi\n";
-					if (pCount >= 1) file << "    pop rdi\n";
+					if (pCount >= 2) { file << "    pop rsi\n"; stackDepth--; }
+					if (pCount >= 1) { file << "    pop rdi\n"; stackDepth--; }
+					
+					// Выравнивание стека перед вызовом
+					if (stackDepth % 2 != 0) file << "    sub rsp, 8\n";
 					file << "    call " << name << "\n";
+					if (stackDepth % 2 != 0) file << "    add rsp, 8\n";
+
+					// Очистка верхних байтов для char функций
+					if (name == "readch" || name == "toUpper") {
+						file << "    movzx rax, al\n";
+					}
 				} else {
 					// Пользовательские функции (cdecl/stdcall hybrid - через стек)
 					file << "    call " << name << "\n";
 				}
 				file << "    push rax\n";
+				stackDepth++;
 			} else {
 				file << "    push qword [" << getMangledName(lex.idTable.table[t.idxTI]) << "]\n";
+				stackDepth++;
 			}
 			break;
 		}
 		// операции
-		case LEX_PLUS: file << "    pop rbx\n    pop rax\n    add rax, rbx\n    push rax\n"; break;
-		case LEX_MINUS: file << "    pop rbx\n    pop rax\n    sub rax, rbx\n    push rax\n"; break;
-		case LEX_STAR: file << "    pop rbx\n    pop rax\n    imul rax, rbx\n    push rax\n"; break;
-		case LEX_COLON: file << "    pop rbx\n    pop rax\n    xor rdx, rdx\n    div rbx\n    push rax\n"; break;
-		case LEX_OST: file << "    pop rbx\n    pop rax\n    xor rdx, rdx\n    div rbx\n    push rdx\n"; break;
+		case LEX_PLUS: file << "    pop rbx\n    pop rax\n    add rax, rbx\n    push rax\n"; stackDepth--; break;
+		case LEX_MINUS: file << "    pop rbx\n    pop rax\n    sub rax, rbx\n    push rax\n"; stackDepth--; break;
+		case LEX_STAR: file << "    pop rbx\n    pop rax\n    imul rax, rbx\n    push rax\n"; stackDepth--; break;
+		case LEX_COLON: file << "    pop rbx\n    pop rax\n    xor rdx, rdx\n    div rbx\n    push rax\n"; stackDepth--; break;
+		case LEX_OST: file << "    pop rbx\n    pop rax\n    xor rdx, rdx\n    div rbx\n    push rdx\n"; stackDepth--; break;
 		case LEX_BIT_NOT: file << "    pop rax\n    not rax\n    push rax\n"; break;
 		case LEX_MORE: case LEX_LESS: case LEX_ISEQUAL: case LEX_NOT_EQUAL: case LEX_MORE_OR_EQUAL: case LEX_LESS_OR_EQUAL: {
 			file << "    pop rbx\n    pop rax\n    cmp rax, rbx\n";
@@ -110,10 +123,16 @@ void processExpression(int start, int end, Lex::LEX& lex, ofstream& file) {
 			case LEX_LESS_OR_EQUAL: setOp = "setle"; break;
 			}
 			file << "    " << setOp << " al\n    movzx rax, al\n    push rax\n";
+			stackDepth--;
 			break;
 		}
 		case LEX_READCH:
-			file << "    call readch\n    push rax\n";
+			if (stackDepth % 2 != 0) file << "    sub rsp, 8\n";
+			file << "    call readch\n";
+			if (stackDepth % 2 != 0) file << "    add rsp, 8\n";
+			file << "    movzx rax, al\n";
+			file << "    push rax\n";
+			stackDepth++;
 			break;
 		// инкремент/декремент
 		case LEX_INC:
@@ -123,6 +142,7 @@ void processExpression(int start, int end, Lex::LEX& lex, ofstream& file) {
 			if (k >= start && lex.lexTable.table[k].lexema[0] == LEX_ID && lex.lexTable.table[k].idxTI != LT_TI_NULLIDX) {
 				IT::Entry& varEntry = lex.idTable.table[lex.lexTable.table[k].idxTI];
 				file << "    pop rax\n";
+				stackDepth--;
 				string op = (t.lexema[0] == LEX_INC) ? "inc" : "dec";
 				file << "    " << op << " qword [" << getMangledName(varEntry) << "]\n";
 			}

@@ -4,7 +4,9 @@
 #include <iostream>
 #include <string>
 #include <cstdlib>
+#include <cstring>
 #include <cwchar>
+#include <iomanip>
 
 using namespace std;
 
@@ -45,6 +47,11 @@ namespace Build {
             cout << link_cmd << endl;
             if (std::system(link_cmd) == 0) {
                 cout << "Сборка выполнена успешно. Исполняемый файл: " << exe_file << endl;
+                cout << "Запуск программы..." << endl;
+                cout << setfill('-') << setw(40) << "" << endl;
+                char open_cmd[302] = "./";
+                std::strcpy(open_cmd, exe_file.c_str());
+                std::system(open_cmd);
             } else {
                 cout << "Ошибка линковки" << endl;
             }

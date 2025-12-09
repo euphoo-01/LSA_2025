@@ -155,4 +155,15 @@ CMakeFiles/LSA_2025.dir/Build.cpp.o: \
  /usr/include/c++/15.2.1/bits/fstream.tcc \
  /home/euphoo/02.\ University/КП/LSA_2025\ (ручная\ работа)/In.h \
  /home/euphoo/02.\ University/КП/LSA_2025\ (ручная\ работа)/Error.h \
- /usr/include/c++/15.2.1/iostream
+ /usr/include/c++/15.2.1/iostream /usr/include/c++/15.2.1/cstring \
+ /usr/include/string.h /usr/include/strings.h \
+ /usr/include/c++/15.2.1/iomanip /usr/include/c++/15.2.1/locale \
+ /usr/include/c++/15.2.1/bits/locale_facets_nonio.h \
+ /usr/include/c++/15.2.1/ctime \
+ /usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/time_members.h \
+ /usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/messages_members.h \
+ /usr/include/libintl.h \
+ /usr/include/c++/15.2.1/bits/locale_facets_nonio.tcc \
+ /usr/include/c++/15.2.1/bits/locale_conv.h \
+ /usr/include/c++/15.2.1/bits/quoted_string.h \
+ /usr/include/c++/15.2.1/sstream /usr/include/c++/15.2.1/bits/sstream.tcc
