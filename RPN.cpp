@@ -29,6 +29,8 @@ int getPriority(char lexema) {
 		return 5;
 
 	case LEX_BIT_NOT:
+	case LEX_INC:
+	case LEX_DEC:
 		return 6;
 
 	default: return -1;
@@ -61,6 +63,10 @@ bool Rpn(LT::LexTable& lextable, IT::IdTable& idtable, int startPos, int endPos)
 			break;
 		}
 
+		case LEX_READCH:
+			stack.push(entry);
+			break;
+
 		case LEX_LEFTTHESIS:
 			stack.push(entry);
 			break;
@@ -82,8 +88,9 @@ bool Rpn(LT::LexTable& lextable, IT::IdTable& idtable, int startPos, int endPos)
 			}
 			// если после скобок шла функция выталкиваем её
 			if (!stack.empty()) {
-				if (stack.top().idxTI != LT_TI_NULLIDX &&
-					idtable.table[stack.top().idxTI].idtype == IT::F) {
+				if (stack.top().lexema[0] == LEX_READCH ||
+					(stack.top().idxTI != LT_TI_NULLIDX &&
+					idtable.table[stack.top().idxTI].idtype == IT::F)) {
 					outString.push_back(stack.top());
 					stack.pop();
 				}
@@ -117,6 +124,8 @@ bool Rpn(LT::LexTable& lextable, IT::IdTable& idtable, int startPos, int endPos)
 		case LEX_LESS_OR_EQUAL:
 		case LEX_BIT_NOT:
 		case LEX_EQUAL:
+		case LEX_INC:
+		case LEX_DEC:
 		{
 			while (!stack.empty()) {
 				int priorityStack = getPriority(stack.top().lexema[0]);

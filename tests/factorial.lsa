@@ -1,0 +1,21 @@
+func unsigned integer factorial(unsigned integer n) {
+    if (n == 0) {
+        send 1;
+    };
+    differ {
+        unsigned integer result = 1;
+        unsigned integer i = 1;
+        because (i = 1; i <= n; i++) {
+            result = result * i;
+        };
+        send result;
+    };
+};
+
+main {
+    char n = readch();
+    n = n - 48;
+    unsigned integer fact = factorial(n);
+    writech(fact);
+    send 0;
+};

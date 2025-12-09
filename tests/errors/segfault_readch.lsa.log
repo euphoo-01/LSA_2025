@@ -1,4 +1,4 @@
----- Протокол ---- 2025.12.09 05:39:00 ----------
+---- Протокол ---- 2025.12.09 15:23:26 ----------
 ---- Параметры ----
 -log: tests/errors/segfault_readch.lsa.log
 -out: tests/errors/segfault_readch.lsa.asm

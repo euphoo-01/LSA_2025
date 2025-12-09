@@ -52,6 +52,7 @@ namespace Build {
                 char open_cmd[302] = "./";
                 std::strcpy(open_cmd, exe_file.c_str());
                 std::system(open_cmd);
+                cout << endl;
             } else {
                 cout << "Ошибка линковки" << endl;
             }

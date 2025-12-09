@@ -6,8 +6,5 @@
    toUpper                CHAR                   F                  -1                                  global                  -1
        pow            UNSIGNED                   F                  -1                                  global                  -1
       main            UNSIGNED                   F                   1                                  global                   1
-         i            UNSIGNED                   V                   2                                    main                   2
-        L0            UNSIGNED                   L                   2                   0                main                   2
-        L1            UNSIGNED                   L                   3                   0            because0                   3
-        L2            UNSIGNED                   L                   3                   3            because0                   3
-        L3            UNSIGNED                   L                   6                   0                main                   6
+        ch                CHAR                   V                   2                                    main                   2
+        L0            UNSIGNED                   L                   4                   0                main                   4

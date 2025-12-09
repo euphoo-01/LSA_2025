@@ -6,10 +6,6 @@
 #include <algorithm>
 #include <vector>
 
-// TODO: because. Не работает 3 подвыражение
-// TODO: readch sigfault
-// TODO: инкремент/декремент не работают
-
 using namespace std;
 
 // генератор кода

@@ -193,6 +193,32 @@ void checkSemantic(LT::LexTable& lextable, IT::IdTable& idtable, std::map<std::s
 				endCond = k;
 			}
 			else if (lextable.table[i].lexema[0] == LEX_BECAUSE) {
+				// Проверка: можно объявлять только unsigned integer в because
+				int j = i + 2; // пропускаем because и (
+				if (j + 2 < lextable.size && 
+					(lextable.table[j].lexema[0] == LEX_UNSIGNED_INTEGER || // 't'
+					 lextable.table[j].lexema[0] == LEX_CHAR ||             // 't'
+					 lextable.table[j].lexema[0] == LEX_LOGIC) &&           // 't'
+					lextable.table[j+1].lexema[0] == LEX_ID &&
+					lextable.table[j+2].lexema[0] == LEX_EQUAL) {
+					
+					// Так как все типы имеют лексему 't', проверяем тип переменной в таблице идентификаторов
+					IT::IDDATATYPE type = getType(j + 1, lextable, idtable);
+					if (type != IT::UNSIGNED) {
+						throw ERROR_THROW_IN(310, lextable.table[j].sn, 0);
+					}
+				}
+				// Проверка: присваивание существующей переменной (должна быть unsigned integer)
+				else if (j + 1 < lextable.size &&
+					lextable.table[j].lexema[0] == LEX_ID &&
+					lextable.table[j+1].lexema[0] == LEX_EQUAL) {
+					
+					IT::IDDATATYPE type = getType(j, lextable, idtable);
+					if (type != IT::UNSIGNED) {
+						throw ERROR_THROW_IN(310, lextable.table[j].sn, 0);
+					}
+				}
+
 				int k = i + 2;
 				int semicolons = 0;
 				while (k < lextable.size && semicolons < 1) {

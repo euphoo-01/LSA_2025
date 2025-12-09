@@ -1,0 +1,12 @@
+main {
+    char input = readch();
+    input = input - 48;
+
+    if (input == 1) {
+        writech('a');
+    };
+    if (input == 0) {
+        writech('b');
+    };
+    send 0;
+};
