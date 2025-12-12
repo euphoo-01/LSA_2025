@@ -1,0 +1,8 @@
+// EXPECT: 319
+main {
+    unsigned integer a = 1;
+    if (a) {
+        a = 2;
+    };
+    send 0;
+};

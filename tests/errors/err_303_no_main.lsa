@@ -1,4 +1,4 @@
 // EXPECT: 303
 func unsigned integer foo() {
     send 0;
-}
+};

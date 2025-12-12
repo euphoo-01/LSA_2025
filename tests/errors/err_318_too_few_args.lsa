@@ -1,0 +1,9 @@
+// EXPECT: 318
+func unsigned integer foo(unsigned integer a) {
+    send a;
+};
+
+main {
+    foo();
+    send 0;
+};

@@ -1,8 +1,8 @@
 // EXPECT: 309
 main {
     send 0;
-}
+};
 
 main {
     send 0;
-}
+};

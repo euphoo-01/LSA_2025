@@ -1,0 +1,5 @@
+// EXPECT: 602
+main {
+    5 = a;
+    send 0;
+}

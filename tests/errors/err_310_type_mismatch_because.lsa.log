@@ -1,0 +1,10 @@
+---- Протокол ---- 2025.12.10 01:58:54 ----------
+---- Параметры ----
+-log: tests/errors/err_310_type_mismatch_because.lsa.log
+-out: tests/errors/err_310_type_mismatch_because.lsa.asm
+-in: tests/errors/err_310_type_mismatch_because.lsa
+---- Исходные данные ----
+Количество символов: 89
+Проигнорировано    :14
+Количество строк   :7
+Ошибка 310: Присваиваемое значение не соответствует типу переменной, строка 3, позиция 0

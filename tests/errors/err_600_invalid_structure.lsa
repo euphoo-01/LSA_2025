@@ -1,0 +1,8 @@
+// EXPECT: 601
+main {
+    unsigned integer a = 1;
+    func unsigned integer foo() {
+        send 0;
+    }
+    send 0;
+}

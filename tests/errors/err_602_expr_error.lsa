@@ -1,0 +1,5 @@
+// EXPECT: 602
+main {
+    unsigned integer a = ;
+    send 0;
+};

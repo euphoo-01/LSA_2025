@@ -1,8 +1,8 @@
 // EXPECT: 308
 main {
     send 0;
-}
+};
 
 func unsigned integer foo(unsigned integer a, unsigned integer b, unsigned integer c, unsigned integer d, unsigned integer e, unsigned integer f, unsigned integer g, unsigned integer h, unsigned integer i) {
     send 0;
-}
+};

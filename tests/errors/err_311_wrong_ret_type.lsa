@@ -1,8 +1,8 @@
 // EXPECT: 311
+func unsigned integer foo() {
+    send true;
+};
+
 main {
     send 0;
-}
-
-func unsigned integer foo() {
-    send 'c';
-}
+};

@@ -1,0 +1,7 @@
+// EXPECT: 310
+main {
+    because (char c = 'a'; c < 'z'; c++) {
+        send c;
+    };
+    send 0;
+};

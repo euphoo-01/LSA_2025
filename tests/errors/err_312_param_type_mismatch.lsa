@@ -1,9 +1,10 @@
+// EXPECT: 312
 func unsigned integer foo(unsigned integer a, unsigned integer b) {
     send 0;
-}
+};
 
 // EXPECT: 312
 main {
-    foo(1, 'c');
+    foo(1, true);
     send 0;
-}
+};

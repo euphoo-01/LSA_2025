@@ -4,4 +4,4 @@ main {
     logic b = true;
     a = b;
     send 0;
-}
+};

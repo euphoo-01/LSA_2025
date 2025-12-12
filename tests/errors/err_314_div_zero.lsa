@@ -4,4 +4,4 @@ main {
     unsigned integer b = 0;
     unsigned integer c = a : b;
     send 0;
-}
+};

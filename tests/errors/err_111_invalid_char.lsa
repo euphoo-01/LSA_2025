@@ -2,4 +2,4 @@
 main {
     unsigned integer a = 5 @;
     send 0;
-}
+};

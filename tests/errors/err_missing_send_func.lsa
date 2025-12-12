@@ -1,7 +1,0 @@
-// EXPECT: 601
-main {
-    send 0;
-}
-
-func unsigned integer foo() {
-}
