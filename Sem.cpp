@@ -20,6 +20,30 @@ void checkSemantic(LT::LexTable& lextable, IT::IdTable& idtable, std::map<std::s
 	std::map<int, int> knownValues; // отслеживание значений переменных
 
 	for (int i = 0; i < lextable.size; i++) {
+		// проверка наличия send в функциях
+		if (lextable.table[i].lexema[0] == LEX_MAIN || lextable.table[i].lexema[0] == LEX_FUNC) {
+			bool hasSend = false;
+			int braceBalance = 0;
+			int j = i;
+			
+			// ищем начало блока
+			while (j < lextable.size && lextable.table[j].lexema[0] != LEX_LEFTBRACE) j++;
+			if (j < lextable.size) {
+				braceBalance = 1;
+				j++;
+				while (j < lextable.size && braceBalance > 0) {
+					if (lextable.table[j].lexema[0] == LEX_LEFTBRACE) braceBalance++;
+					if (lextable.table[j].lexema[0] == LEX_BRACELET) braceBalance--;
+					if (lextable.table[j].lexema[0] == LEX_SEND) hasSend = true;
+					j++;
+				}
+			}
+			
+			if (!hasSend) {
+				throw ERROR_THROW_IN(600, lextable.table[i].sn, 0);
+			}
+		}
+
 		// проверка main
 		if (lextable.table[i].lexema[0] == LEX_MAIN) {
 			flagMain = true;

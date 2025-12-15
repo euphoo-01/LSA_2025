@@ -12,7 +12,7 @@ using namespace std;
 namespace NasmGen {
 
 // путь к статической библиотеке
-const string LIB_PATH = "/home/euphoo/02. University/КП/LSA_2025/LSA_StdLib/libLSA_StdLib.a";
+const string LIB_PATH = "/home/euphoo/02. University/КП/LSA_2025/LSA_StdLib/build/libLSA_StdLib.a";
 
 // управление блоками
 struct LabelBlock {
@@ -26,7 +26,7 @@ struct LabelBlock {
 const string ASM_HEAD = 
 	"global main\n"
 	"default rel\n"
-	"extern lsa_writech, lsa_writeuint, lsa_readch, lsa_pow, lsa_sqrt, lsa_isPrime, lsa_getMin, lsa_getMax, lsa_toUpper\n"
+	"extern lsa_writech, lsa_writeuint, lsa_writelogic, lsa_readch, lsa_pow, lsa_sqrt, lsa_isPrime, lsa_getMin, lsa_getMax, lsa_toUpper\n"
 	"section .text\n\n";
 
 // stdlib теперь внешняя
@@ -37,14 +37,14 @@ string getMangledName(IT::Entry& entry) {
 }
 
 bool isStandardFunc(const string& name) {
-	static const vector<string> stdFuncs = { "pow", "sqrt", "getMin", "getMax", "isPrime", "toUpper", "readch", "writech", "writeuint" };
+	static const vector<string> stdFuncs = { "pow", "sqrt", "getMin", "getMax", "isPrime", "toUpper", "readch", "writech", "writeuint", "writelogic" };
 	return find(stdFuncs.begin(), stdFuncs.end(), name) != stdFuncs.end();
 }
 
 int getStdFuncParamCount(const string& name) {
 	if (name == "pow" || name == "getMin" || name == "getMax") return 2;
 	if (name == "readch") return 0;
-	return 1; // sqrt, isPrime, toUpper, writech, writeuint
+	return 1; // sqrt, isPrime, toUpper, writech, writeuint, writelogic
 }
 
 // генерация выражения
@@ -155,23 +155,44 @@ void processExpression(int start, int end, Lex::LEX& lex, ofstream& file) {
 // определение типа выражения
 IT::IDDATATYPE getExprType(int start, int end, Lex::LEX& lex) {
 	IT::IDDATATYPE type = IT::CHAR;
+	bool hasLogic = false;
+	bool hasUnsigned = false;
+	
 	for (int i = start; i < end; i++) {
-		if (lex.lexTable.table[i].lexema[0] ==LEX_ID || lex.lexTable.table[i].lexema[0] == LEX_LITERAL) {
+		if (lex.lexTable.table[i].lexema[0] == LEX_ID || lex.lexTable.table[i].lexema[0] == LEX_LITERAL) {
 			int idx = lex.lexTable.table[i].idxTI;
 			if (idx != LT_TI_NULLIDX) {
 				IT::IDDATATYPE t = lex.idTable.table[idx].iddatatype;
-				if (t == IT::UNSIGNED) type = IT::UNSIGNED;
+				if (t == IT::UNSIGNED) hasUnsigned = true;
+				if (t == IT::LOGIC) hasLogic = true;
 			}
 		}
-		else if (lex.lexTable.table[i].lexema[0] ==LEX_PLUS ||
+		else if (lex.lexTable.table[i].lexema[0] == LEX_PLUS ||
 			lex.lexTable.table[i].lexema[0] == LEX_MINUS ||
 			lex.lexTable.table[i].lexema[0] == LEX_STAR ||
 			lex.lexTable.table[i].lexema[0] == LEX_DIRSLASH ||
 			lex.lexTable.table[i].lexema[0] == LEX_OST ||
 			lex.lexTable.table[i].lexema[0] == LEX_COLON) {
-			type = IT::UNSIGNED;
+			hasUnsigned = true;
 		}
 	}
+
+	// Проверяем наличие операторов сравнения, которые всегда возвращают LOGIC
+	for (int i = start; i < end; i++) {
+		if (lex.lexTable.table[i].lexema[0] == LEX_MORE ||
+			lex.lexTable.table[i].lexema[0] == LEX_LESS ||
+			lex.lexTable.table[i].lexema[0] == LEX_ISEQUAL ||
+			lex.lexTable.table[i].lexema[0] == LEX_NOT_EQUAL ||
+			lex.lexTable.table[i].lexema[0] == LEX_MORE_OR_EQUAL ||
+			lex.lexTable.table[i].lexema[0] == LEX_LESS_OR_EQUAL) {
+			type = IT::LOGIC;
+			return type; // Сравнение всегда дает логический результат
+		}
+	}
+	
+	if (hasUnsigned) type = IT::UNSIGNED;
+	else if (hasLogic) type = IT::LOGIC;
+	
 	return type;
 }
 
@@ -273,11 +294,37 @@ void asmGenerator(Lex::LEX& lex, wchar_t outfile[]) {
 				processExpression(startExpr, endExpr, lex, file);
 				
 				file << "    pop rdi\n"; // Аргумент в RDI
-				if (getExprType(startExpr, endExpr, lex) == IT::UNSIGNED) {
+				
+				IT::IDDATATYPE type = getExprType(startExpr, endExpr, lex);
+				
+				// Выравнивание стека для вызова библиотечной функции (printf/cout)
+				int uniq = labelCounter++;
+				file << "    test rsp, 15\n";     // Проверка выравнивания
+				file << "    jz L_aligned_" << uniq << "\n";
+				file << "    sub rsp, 8\n";       // Выравнивание
+				
+				if (type == IT::UNSIGNED) {
 					file << "    call lsa_writeuint\n";
+				} else if (type == IT::LOGIC) {
+					file << "    call lsa_writelogic\n";
 				} else {
 					file << "    call lsa_writech\n";
 				}
+				
+				file << "    add rsp, 8\n";       // Восстановление
+				file << "    jmp L_end_" << uniq << "\n";
+				file << "L_aligned_" << uniq << ":\n";
+
+				if (type == IT::UNSIGNED) {
+					file << "    call lsa_writeuint\n";
+				} else if (type == IT::LOGIC) {
+					file << "    call lsa_writelogic\n";
+				} else {
+					file << "    call lsa_writech\n";
+				}
+				
+				file << "L_end_" << uniq << ":\n";
+				
 				i = endExpr;
 			}
 			break;

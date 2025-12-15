@@ -1,5 +1,5 @@
 // EXPECT: 111
 main {
-    unsigned integer a = 5 @;
+    writech("a");
     send 0;
 };

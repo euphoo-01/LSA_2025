@@ -128,7 +128,7 @@ Greibach greibach(NS('S'), TS('$'),
     ),
 
     // E Expressions
-    Rule(NS('E'), GRB_ERROR_SERIES + 4,
+    Rule(NS('E'), GRB_ERROR_SERIES + 2,
         12,
         // вызов функции: ID ( W ) ...
         Rule::Chain(5, TS(LEX_ID), TS(LEX_LEFTTHESIS), NS('W'), TS(LEX_RIGHTTHESIS), NS('M')),
@@ -158,7 +158,7 @@ Greibach greibach(NS('S'), TS('$'),
     ),
 
     // M Math
-    Rule(NS('M'), GRB_ERROR_SERIES + 5,
+    Rule(NS('M'), GRB_ERROR_SERIES + 3,
         11,
         Rule::Chain(2, TS(LEX_PLUS), NS('E')),
         Rule::Chain(2, TS(LEX_MINUS), NS('E')),

@@ -27,6 +27,12 @@ extern "C" {
         }
     }
 
+    // вывод logic
+    void lsa_writelogic(unsigned long long i) {
+        if (i) std::cout << "true";
+        else std::cout << "false";
+    }
+
     // вывод числа
     void lsa_writeuint(unsigned long long i) {
         std::cout << i;
@@ -35,7 +41,7 @@ extern "C" {
     // чтение символа
     char lsa_readch() {
         char c;
-        std::cin >> c;
+        std::cin.get(c);
         return c;
     }
 

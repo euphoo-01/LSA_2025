@@ -1,0 +1,12 @@
+func char waitKey() {
+    char ch = readch();
+    writech(ch);
+    send ch;
+};
+
+main {
+    writech('>');
+    waitKey();
+    writech('<');
+    send 0;
+};

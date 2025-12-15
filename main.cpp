@@ -23,6 +23,10 @@
 
 using namespace std;
 
+// TODO: bit inversion
+// TODO: readch bug
+// TODO: hex lit
+
 int main(int argc, char* argv[]) {
 	setlocale(LC_ALL, "ru_RU.UTF-8");
 

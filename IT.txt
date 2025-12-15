@@ -5,17 +5,6 @@
    isPrime               LOGIC                   F                  -1                                  global                  -1
    toUpper                CHAR                   F                  -1                                  global                  -1
        pow            UNSIGNED                   F                  -1                                  global                  -1
- factorial            UNSIGNED                   F                   1                                  global                   1
-         n            UNSIGNED                   P                   1                               factorial                   1
-        L0            UNSIGNED                   L                   2                   0                 if0                   2
-        L1            UNSIGNED                   L                   3                   1                 if0                   3
-    result            UNSIGNED                   V                   6                                 differ0                   6
-        L2            UNSIGNED                   L                   6                   1             differ0                   6
-         i            UNSIGNED                   V                   7                                 differ0                   7
-        L3            UNSIGNED                   L                   7                   1             differ0                   7
-        L4            UNSIGNED                   L                   8                   1            because0                   8
-      main            UNSIGNED                   F                  15                                  global                  15
-         n                CHAR                   V                  16                                    main                  16
-        L5            UNSIGNED                   L                  17                  48                main                  17
-      fact            UNSIGNED                   V                  18                                    main                  18
-        L6            UNSIGNED                   L                  20                   0                main                  20
+      main            UNSIGNED                   F                   2                                  global                   2
+         a            UNSIGNED                   V                   3                                    main                   3
+        L0            UNSIGNED                   L                   4                   0                main                   4

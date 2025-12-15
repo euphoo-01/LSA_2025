@@ -8,7 +8,7 @@ namespace Error {
         ERROR_ENTRY(1, "Системный сбой"),
         ERROR_ENTRY_NODEF(2), ERROR_ENTRY_NODEF(3), ERROR_ENTRY_NODEF(4), ERROR_ENTRY_NODEF(5),
         ERROR_ENTRY_NODEF(6), ERROR_ENTRY_NODEF(7), ERROR_ENTRY_NODEF(8), ERROR_ENTRY_NODEF(9),
-        
+
         // системные ошибки
         ERROR_ENTRY(10, "Ошибка при открытии файла с исходным кодом (-in)"),
         ERROR_ENTRY_NODEF(11),
@@ -20,7 +20,7 @@ namespace Error {
         ERROR_ENTRY(17, "Недопустимый размер таблицы идентификаторов"),
         ERROR_ENTRY(18, "Превышен размер таблицы идентификаторов"),
         ERROR_ENTRY(19, "Недопустимый индекс таблицы идентификаторов"),
-        
+
         ERROR_ENTRY_NODEF10(20), ERROR_ENTRY_NODEF10(30), ERROR_ENTRY_NODEF10(40),
         ERROR_ENTRY_NODEF10(50), ERROR_ENTRY_NODEF10(60), ERROR_ENTRY_NODEF10(70), ERROR_ENTRY_NODEF10(80),
         ERROR_ENTRY_NODEF10(90),
@@ -42,9 +42,10 @@ namespace Error {
         ERROR_ENTRY(125, "Ошибка в строковом литерале"),
 
         ERROR_ENTRY(126, "Переполнение целочисленного литерала"),
-        ERROR_ENTRY(127, "Недопустимый спец. символ"), ERROR_ENTRY_NODEF10(136), ERROR_ENTRY_NODEF10(146), ERROR_ENTRY_NODEF10(156),
-        ERROR_ENTRY_NODEF10(166), ERROR_ENTRY_NODEF10(176), ERROR_ENTRY_NODEF10(186), ERROR_ENTRY_NODEF10(196),
-        ERROR_ENTRY_NODEF100(200),
+        ERROR_ENTRY(127, "Недопустимый спец. символ"), ERROR_ENTRY_NODEF10(136), ERROR_ENTRY_NODEF10(146),
+        ERROR_ENTRY_NODEF10(156), ERROR_ENTRY_NODEF10(166), ERROR_ENTRY_NODEF10(176),
+        ERROR_ENTRY_NODEF10(186), ERROR_ENTRY_NODEF(196),ERROR_ENTRY_NODEF(197),
+        ERROR_ENTRY_NODEF(198), ERROR_ENTRY_NODEF(199),ERROR_ENTRY_NODEF100(200),
 
         // семантические ошибки
         ERROR_ENTRY(300, "Неопределенная семантическая ошибка"),
@@ -70,17 +71,19 @@ namespace Error {
         ERROR_ENTRY(320, "Ошибка в логическом подвыражении"),
 
         ERROR_ENTRY_NODEF10(321), ERROR_ENTRY_NODEF10(331), ERROR_ENTRY_NODEF10(341),
-        
-        ERROR_ENTRY_NODEF100(351), ERROR_ENTRY_NODEF100(451), ERROR_ENTRY_NODEF10(551), ERROR_ENTRY_NODEF10(561),
-        ERROR_ENTRY_NODEF10(571), ERROR_ENTRY_NODEF10(581), ERROR_ENTRY_NODEF10(591),
+        ERROR_ENTRY_NODEF100(351), ERROR_ENTRY_NODEF100(451), ERROR_ENTRY_NODEF10(551),
+        ERROR_ENTRY_NODEF10(561), ERROR_ENTRY_NODEF10(571), ERROR_ENTRY_NODEF10(581),
+        ERROR_ENTRY_NODEF10(591),
 
         // синтаксические ошибки
         ERROR_ENTRY(600, "Неверная структура программы"),
         ERROR_ENTRY(601, "Ошибочный оператор"),
         ERROR_ENTRY(602, "Ошибка в выражении"),
-        ERROR_ENTRY(605, "Ошибка в подвыражении"),
-        ERROR_ENTRY(606, "Синтаксическая ошибка"),
-        
+        ERROR_ENTRY(603, "Ошибка в подвыражении"),
+        ERROR_ENTRY(604, "Синтаксическая ошибка"),
+        ERROR_ENTRY_NODEF(605),
+        ERROR_ENTRY_NODEF(606),
+
         ERROR_ENTRY_NODEF100(700),ERROR_ENTRY_NODEF100(800),
         ERROR_ENTRY_NODEF100(900)
     };

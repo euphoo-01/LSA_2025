@@ -1,6 +1,6 @@
 #!/bin/bash
 
-COMPILER="./build/LSA_2025"
+COMPILER="./cmake-build-lsa_2025/LSA_2025"
 TEST_DIR="tests/errors"
 
 if [ ! -f "$COMPILER" ]; then

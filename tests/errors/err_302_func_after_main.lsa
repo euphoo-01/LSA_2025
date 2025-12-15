@@ -1,4 +1,4 @@
-// EXPECT: 605
+// EXPECT: 302
 main {
     send 0;
 };
