@@ -69,8 +69,9 @@ namespace Error {
         ERROR_ENTRY(318, "Ошибка в параметрах вызываемой функции"),
         ERROR_ENTRY(319, "Ошибка в логическом выражении"),
         ERROR_ENTRY(320, "Ошибка в логическом подвыражении"),
+        ERROR_ENTRY(321, "Обнаружен бесконечный цикл"),
 
-        ERROR_ENTRY_NODEF10(321), ERROR_ENTRY_NODEF10(331), ERROR_ENTRY_NODEF10(341),
+        ERROR_ENTRY_NODEF10(331), ERROR_ENTRY_NODEF10(341),
         ERROR_ENTRY_NODEF100(351), ERROR_ENTRY_NODEF100(451), ERROR_ENTRY_NODEF10(551),
         ERROR_ENTRY_NODEF10(561), ERROR_ENTRY_NODEF10(571), ERROR_ENTRY_NODEF10(581),
         ERROR_ENTRY_NODEF10(591),
@@ -80,8 +81,8 @@ namespace Error {
         ERROR_ENTRY(601, "Ошибочный оператор"),
         ERROR_ENTRY(602, "Ошибка в выражении"),
         ERROR_ENTRY(603, "Ошибка в подвыражении"),
-        ERROR_ENTRY(604, "Синтаксическая ошибка"),
-        ERROR_ENTRY_NODEF(605),
+        ERROR_ENTRY(604, "Ошибка в параметрах функции"),
+        ERROR_ENTRY(605, "Ошибка в параметрах вызываемой функции"),
         ERROR_ENTRY_NODEF(606),
 
         ERROR_ENTRY_NODEF100(700),ERROR_ENTRY_NODEF100(800),

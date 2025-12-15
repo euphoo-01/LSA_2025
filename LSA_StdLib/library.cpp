@@ -41,8 +41,11 @@ extern "C" {
     // чтение символа
     char lsa_readch() {
         char c;
-        std::cin.get(c);
-        return c;
+        std::cout.flush();
+        if (std::cin.get(c)) {
+            return c;
+        }
+        return 0;
     }
 
     // переименование c++ функций для избежания конфликтов

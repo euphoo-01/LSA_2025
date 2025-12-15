@@ -1,0 +1,100 @@
+func unsigned integer factorial(unsigned integer n) {
+    if (n == 0) {
+        send 1;
+    };
+    differ {
+        unsigned integer result = 1;
+        unsigned integer i = 1;
+        because (i = 1; i <= n; i++) {
+            result = result * i;
+        };
+        send result;
+    };
+    send 1;
+};
+func char waitKey() {
+    char ch = readch();
+    writech(ch);
+    send ch;
+};
+
+// Основной блок
+main {
+    unsigned integer x = 5;
+    unsigned integer y = 2;
+    char symbol = 'h';
+
+    unsigned integer expr = 100 * (2 + 9) : x % 9;
+    writech('\n');
+    writech(expr);
+
+    unsigned integer sum = x + y;
+    unsigned integer product = x * y;
+    unsigned integer divide = x : y;
+
+    writech('\n');
+    writech(sum);
+
+    writech('\n');
+    writech(product);
+
+    writech('\n');
+    writech(divide);
+
+
+    x++;
+    y--;
+
+    unsigned integer fact = factorial(x);
+    writech('\n');
+    writech(fact);
+
+    unsigned integer power = pow(2, 1);
+    writech('\n');
+    writech(power);
+
+
+    unsigned integer root = sqrt(256);
+    writech('\n');
+    writech(root);
+
+
+    logic isPrimeNum = isPrime(17);
+    writech('\n');
+    writech(isPrimeNum);
+
+
+    char uppered = toUpper(symbol);
+
+    unsigned integer maxVal = getMax(x, y);
+    writech('\n');
+    writech(maxVal);
+
+    unsigned integer minVal = getMin(x, y);
+    writech('\n');
+    writech(minVal);
+
+    unsigned integer diff;
+    if (x > y) {
+        diff = x - y;
+    };
+    differ {
+        diff = y - x;
+    };
+
+    writech('\n');
+    writech(diff);
+
+    writech('\n');
+    unsigned integer counter = 0;
+    because (unsigned integer i = 0; i < 10; i++) {
+        counter = counter + i;
+        writech(counter);
+        writech('\t');
+    };
+    writech('\n');
+
+    waitKey();
+
+    send 0;
+};

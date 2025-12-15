@@ -179,8 +179,17 @@ namespace Lex {
                                 // Ошибка: присвоение отрицательного числа беззнаковому типу
                                 throw ERROR_THROW_IN(126, currentLine, pos);
                             } else {
-                                cur_iden.value.vint = (unsigned int)stoi(str);
-                                if (str[0] == '0') cur_iden.value.vint = (unsigned int)stoi(str, nullptr, 8);
+                                size_t idx = 0;
+                                if (str[0] == '0' && str[1] == 'x') {
+                                    cur_iden.value.vint = (unsigned int)std::stoul(str, &idx, 16);
+                                } else {
+                                    cur_iden.value.vint = (unsigned int)std::stoul(str, &idx, 10);
+                                }
+                                
+                                if (idx != strlen(str)) {
+                                    // Ошибка: некорректный литерал (например 1A или 0x)
+                                    throw ERROR_THROW_IN(111, currentLine, pos);
+                                }
                             }
                         } catch (...) {
                             throw ERROR_THROW_IN(126, currentLine, pos);

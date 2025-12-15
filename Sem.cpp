@@ -259,6 +259,7 @@ void checkSemantic(LT::LexTable& lextable, IT::IdTable& idtable, std::map<std::s
 			// анализ
 			bool hasComparison = false;
 			bool isSingleLogic = false;
+			bool hasId = false;
 
 			if (endCond - startCond == 1) {
 				IT::IDDATATYPE t = getType(startCond, lextable, idtable);
@@ -267,10 +268,15 @@ void checkSemantic(LT::LexTable& lextable, IT::IdTable& idtable, std::map<std::s
 
 			for (int k = startCond; k < endCond; k++) {
 				char lex = lextable.table[k].lexema[0];
+				if (lex == LEX_ID) hasId = true;
 				if (lex == LEX_MORE || lex == LEX_LESS || lex == LEX_ISEQUAL ||
 					lex == LEX_NOT_EQUAL || lex == LEX_MORE_OR_EQUAL || lex == LEX_LESS_OR_EQUAL) {
 					hasComparison = true;
 				}
+			}
+
+			if (lextable.table[i].lexema[0] == LEX_BECAUSE && !hasId) {
+				throw ERROR_THROW_IN(321, lextable.table[i].sn, 0);
 			}
 
 			if (!hasComparison && !isSingleLogic) {

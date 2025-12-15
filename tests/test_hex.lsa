@@ -1,0 +1,14 @@
+main {
+    unsigned integer hexVal = 0xFF;
+    unsigned integer hexVal2 = 0x1A;
+    unsigned integer zero = 0;
+    
+    writech(hexVal);
+    writech('\n');
+    writech(hexVal2);
+    writech('\n');
+    writech(zero);
+    writech('\n');
+    
+    send 0;
+};

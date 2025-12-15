@@ -1,10 +1,10 @@
 global main
 default rel
-extern lsa_writech, lsa_writeuint, lsa_readch, lsa_pow, lsa_sqrt, lsa_isPrime, lsa_getMin, lsa_getMax, lsa_toUpper
+extern lsa_writech, lsa_writeuint, lsa_writelogic, lsa_readch, lsa_pow, lsa_sqrt, lsa_isPrime, lsa_getMin, lsa_getMax, lsa_toUpper
 section .text
 
-; Ссылка на библиотеку: /home/euphoo/02. University/КП/LSA_2025/LSA_StdLib/libLSA_StdLib.a
-; Пример сборки: g++ -o program program.o /home/euphoo/02. University/КП/LSA_2025/LSA_StdLib/libLSA_StdLib.a -no-pie
+; Ссылка на библиотеку: /home/euphoo/02. University/КП/LSA_2025/LSA_StdLib/build/libLSA_StdLib.a
+; Пример сборки: g++ -o program program.o /home/euphoo/02. University/КП/LSA_2025/LSA_StdLib/build/libLSA_StdLib.a -no-pie
 
 section .bss
     factorial_n resq 1
@@ -84,7 +84,15 @@ L1:
 main:
     push rbp
     mov rbp, rsp
+    test rsp, 15
+    jz L_aligned_0
+    sub rsp, 8
     call lsa_readch
+    add rsp, 8
+    jmp L_end_0
+L_aligned_0:
+    call lsa_readch
+L_end_0:
     movzx rax, al
     push rax
     pop rax
@@ -104,7 +112,15 @@ main:
     mov [main_fact], rax
     push qword [main_fact]
     pop rdi
+    test rsp, 15
+    jz L_aligned_4
+    sub rsp, 8
     call lsa_writeuint
+    add rsp, 8
+    jmp L_end_4
+L_aligned_4:
+    call lsa_writeuint
+L_end_4:
     push 0
     pop rax
     mov rsp, rbp

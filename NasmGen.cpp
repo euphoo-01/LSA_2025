@@ -126,14 +126,22 @@ void processExpression(int start, int end, Lex::LEX& lex, ofstream& file) {
 			stackDepth--;
 			break;
 		}
-		case LEX_READCH:
-			if (stackDepth % 2 != 0) file << "    sub rsp, 8\n";
+		case LEX_READCH: {
+			int uniq = stackDepth++;
+			file << "    test rsp, 15\n";
+			file << "    jz L_aligned_" << uniq << "\n";
+			file << "    sub rsp, 8\n";
 			file << "    call lsa_readch\n";
-			if (stackDepth % 2 != 0) file << "    add rsp, 8\n";
+			file << "    add rsp, 8\n";
+			file << "    jmp L_end_" << uniq << "\n";
+			file << "L_aligned_" << uniq << ":\n";
+			file << "    call lsa_readch\n";
+			file << "L_end_" << uniq << ":\n";
 			file << "    movzx rax, al\n";
 			file << "    push rax\n";
 			stackDepth++;
 			break;
+		}
 		// инкремент/декремент
 		case LEX_INC:
 		case LEX_DEC: {
@@ -297,11 +305,10 @@ void asmGenerator(Lex::LEX& lex, wchar_t outfile[]) {
 				
 				IT::IDDATATYPE type = getExprType(startExpr, endExpr, lex);
 				
-				// Выравнивание стека для вызова библиотечной функции (printf/cout)
 				int uniq = labelCounter++;
-				file << "    test rsp, 15\n";     // Проверка выравнивания
+				file << "    test rsp, 15\n";
 				file << "    jz L_aligned_" << uniq << "\n";
-				file << "    sub rsp, 8\n";       // Выравнивание
+				file << "    sub rsp, 8\n";
 				
 				if (type == IT::UNSIGNED) {
 					file << "    call lsa_writeuint\n";
@@ -311,7 +318,7 @@ void asmGenerator(Lex::LEX& lex, wchar_t outfile[]) {
 					file << "    call lsa_writech\n";
 				}
 				
-				file << "    add rsp, 8\n";       // Восстановление
+				file << "    add rsp, 8\n";
 				file << "    jmp L_end_" << uniq << "\n";
 				file << "L_aligned_" << uniq << ":\n";
 
