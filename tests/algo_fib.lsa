@@ -1,0 +1,41 @@
+func unsigned integer fibRecursive(unsigned integer n) {
+    if (n < 2) {
+        send n;
+    };
+    differ {
+        send fibRecursive(n - 1) + fibRecursive(n - 2);
+    };
+    send 0;
+};
+
+func unsigned integer fibIterative(unsigned integer n) {
+    if (n < 2) {
+        send n;
+    };
+    differ {
+        unsigned integer a = 0;
+        unsigned integer b = 1;
+        unsigned integer temp;
+        because (unsigned integer i = 2; i <= n; i++) {
+            temp = a + b;
+            a = b;
+            b = temp;
+        };
+        send b;
+    };
+    send 0;
+};
+
+main {
+    unsigned integer n = 10;
+    // Фиб(10) - Iterative
+    writech('Ф'); writech('и'); writech('б'); writech(':'); writech(' ');
+    writech(fibIterative(n));
+    writech('\n');
+    
+    // Рек - Recursive
+    writech('Р'); writech('е'); writech('к'); writech(':'); writech(' ');
+    writech(fibRecursive(n));
+    writech('\n');
+    send 0;
+};

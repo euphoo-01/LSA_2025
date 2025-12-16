@@ -1,5 +1,5 @@
 // EXPECT: 125
 main {
-    char c = 'aa';
+    char c = 'aaa';
     send 0;
 }

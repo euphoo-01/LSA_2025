@@ -5,5 +5,6 @@
     <file url="file://$PROJECT_DIR$/cmake-build-lsa_2025/ST.txt" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/cmake-build-lsa_2025/main.txt" charset="windows-1251" />
     <file url="file://$PROJECT_DIR$/tests/errors/segfault_readch.lsa" charset="windows-1251" />
+    <file url="file://$PROJECT_DIR$/tests/segfault_repro.lsa" charset="windows-1251" />
   </component>
 </project>

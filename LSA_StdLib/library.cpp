@@ -22,7 +22,7 @@ extern "C" {
                 std::cout << (char)0xD1 << (char)0x91;
             } else {
                 // другие символы cp1251
-                std::cout << c; 
+                std::cout << c;
             }
         }
     }
@@ -43,7 +43,25 @@ extern "C" {
         char c;
         std::cout.flush();
         if (std::cin.get(c)) {
-            return c;
+            unsigned char uc = static_cast<unsigned char>(c);
+            if (uc < 128) {
+                return c;
+            } else {
+                // UTF-8 handling (assume 2 bytes for Cyrillic)
+                char c2;
+                if (std::cin.get(c2)) {
+                    unsigned char uc2 = static_cast<unsigned char>(c2);
+                    // Ё
+                    if (uc == 0xD0 && uc2 == 0x81) return (char)0xA8;
+                    // ё
+                    if (uc == 0xD1 && uc2 == 0x91) return (char)0xB8;
+                    // А-п (0xD0 0x90 - 0xD0 0xBF) -> (0xC0 - 0xEF)
+                    if (uc == 0xD0 && uc2 >= 0x90 && uc2 <= 0xBF) return (char)(uc2 + 0x30);
+                    // р-я (0xD1 0x80 - 0xD1 0x8F) -> (0xF0 - 0xFF)
+                    if (uc == 0xD1 && uc2 >= 0x80 && uc2 <= 0x8F) return (char)(uc2 + 0x70);
+                }
+                return c; // fallback or partial read
+            }
         }
         return 0;
     }

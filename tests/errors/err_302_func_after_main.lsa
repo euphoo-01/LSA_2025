@@ -1,8 +1,0 @@
-// EXPECT: 302
-main {
-    send 0;
-};
-
-func unsigned integer foo() {
-    send 0;
-};

@@ -390,6 +390,16 @@ namespace Lex {
                                 // пустой символьный литерал, трактуем как пробел
                                 cur_iden.value.vstr.str[0] = ' '; 
                                 cur_iden.value.vstr.len = 1;
+                            } else if (strlen(str) == 4) {
+                                // UTF-8 char literal -> CP1251
+                                unsigned char u1 = (unsigned char)str[1];
+                                unsigned char u2 = (unsigned char)str[2];
+                                if (u1 == 0xD0 && u2 == 0x81) cur_iden.value.vstr.str[0] = (char)0xA8; // Ё
+                                else if (u1 == 0xD1 && u2 == 0x91) cur_iden.value.vstr.str[0] = (char)0xB8; // ё
+                                else if (u1 == 0xD0 && u2 >= 0x90 && u2 <= 0xBF) cur_iden.value.vstr.str[0] = (char)(u2 + 0x30);
+                                else if (u1 == 0xD1 && u2 >= 0x80 && u2 <= 0x8F) cur_iden.value.vstr.str[0] = (char)(u2 + 0x70);
+                                else cur_iden.value.vstr.str[0] = '?'; // Unsupported
+                                cur_iden.value.vstr.len = 1;
                             }
                             else {
                                 // некорректный символьный литерал
@@ -473,6 +483,7 @@ namespace Lex {
                         if (lexTable.size > 0 && lexTable.table[lexTable.size - 1].lexema[0] !=LEX_ID) throw ERROR_THROW_IN(602, currentLine, pos);
                         cur_lex.sn = currentLine; LT::Add(lexTable, cur_lex); cur_lex.lexema[0] = '\0'; break;
                     } else throw ERROR_THROW_IN(601, currentLine, pos);
+                case LEX_BIT_NOT: cur_lex.lexema[0] = LEX_BIT_NOT; cur_lex.sn = currentLine; LT::Add(lexTable, cur_lex); cur_lex.lexema[0] = '\0'; break;
                 case LEX_NOT:
                     if (in.text[i + 1] == LEX_EQUAL) { cur_lex.lexema[0] = LEX_NOT_EQUAL; i++; } else throw ERROR_THROW_IN(601, currentLine, pos);
                     cur_lex.sn = currentLine; LT::Add(lexTable, cur_lex); cur_lex.lexema[0] = '\0'; break;

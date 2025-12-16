@@ -1,4 +1,4 @@
----- Протокол ---- 2025.12.15 18:46:44 ----------
+---- Протокол ---- 2025.12.16 04:20:30 ----------
 ---- Параметры ----
 -log: tests/errors/err_600_invalid_structure.lsa.log
 -out: tests/errors/err_600_invalid_structure.lsa.asm

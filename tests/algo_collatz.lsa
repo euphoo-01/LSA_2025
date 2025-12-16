@@ -1,0 +1,27 @@
+main {
+    unsigned integer n = 6; 
+    unsigned integer steps = 0;
+    
+    // Старт: 6
+    writech('С'); writech('т'); writech('а'); writech('р'); writech('т'); writech(':'); writech(' ');
+    writech(n); 
+    writech('\n');
+
+    because (unsigned integer i = 0; n > 1; i++) {
+        unsigned integer rem = n % 2;
+        if (rem == 0) {
+            n = n : 2;
+        };
+        differ {
+            n = 3 * n + 1;
+        };
+        writech(n);
+        writech(' ');
+        steps++;
+    };
+    writech('\n');
+    writech('Ш'); writech('а'); writech('г'); writech('и'); writech(':'); writech(' ');
+    writech(steps);
+    writech('\n');
+    send 0;
+};

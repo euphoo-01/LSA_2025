@@ -5,6 +5,38 @@
    isPrime               LOGIC                   F                  -1                                  global                  -1
    toUpper                CHAR                   F                  -1                                  global                  -1
        pow            UNSIGNED                   F                  -1                                  global                  -1
-      main            UNSIGNED                   F                   2                                  global                   2
-         a            UNSIGNED                   V                   3                                    main                   3
-        L0            UNSIGNED                   L                   4                   0                main                   4
+      main            UNSIGNED                   F                   1                                  global                   1
+         n            UNSIGNED                   V                   2                                    main                   2
+        L0            UNSIGNED                   L                   2                   6                main                   2
+     steps            UNSIGNED                   V                   3                                    main                   3
+        L1            UNSIGNED                   L                   3                   0                main                   3
+        L2                CHAR                   L                   6                                   Ñ                main                   6
+        L3                CHAR                   L                   6                                   ò                main                   6
+        L4                CHAR                   L                   6                                   à                main                   6
+        L5                CHAR                   L                   6                                   ð                main                   6
+        L6                CHAR                   L                   6                                   ò                main                   6
+        L7                CHAR                   L                   6                                   :                main                   6
+        L8                CHAR                   L                   6                                                    main                   6
+        L9                CHAR                   L                   8                                   
+                main                   8
+         i            UNSIGNED                   V                  10                                because0                  10
+       L10            UNSIGNED                   L                  10                   0            because0                  10
+       L11            UNSIGNED                   L                  10                   1            because0                  10
+       rem            UNSIGNED                   V                  11                                because0                  11
+       L12            UNSIGNED                   L                  11                   2            because0                  11
+       L13            UNSIGNED                   L                  12                   0                 if0                  12
+       L14            UNSIGNED                   L                  13                   2                 if0                  13
+       L15            UNSIGNED                   L                  16                   3             differ0                  16
+       L16            UNSIGNED                   L                  16                   1             differ0                  16
+       L17                CHAR                   L                  19                                                because0                  19
+       L18                CHAR                   L                  22                                   
+                main                  22
+       L19                CHAR                   L                  24                                   Ø                main                  24
+       L20                CHAR                   L                  24                                   à                main                  24
+       L21                CHAR                   L                  24                                   ã                main                  24
+       L22                CHAR                   L                  24                                   è                main                  24
+       L23                CHAR                   L                  24                                   :                main                  24
+       L24                CHAR                   L                  24                                                    main                  24
+       L25                CHAR                   L                  26                                   
+                main                  26
+       L26            UNSIGNED                   L                  27                   0                main                  27

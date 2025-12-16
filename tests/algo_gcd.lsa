@@ -1,0 +1,22 @@
+func unsigned integer gcd(unsigned integer a, unsigned integer b) {
+    unsigned integer temp;
+    // Simulate while(b > 0)
+    because (unsigned integer i = 0; b > 0; i++) {
+        temp = b;
+        b = a % b;
+        a = temp;
+    };
+    send a;
+};
+
+main {
+    unsigned integer a = 48;
+    unsigned integer b = 18;
+    // НОД(48, 18) -> 6
+    writech('Н'); writech('О'); writech('Д'); writech('('); 
+    writech(a); writech(','); writech(' '); writech(b); writech(')');
+    writech(':'); writech(' ');
+    writech(gcd(a, b));
+    writech('\n');
+    send 0;
+};
