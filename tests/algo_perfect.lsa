@@ -1,0 +1,27 @@
+func logic isPerfect(unsigned integer n) {
+    unsigned integer sum = 0;
+    because (unsigned integer i = 1; i * 2 <= n; i++) {
+        if (n % i == 0) {
+            sum = sum + i;
+        };
+    };
+    
+    if (sum == n) {
+        send true;
+    };
+    send false;
+};
+
+main {
+    // "идеальное" - то, которое делится на всех своих делителей
+    because (unsigned integer k = 1; k < 1000; k++) {
+        if (isPerfect(k) == true) {
+            writech(k);
+            writech(' ');
+            writech('='); writech(' ');
+            writech('И'); writech('д'); writech('е'); writech('а'); writech('л');
+            writech('\n');
+        };
+    };
+    send 0;
+};

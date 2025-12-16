@@ -16,6 +16,7 @@ IT::IDDATATYPE getType(int idx, LT::LexTable& lextable, IT::IdTable& idtable) {
 void checkSemantic(LT::LexTable& lextable, IT::IdTable& idtable, std::map<std::string, std::vector<IT::IDDATATYPE>>& funcs) {
 	bool flagMain = false;
 	IT::IDDATATYPE currentFuncType = IT::IDDATATYPE::UNSIGNED;
+    std::string currentFuncName = "";
 	bool insideFunction = false;
 	std::map<int, int> knownValues; // отслеживание значений переменных
 
@@ -48,6 +49,7 @@ void checkSemantic(LT::LexTable& lextable, IT::IdTable& idtable, std::map<std::s
 		if (lextable.table[i].lexema[0] == LEX_MAIN) {
 			flagMain = true;
 			currentFuncType = IT::IDDATATYPE::UNSIGNED;
+            currentFuncName = "main";
 			insideFunction = true;
 		}
 
@@ -56,6 +58,15 @@ void checkSemantic(LT::LexTable& lextable, IT::IdTable& idtable, std::map<std::s
 			if (flagMain) {
 				throw ERROR_THROW_IN(302, lextable.table[i].sn, 0);
 			}
+            
+            // имя функции (LEX_FUNC type id)
+            if (i + 2 < lextable.size) {
+                int funcIdIdx = lextable.table[i + 2].idxTI;
+                if (funcIdIdx != LT_TI_NULLIDX) {
+                    currentFuncName = idtable.table[funcIdIdx].id;
+                }
+            }
+
 			// тип возврата
 			if (i + 2 < lextable.size) {
 				currentFuncType = getType(i + 2, lextable, idtable);
@@ -89,6 +100,12 @@ void checkSemantic(LT::LexTable& lextable, IT::IdTable& idtable, std::map<std::s
 			if (i > 1 && lextable.table[i - 2].lexema[0] == LEX_FUNC) continue;
 
 			std::string funcName = idtable.table[lextable.table[i].idxTI].id;
+            
+            // Проверка рекурсии
+            if (funcName == currentFuncName) {
+                throw ERROR_THROW_IN(322, lextable.table[i].sn, 0);
+            }
+
 			std::vector<IT::IDDATATYPE> expectedParams = funcs[funcName];
 
 			int pIndex = 0;

@@ -12,7 +12,7 @@ using namespace std;
 
 namespace Build {
     // путь к стандартной библиотеке
-    const std::string STD_LIB_PATH = "/home/euphoo/02. University/КП/LSA_2025/LSA_StdLib/libLSA_StdLib.a";
+    const std::string STD_LIB_PATH = "/home/euphoo/02. University/КП/LSA_2025/LSA_StdLib/build/libLSA_StdLib.a";
 
     // выполнение сборки
     void Build(Parm::Parm parm) {
@@ -38,7 +38,7 @@ namespace Build {
 
         // команды сборки
         sprintf(nasm_cmd, "nasm -f elf64 \"%s\" -o \"%s\"", out_asm, obj_file.c_str());
-        sprintf(link_cmd, "g++ -o \"%s\" \"%s\" \"%s\" ", exe_file.c_str(), obj_file.c_str(), STD_LIB_PATH.c_str());
+        sprintf(link_cmd, "g++ -o \"%s\" \"%s\" \"%s\"", exe_file.c_str(), obj_file.c_str(), STD_LIB_PATH.c_str());
 
         cout << "Сборка..." << endl;
         cout << nasm_cmd << endl;

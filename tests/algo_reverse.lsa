@@ -1,0 +1,29 @@
+func unsigned integer reverse(unsigned integer n) {
+    unsigned integer r = 0;
+    unsigned integer i;
+    because (i = 0; n > 0; i++) {
+        r = r * 10;
+        r = r + (n % 10);
+        n = n : 10;
+    };
+    send r;
+};
+
+main {
+    unsigned integer val = 12321;
+    unsigned integer rev = reverse(val);
+    
+    writech(val);
+    writech(' '); writech('-'); writech('>'); writech(' ');
+    writech(rev);
+    writech('\n');
+    
+    if (val == rev) {
+        writech('П'); writech('а'); writech('л'); writech('и'); writech('н'); writech('д'); writech('р'); writech('о'); writech('м');
+    };
+    differ {
+        writech('Н'); writech('е'); writech('т');
+    };
+    writech('\n');
+    send 0;
+};

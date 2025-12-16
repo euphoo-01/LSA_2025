@@ -70,6 +70,7 @@ namespace Error {
         ERROR_ENTRY(319, "Ошибка в логическом выражении"),
         ERROR_ENTRY(320, "Ошибка в логическом подвыражении"),
         ERROR_ENTRY(321, "Обнаружен бесконечный цикл"),
+        ERROR_ENTRY(322, "Рекурсия запрещена"),
 
         ERROR_ENTRY_NODEF10(331), ERROR_ENTRY_NODEF10(341),
         ERROR_ENTRY_NODEF100(351), ERROR_ENTRY_NODEF100(451), ERROR_ENTRY_NODEF10(551),

@@ -1,0 +1,13 @@
+        id            datatype              idtype                Line               value               Scope                idTi
+      sqrt            UNSIGNED                   F                  -1                                  global                  -1
+    getMin            UNSIGNED                   F                  -1                                  global                  -1
+    getMax            UNSIGNED                   F                  -1                                  global                  -1
+   isPrime               LOGIC                   F                  -1                                  global                  -1
+   toUpper                CHAR                   F                  -1                                  global                  -1
+       pow            UNSIGNED                   F                  -1                                  global                  -1
+   waitKey                CHAR                   F                   1                                  global                   1
+        ch                CHAR                   V                   2                                 waitKey                   2
+      main            UNSIGNED                   F                   7                                  global                   7
+        L0                CHAR                   L                   8                                   >                main                   8
+        L1                CHAR                   L                  10                                   <                main                  10
+        L2            UNSIGNED                   L                  11                   0                main                  11

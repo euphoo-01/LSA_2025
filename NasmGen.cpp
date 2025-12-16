@@ -49,7 +49,7 @@ namespace NasmGen {
     }
 
     // генерация выражения
-    void processExpression(int start, int end, Lex::LEX &lex, ofstream &file) {
+    void processExpression(int start, int end, Lex::LEX &lex, ofstream &file, int& labelCounter) {
         int stackDepth = 0;
         for (int i = start; i < end; i++) {
             LT::Entry &t = lex.lexTable.table[i];
@@ -128,14 +128,27 @@ namespace NasmGen {
                     stackDepth--;
                     break;
                 case LEX_BIT_NOT: {
-                    // снимаем операнд
+                    int k = i - 1;
+                    while (k >= start && lex.lexTable.table[k].lexema[0] == '\0') k--;
+                    
+                    IT::IDDATATYPE type = IT::UNSIGNED;
+                    if (k >= start) {
+                        char l = lex.lexTable.table[k].lexema[0];
+                        if (l == LEX_ID || l == LEX_LITERAL) {
+                            type = lex.idTable.table[lex.lexTable.table[k].idxTI].iddatatype;
+                        } else if (l == LEX_MORE || l == LEX_LESS || l == LEX_ISEQUAL || 
+                                   l == LEX_NOT_EQUAL || l == LEX_MORE_OR_EQUAL || l == LEX_LESS_OR_EQUAL) {
+                            type = IT::LOGIC;
+                        }
+                    }
+
                     file << "    pop rax\n";
-
-                    // если хочешь различать logic / unsigned: смотри тип по стеку заранее;
-                    // при текущем RPN проще считать, что ~ всегда побитовое NOT:
-                    file << "    not rax\n";
-
-                    file << "    push rax\n";
+                    if (type == IT::LOGIC) {
+                        file << "    cmp rax, 0\n    sete al\n    movzx rax, al\n";
+                    } else {
+                        file << "    not rax\n";
+                    }
+                    file << "    push rax\n"; 
                     break;
                 }
 
@@ -166,7 +179,7 @@ namespace NasmGen {
                     break;
                 }
                 case LEX_READCH: {
-                    int uniq = stackDepth++;
+                    int uniq = labelCounter++;
                     file << "    test rsp, 15\n";
                     file << "    jz L_aligned_" << uniq << "\n";
                     file << "    sub rsp, 8\n";
@@ -219,7 +232,8 @@ namespace NasmGen {
                        lex.lexTable.table[i].lexema[0] == LEX_STAR ||
                        lex.lexTable.table[i].lexema[0] == LEX_DIRSLASH ||
                        lex.lexTable.table[i].lexema[0] == LEX_OST ||
-                       lex.lexTable.table[i].lexema[0] == LEX_COLON) {
+                       lex.lexTable.table[i].lexema[0] == LEX_COLON ||
+                       lex.lexTable.table[i].lexema[0] == LEX_BIT_NOT) {
                 hasUnsigned = true;
             }
         }
@@ -310,7 +324,7 @@ namespace NasmGen {
                     int endExpr = i + 1;
                     while (endExpr < lex.lexTable.size && lex.lexTable.table[endExpr].lexema[0] != LEX_SEMICOLON)
                         endExpr++;
-                    processExpression(i + 1, endExpr, lex, file);
+                    processExpression(i + 1, endExpr, lex, file, labelCounter);
                     int retBytes = 0;
                     if (!blockStack.empty()) {
                         stack<LabelBlock> temp = blockStack;
@@ -342,7 +356,7 @@ namespace NasmGen {
                             if (balance == 0) break;
                             endExpr++;
                         }
-                        processExpression(startExpr, endExpr, lex, file);
+                        processExpression(startExpr, endExpr, lex, file, labelCounter);
 
                         file << "    pop rdi\n"; // Аргумент в RDI
 
@@ -393,7 +407,7 @@ namespace NasmGen {
                             endExpr++;
 
                         // после RPN выражение лежит в [startExpr, endExpr),
-                        processExpression(startExpr, endExpr, lex, file);
+                        processExpression(startExpr, endExpr, lex, file, labelCounter);
 
                         file << "    pop rax\n";
                         file << "    mov [" << getMangledName(varEntry) << "], rax\n";
@@ -416,7 +430,7 @@ namespace NasmGen {
                                    lex.lexTable.table[endStmt].lexema[0] != LEX_SEMICOLON)
                                 endStmt++;
 
-                            processExpression(i, endStmt, lex, file);
+                            processExpression(i, endStmt, lex, file, labelCounter);
                             file << "    pop rax ; clear stack\n";
                             i = endStmt;
                         }
@@ -433,7 +447,7 @@ namespace NasmGen {
                     int endStmt = i + 1;
                     while (endStmt < lex.lexTable.size && lex.lexTable.table[endStmt].lexema[0] != LEX_SEMICOLON)
                         endStmt++;
-                    processExpression(i, endStmt, lex, file);
+                    processExpression(i, endStmt, lex, file, labelCounter);
                     file << "    pop rax ; clear stack\n";
                     i = endStmt;
                     break;
@@ -453,7 +467,7 @@ namespace NasmGen {
                         if (balance == 0) break;
                         endCond++;
                     }
-                    processExpression(j, endCond, lex, file);
+                    processExpression(j, endCond, lex, file, labelCounter);
                     i = endCond;
                     break;
                 }
@@ -476,7 +490,7 @@ namespace NasmGen {
                     // Проверка на присваивание: i = 0
                     if (lex.lexTable.table[j].lexema[0] == LEX_ID && lex.lexTable.table[j + 1].lexema[0] == LEX_EQUAL) {
                         IT::Entry &varEntry = lex.idTable.table[lex.lexTable.table[j].idxTI];
-                        processExpression(j + 2, endInit, lex, file);
+                        processExpression(j + 2, endInit, lex, file, labelCounter);
                         file << "    pop rax\n    mov [" << getMangledName(varEntry) << "], rax\n";
                     }
                     // Проверка на объявление: unsigned integer i = 0
@@ -486,10 +500,10 @@ namespace NasmGen {
                              lex.lexTable.table[j + 1].lexema[0] == LEX_ID &&
                              lex.lexTable.table[j + 2].lexema[0] == LEX_EQUAL) {
                         IT::Entry &varEntry = lex.idTable.table[lex.lexTable.table[j + 1].idxTI];
-                        processExpression(j + 3, endInit, lex, file);
+                        processExpression(j + 3, endInit, lex, file, labelCounter);
                         file << "    pop rax\n    mov [" << getMangledName(varEntry) << "], rax\n";
                     } else {
-                        processExpression(j, endInit, lex, file);
+                        processExpression(j, endInit, lex, file, labelCounter);
                         if (endInit > j) file << "    pop rax ; clear stack init\n";
                     }
                     // метка начала цикла
@@ -499,7 +513,7 @@ namespace NasmGen {
                     int endCond = startCond;
                     while (endCond < lex.lexTable.size && lex.lexTable.table[endCond].lexema[0] != LEX_SEMICOLON)
                         endCond++;
-                    processExpression(startCond, endCond, lex, file);
+                    processExpression(startCond, endCond, lex, file, labelCounter);
 
                     int startStep = endCond + 1;
                     int endStep = startStep;
@@ -573,10 +587,10 @@ namespace NasmGen {
 
                             if (isAssign) {
                                 IT::Entry &varEntry = lex.idTable.table[lex.lexTable.table[stepStart].idxTI];
-                                processExpression(stepStart + 2, stepEnd, lex, file);
+                                processExpression(stepStart + 2, stepEnd, lex, file, labelCounter);
                                 file << "    pop rax\n    mov [" << getMangledName(varEntry) << "], rax\n";
                             } else {
-                                processExpression(stepStart, stepEnd, lex, file);
+                                processExpression(stepStart, stepEnd, lex, file, labelCounter);
                             }
                             // переход на новую итерацию
                             file << "    jmp L" << b.label_1 << "\nL" << b.label_2 << ":\n";
